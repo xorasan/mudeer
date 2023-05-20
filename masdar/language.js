@@ -1,0 +1,5 @@
+var language;
+;(function(){
+	language = {
+	};
+})();
