@@ -1,5 +1,6 @@
 * List
-	* recycler( {} )
-	* Test
-	* this
-	* thing
+    * recycler( {} )
+        * Dynamic items
+        * Calculate scroll height on update
+        * Remember scroll position or item
+        * Reuse off screen items
