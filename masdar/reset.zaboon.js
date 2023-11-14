@@ -1,5 +1,93 @@
 // put global functions here that are only available to zaboon
 var
+select_content = function (e, start, end) {
+	if (e instanceof HTMLInputElement || e instanceof HTMLTextAreaElement) {
+		if (isnum(start)) {
+			e.selectionStart = start || 0;
+			e.selectionEnd = end || start || 0;
+		} else if (isfun(e.select)) {
+			e.select();
+		}
+	} else {
+		function getTextNodesIn(node) {
+			var textNodes = [];
+			if (node.nodeType == 3) {
+				textNodes.push(node);
+			} else {
+				var children = node.childNodes;
+				for (var i = 0, len = children.length; i < len; ++i) {
+					textNodes.push.apply(textNodes, getTextNodesIn(children[i]));
+				}
+			}
+			return textNodes;
+		}
+		if (document.createRange && window.getSelection) {
+			var range = document.createRange();
+			range.selectNodeContents(e);
+			var textNodes = getTextNodesIn(e);
+			var foundStart = false;
+			var charCount = 0, endCharCount;
+
+			for (var i = 0, textNode; textNode = textNodes[i++]; ) {
+				endCharCount = charCount + textNode.length;
+				if (!foundStart && start >= charCount
+						&& (start < endCharCount ||
+						(start == endCharCount && i <= textNodes.length))) {
+					range.setStart(textNode, start - charCount);
+					foundStart = true;
+				}
+				if (foundStart && end <= endCharCount) {
+					range.setEnd(textNode, end - charCount);
+					break;
+				}
+				charCount = endCharCount;
+			}
+
+			var sel = window.getSelection();
+			sel.removeAllRanges();
+			sel.addRange(range);
+		} else if (document.selection && document.body.createTextRange) {
+			var textRange = document.body.createTextRange();
+			textRange.moveToElementText(e);
+			textRange.collapse(true);
+			textRange.moveEnd("character", end);
+			textRange.moveStart("character", start);
+			textRange.select();
+		}
+	}
+},
+get_caret_position = function (e) {
+	if (e instanceof HTMLInputElement || e instanceof HTMLTextAreaElement) {
+		return [e.selectionStart, e.selectionEnd];
+	}
+
+    var start = 0;
+    var end = 0;
+    var doc = e.ownerDocument || e.document;
+    var win = doc.defaultView || doc.parentWindow;
+    var sel;
+    if (typeof win.getSelection != "undefined") {
+        sel = win.getSelection();
+        if (sel.rangeCount > 0) {
+            var range = win.getSelection().getRangeAt(0);
+            var preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(e);
+            preCaretRange.setEnd(range.startContainer, range.startOffset);
+            start = preCaretRange.toString().length;
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            end = preCaretRange.toString().length;
+        }
+    } else if ( (sel = doc.selection) && sel.type != "Control") {
+        var textRange = sel.createRange();
+        var preCaretTextRange = doc.body.createTextRange();
+        preCaretTextRange.moveToElementText(e);
+        preCaretTextRange.setEndPoint("EndToStart", textRange);
+        start = preCaretTextRange.text.length;
+        preCaretTextRange.setEndPoint("EndToEnd", textRange);
+        end = preCaretTextRange.text.length;
+    }
+    return [start, end];
+},
 enc = function (v) {
 	return encodeURIComponent(v);
 },

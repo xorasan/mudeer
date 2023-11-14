@@ -7,5 +7,7 @@
 	#skmain		.row1
 	button [template=skbutton]
 		.icon [id=icon]
-		label [id=name] @hidden
+		span .flex .tooltip
+			label [id=name] @hidden
+			.key .pad .tag .dim [id=key] @hidden
 		span [id=label] @hidden

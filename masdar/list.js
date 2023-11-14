@@ -1,9 +1,3 @@
-//+ first last message up down select press onpress popall idprefix adapter
-//+ beforepop beforeset uponend uponstart uponpastend uponpaststart selected
-//+ before gridnum hidetext listitem _listitem uponclick id2num mufarraq id_dom
-//+ bahac uponbahac rakkaz uponnavi uponrakkaz freeflow _muntahaabox muntahaa
-//+ _muntahaa mowdoo3 _katabmowdoo3 murakkaz baidaa eawwad ixtaf izhar afterset
-//+ mu3allaq ba3dihi namoovaj
 /*
  * 
  * lists have an adapter $.array, it contains the objects present in the dom list
@@ -12,13 +6,17 @@
  * 
  * the dom list set/pop functions also mutate the adapter
  * */
+//+ first last message up down select press onpress popall idprefix adapter
+//+ beforepop beforeset uponend uponstart uponpastend uponpaststart selected
+//+ before gridnum hidetext listitem _listitem uponclick id2num mufarraq id_dom
+//+ bahac uponbahac rakkaz uponnavi uponrakkaz freeflow _muntahaabox muntahaa
+//+ _muntahaa mowdoo3 _katabmowdoo3 murakkaz baidaa eawwad ixtaf izhar afterset
+//+ mu3allaq ba3dihi namoovaj
 var list;
 ;(function(){
 	'use strict';
 
-	var direction = function () {
-		return document.body.dir;
-	};
+	var direction = function () { return document.body.dir; };
 
 	var proto = {
 		_muntahaabox: 0,
@@ -44,9 +42,15 @@ var list;
 		// TODO
 		uponend: 0, // when reached list end, do what? return 1 to avoid default
 		uponstart: 0,
-		bintixaab: 0, // upon selection change [TODO]
+		bintixaab: 0, // upon selection change [TODO deprecate this]
 		uponintaxab: 0, // same as bintixaab [TODO deprecate this]
+		on_selection: 0, // 2023 NEW
 		uponnavi: 0, // ( type )
+		_scroll_on_focus: 1,
+		scroll_on_focus: function (yes) {
+			this._scroll_on_focus = yes;
+			return this;
+		},
 		moveup: function (uid) {
 			uid = uid || (this.axavmuntaxab()||{}).uid;
 			var clone = this.get( this.id2num(uid) );
@@ -263,8 +267,7 @@ var list;
 			}
 			return item;
 		},
-		/*
-		 * id can be a number or string id
+		/* id can be a number or string id
 		 * */
 		select: function (id, noscroll, silent, nofocus) {
 //			$.log( 'select', this.idprefix_raw, id, noscroll, silent, nofocus );
@@ -291,7 +294,9 @@ var list;
 			
 			return this;
 		},
-		intaxabscroll: function (selected) {
+		intaxabscroll: function (selected) { // select_scroll TODO rename
+			if (!this._scroll_on_focus) return;
+
 			if (isundef(selected)) {
 				selected = this.get( this.selected );
 			}
@@ -317,9 +322,9 @@ var list;
 				}
 			}
 
-			if (isfun(this.uponintaxab) && selected) {
+			if (isfun(this.on_selection) && selected) {
 				var a = this.adapter.get( selected.dataset.XPO.uid );
-				if (a) this.uponintaxab(a);
+				if (a) this.on_selection(a);
 			}
 
 			return selected;
@@ -358,7 +363,9 @@ var list;
 			o = o || {};
 
 			var clone, LV = this, listitem = o._listitem || LV._listitem,
-				parent = LV.keys.XPO.items;
+				parent = LV.keys.XPO.items,
+				available_height = innerheight() - LV.element.offsetTop,
+				actual_height = parent.offsetHeight;
 
 			if (isnum(LV._muntahaa) && LV._muntahaa > -1 && LV.length() >= LV._muntahaa)
 				return; // muntahaa limit hit
@@ -395,6 +402,13 @@ var list;
 				delete o.ruid;
 			}
 			LV.adapter.set(o.uid, o);
+
+//			$.log(actual_height, available_height);
+//			if (actual_height > available_height) {
+//				// setup prepad and postpad
+////				LV.keys.XPO.postpad.style.height = LV.length() * 32;
+//				return false;
+//			}
 
 			if (!clone) {
 				/*
@@ -447,23 +461,27 @@ var list;
 			LV._katabmowdoo3();
 
 			LV.afterset && LV.afterset( o, clone, templates.keys(clone) ); // TODO deprecate
-			LV.ba3dihi && LV.ba3dihi( o, clone, templates.keys(clone) );
+			LV.ba3dihi && LV.ba3dihi( o, clone, templates.keys(clone) ); // TODO deprecate
+			LV.after_set && LV.after_set( o, clone, templates.keys(clone) );
 			LV.uponadaaf && LV.uponadaaf( LV.length() );
 
 			return clone;
 		},
-		namoovaj: function (eansarism) {
+		namoovaj: function (eansarism) { // deprecated
 			this._listitem = eansarism || 'XPO.listitem';
 			return this;
 		},
 		listitem: function (elementname) { // namoovaj alternative
 			return this.namoovaj(elementname);
 		},
-		axavmfateeh: function (uid) {
+		axavmfateeh: function (uid) { // TODO deprecate
 			var clone = this.get( this.id2num(uid) );
 			if (clone) {
 				return templates.mfateeh(clone);
 			}
+		},
+		get_item_keys: function (uid) { // NEW
+			return this.axavmfateeh(uid);
 		},
 		axavmuntaxab: function (uid) { // get [selected] item's adapter object
 			return this.axadmuntaxab(uid);
@@ -494,6 +512,9 @@ var list;
 				return this.adapter.get( baidaa );
 			}
 			return false;
+		},
+		get_item_element: function (uid) {
+			return this.get( isundef(uid) ? this.selected : uid );
 		},
 		get: function (id) {
 			return this.keys.XPO.items.children[id];
@@ -592,7 +613,7 @@ var list;
 			this.keys.raees.hidden = len ? 0 : 1;
 			if (!this._mowdoo3) this.keys.raees.hidden = 1;
 		},
-		mowdoo3: function (m, i18n) {
+		mowdoo3: function (m, i18n) { // deprecated -> title
 			this._mowdoo3 = m || 0;
 			if (i18n)
 				attribute(this.keys.mowdoo3list, 'data-XPO.i18n', m),
@@ -600,6 +621,13 @@ var list;
 			else if (m)
 				innertext(this.keys.mowdoo3list, m);
 			this._katabmowdoo3();
+			return this;
+		},
+		title: function (m, i18n) { // only visible when length > 0
+			return this.mowdoo3(m, i18n);
+		},
+		recycle: function (yes) {
+			this._recycle = yes;
 			return this;
 		},
 		idprefix: function (id) {

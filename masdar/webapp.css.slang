@@ -10,6 +10,7 @@
 	width			76px
 	height			76px
 	border			0
+	margin			8px
 #loadingbox
 	top				0
 	bottom			0
@@ -106,6 +107,8 @@
 .inline
 	display			inline-block
 	vertical-align	middle
+.displayblock
+	display			block
 .narrowline
 	line-height		1
 .narrowletters

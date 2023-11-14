@@ -101,24 +101,25 @@ label
 	font-size		90%
 	font-weight		bold
 	padding			0 2px
-input, textarea, select
-	background-color	transparent
+input, textarea, select, .input
 	border				0
-	border-radius		0
 	border-bottom		2px solid @secondary
 	color				@textd
+	padding				1px 2px
+input, textarea, select
+	background-color	transparent
+	border-radius		0
 	font-family			inherit
 	font-size			inherit
 	font-weight			inherit
 	width				100%
 	margin				0
-	padding				1px 2px
 	display				block
 	resize				none
-input:active, input:focus
+input:active, input:focus, .input:active, .input:focus
 	color				@textl
 	border-color		@accent
-input[data-error]
+input[data-error], .input[data-error]
 	border-color		@red
 select
 	display				inline-block

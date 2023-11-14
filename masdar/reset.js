@@ -3,6 +3,9 @@ var
 stringify = function (o) {
 	return JSON.stringify(o);
 },
+parsejson = function (o) {
+	return JSON.parse(o);
+},
 mubaaraat = function (str, re) {
 	return (str.match(re)||[])[0];
 },

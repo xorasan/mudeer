@@ -149,7 +149,7 @@ var pager;
 			return [pagerasmaa ? 'XPO.on' : 'XPO.off' ];
 		}, function () {
 			preferences.set(saveto, preferences.get(saveto, 1) ? 0 : 1);
-		});
+		}, 'XPO.icontab');
 
 		pager.izhar();
 //		pager.jama3('XPO.main');

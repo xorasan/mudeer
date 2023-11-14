@@ -1,5 +1,19 @@
 //+ showhints press update saveto onnext onprev hfiz fasax nsee talaf actualpress
 //+ uponenter uponshiftenter autoheight baidaa
+/* TODO
+* add .alias to support linking secondary keysets to a shortcut entry
+* .row1 should be animated
+* move notifications above the back button on desktop
+  and they should have title desc icon
+  actions can be merged into the softkeys!!
+*/
+/* FEATURES
+<element>.on_focus_prev() triggered when K.up is pressed on an element
+<element>.on_focus_next() triggered when K.dn is pressed on an element
+all keyups are pd'd, fig out logic for keydowns in .press
+modifiers now do work! 13 sep 2023
+
+*/
 var softkeys, K, P;
 ;(function(){
 	K = { // key code names
@@ -23,11 +37,12 @@ var softkeys, K, P;
 		list: {},
 	};
 
+	var global_keys = ['f1', 'f2', 'f5', 'escape', K.sl, K.sr];
+
 	var hfizM = {}, M = {}, // mapped keys
 	current,
 	inlongpress, lastkey, lastkeytime, repeatmode,
 	index = {},
-	selectionorigin = 0,
 	// loop up into parents as long as each parent has [focus=1] until [removable=1]
 	removableparent = function (element) {
 		var parent = element.parentElement;
@@ -38,22 +53,35 @@ var softkeys, K, P;
 				return removableparent(parent);
 		}
 	},
-	updatekey = function (k) {
-		var parent, o = {}, classes = '', args = M[k];
+	updatekey = function (uid) {
+		var parent, o = {}, classes = '', args = M[uid];
 		
 		if (!args) return;
 		
-		if (args.length === 1) o.hidden = 1;
+		if (args.length === 1 || args.hidden || args.h) o.hidden = 1;
 		
-		if (args[0]) o.onclick = function (e) {
-			args[0](e.key, e);
+		var callback = args[0] || args.callback;
+		var k = args.key || uid;
+		
+		if (callback) o.onclick = function (e) {
+			var key = e ? e.key : undefined;
+			callback(key, e);
 		};
 		
-		o.XPO.label = args[1] || '';
-		o.XPO.icon = args[2];
-		o.XPO.status = args[3];
+		o.XPO.name = args.name || args.n || '';
+		o.XPO.label = args[1] || args.label || args.l || '';
+		o.XPO.icon = args[2] || args.icon || args.i;
+		o.XPO.status = args[3] || args.status || args.s;
 		if (o.XPO.icon === false) {
 			o.XPO.name = k;
+		}
+		
+		if (!isarr(args)) { // only .add API
+			o.XPO.key =   (args.ctrl ? 'ctrl ' : '')
+						+ (args.alt ? 'alt ' : '')
+						+ (args.shift ? 'shift ' : '')
+						+ (args.key || uid)
+						;
 		}
 
 		if ( k == K.sl	) classes = 'XPO.left'	;
@@ -69,7 +97,7 @@ var softkeys, K, P;
 		}
 		o.id = 'XPO.sk'+k;
 		o.classes = classes;
-		
+
 		index[k] = templates.get('XPO.skbutton', parent, 0, o.id)(o);
 		
 		XPO.skdots.hidden = totalvisible() ? 0 : 1;
@@ -119,8 +147,7 @@ var softkeys, K, P;
 		P: P,
 		K: K,
 		saveto: 7,
-		/*
-		 * clear previous map explicitly, .map doesn't clear it by default
+		/* clear previous map explicitly, .map doesn't clear it by default
 		 * */
 		clear: function () {
 			M = {};
@@ -135,7 +162,7 @@ var softkeys, K, P;
 			M[name][3] = yes ? 1 : undefined;
 			softkeys.update();
 		} },
-		talaf: function (name) {
+		talaf: function (name) { // TODO deprecate, NEW remove
 			if (name) {
 				if (name instanceof Array) {
 					name.forEach(function (n) {
@@ -157,18 +184,19 @@ var softkeys, K, P;
 		},
 		showhints: function () {
 			delete XPO.softkeysui.dataset.XPO.hidden;
+			setdata(XPO.softkeysui, 'XPO.shown', 1);
 			if (!XPO.skhelp.hidden) {
 				XPO.skhelp.hidden = 1;
 				preferences.set(7, 1);
 			}
 //			XPO.skhints.hidden = 0;
 			$.taxeer('XPO.softkeyshints', function () {
+				popdata(XPO.softkeysui, 'XPO.shown');
 				XPO.softkeysui.dataset.XPO.hidden = 1;
 //				XPO.skhints.hidden = 1;
 			}, 2500);
 		},
-		/*
-		 * remember one or more actions which you can recall later
+		/* remember one or more actions which you can recall later
 		 * you can also forget stored actions
 		 * */
 		hfiz: function (name) { // remember
@@ -198,7 +226,7 @@ var softkeys, K, P;
 		 * update a single key definition in M
 		 * status 0normal 1selected 2disabled
 		 * */
-		set: function (name, callback, label, icon, status) {
+		set: function (name, callback, label, icon, status) { // TODO deprecate for add
 			if (name) {
 				if (isarr(name)) {
 					name.forEach(function (n, i) {
@@ -217,7 +245,37 @@ var softkeys, K, P;
 				softkeys.update(name);
 				backstack.set('XPO.softkeys', M);
 			}
-			return softkeys;
+			return this;
+		},
+		add: function (o) { // use this instead of .set
+			/* key uid is based on mods + keyname
+			properties
+			uid generated, you can later use it to remove keys
+			n name
+			h hidden
+			i icon
+			l label
+			s status
+			k key
+			c cb callback
+			*/
+			o.callback = o.callback || o.c || o.cb;
+			o.key = tolower(o.key || o.k);
+
+			if ( isfun(o.callback) && isstr(o.key) ) {
+				o.uid = (o.ctrl  ? 1 : 0) +'-'+
+						(o.alt   ? 1 : 0) +'-'+
+						(o.shift ? 1 : 0) +'-'+
+						o.key;
+				M[ o.uid ] = o;
+				
+				updatekey(o.uid);
+				backstack.set('XPO.softkeys', M);
+			}
+			return this;
+		},
+		remove: function (uid) { // use this instead of .talaf
+			this.talaf(uid);
 		},
 		/*
 		 * preset		P.<name>
@@ -258,20 +316,23 @@ var softkeys, K, P;
 				M[k][0](k, e, e && e.type, longpress) && pd(); // prevent default if true is returned
 		},
 		press: function (k, e, longpress) {
-			var pd = function () { preventdefault(e); }, caught;
+			var caught, pd = function () { preventdefault(e); };
 			
 			kraw = k;
 			k = k.toLowerCase();
 
 			// for compat on desktop
 			if (e && e.type && e.type == 'XPO.mousewheel') {
-//				$.log( e.y );
 				if (e.y <= -1) k = K.up;
-				if (e.y >= 1) k = K.dn;
+				if (e.y >=  1) k = K.dn;
 			}
 			if (k == 'f1') k = K.sl, pd();
 			if (k == 'f2') k = K.sr, pd();
-			if (k == 'f5' || (e && e.ctrlKey && k == 'r')) history.go();
+			if (k == 'f5' ||
+					(e && e.ctrlKey && ['r', 'ر'].includes(k))
+				) {
+				history.go();
+			}
 
 			if ('escape' == k && !document.fullscreenElement)
 				k = K.sr, pd();
@@ -280,13 +341,28 @@ var softkeys, K, P;
 			if (k == K.mt) pd();
 
 			var editmode = 0, a = document.activeElement, dir;
+			
+			// direction dependent keys
+			var left_key = K.lf,
+				right_key = K.rt;
+			
+			// TODO what's the point of this block
 			if ((a instanceof HTMLTextAreaElement) || a.contentEditable == 'true') {
-				if (e && e.altKey || [K.sl, K.sr].includes(k)) {} else caught = 1;
+				if (e && e.altKey || [K.sl, K.sr].includes(k)) {
+				} else {
+					// BUG FIX this prevents softkey hook trigger, improve logic here
+//					caught = 1;
+				}
 			}
-			if ((a instanceof HTMLInputElement
-			||	a instanceof HTMLTextAreaElement) && a.type != 'range') {
-				editmode = 1,
-				dir = translate.direction(a.value);
+
+			if ((a instanceof HTMLInputElement || a instanceof HTMLTextAreaElement || a.contentEditable == 'true')
+			&& a.type != 'range') {
+				editmode = 1;
+				if (a.contentEditable == 'true') {
+					dir = translate.direction(a.innerText);
+				} else {
+					dir = translate.direction(a.value);
+				}
 				
 				a.dir = dir === 1 ? 'rtl' : 'ltr';
 			}
@@ -303,34 +379,67 @@ var softkeys, K, P;
 					
 					pd();
 				}
+				// MERGE ?
+				if ( isfun(a.on_focus_prev) && (k == K.up || k == left_key) ) {
+					caught = 1;
+					pd();
+					a.on_focus_prev();
+					return;
+				}
+				if ( isfun(a.on_focus_next) && (k == K.dn || k == right_key) ) {
+					caught = 1;
+					pd();
+					a.on_focus_next();
+					return;
+				}
 			}
 
-			/*
+			var length = 0, selectionStart = 0;
+
+			/* TODO test left/right keys on buttons and single line inputs
 			 * always allow using up/down keys to move between fields
+			 * left/right should detect language direction
 			 * */
 			if (editmode) {
-				var atend	= (a.value.length === a.selectionStart),
-					atstart	= (0 === a.selectionStart);
+				if (a.contentEditable == 'true') {
+					length = a.textContent.length;
+					selectionStart = getSelection().baseOffset;
+				} else {
+					length = a.value.length;
+					selectionStart = a.selectionStart;
+				}
+
+				var atend	= (length === selectionStart),
+					atstart	= (0 === selectionStart);
 				
-				if (atstart && k == K.up) caught = focusprev(a), pd();
-				if (atend && k == K.dn) caught = focusnext(a), pd();
-				else if (k == K.en && e.shiftKey && a.uponshiftenter) a.uponshiftenter(), pd();
-				else if (k == K.en && !e.shiftKey && a.uponenter) a.uponenter(), pd();
+				// TODO no modifiers helper function
+				if ( atstart && (k == K.up || (k == left_key && dir !== 1) ) && !e.altKey && !e.ctrlKey && !e.shiftKey ) { // MERGE ?
+					if ( isfun(a.on_focus_prev) ) { caught = 1; pd(); a.on_focus_prev(); return; }
+
+					caught = focusprev(a), pd();
+				}
+				if ( atend   && (k == K.dn || (k == right_key && dir !== 1) ) && !e.altKey && !e.ctrlKey && !e.shiftKey ) { // MERGE ?
+					if ( isfun(a.on_focus_next) ) { caught = 1; pd(); a.on_focus_next(); return; }
+
+					caught = focusnext(a), pd();
+				}
+				else
+				if (k == K.en &&  e.shiftKey && a.uponshiftenter) a.uponshiftenter(atstart, atend), pd();
+				else if (k == K.en && !e.shiftKey && a.uponenter     ) a.uponenter     (atstart, atend), pd();
 			}
 			else if (a) {
-				if ( navigables.includes( a.tagName.toLowerCase() )
+				if ( is_navigable( a )
 					|| a.parentElement.dataset.XPO.focus ) {
-					if (k == K.up) caught = focusprev(a), pd();
-					if (k == K.dn) caught = focusnext(a), pd();
+					if (k == K.up || k == left_key) caught = focusprev(a), pd();
+					if (k == K.dn || k == right_key) caught = focusnext(a), pd();
 					if (k == K.en && a.onclick) a.onclick(), pd();
 				}
 			}
 			
-			/*
-			 * if text field isn't empty, disable arrow key handling
+			/* if text field isn't empty, disable arrow key handling
 			 * K.bs is managed by KaiOS
 			 * */
-			if (editmode && !a.value.length) {
+			if (editmode && !length) {
 				if (k == K.bs) {
 					if (a.dataset.XPO.removable)
 						caught = focusprev(a), a.remove(), pd();
@@ -338,55 +447,29 @@ var softkeys, K, P;
 						/*Hooks.run('XPO.back'), webapp.blur(), */pd();
 				}
 			}
-			/*
-			 * shim for text selection for bad OSes like KaiOS :/ :(
-			 * */
-			if (editmode && a.value.length && !e.altKey
-			&&	[K.up, K.dn, K.lf, K.rt, K.en].includes(k)) {
-				/*if (k == K.en)
-					if (selectionorigin === undefined)
-						softkeys.set(K.en, function () {
-							selectionorigin = undefined;
-						}, 0, 'XPO.iconcopy', 1),
-						selectionorigin = a.selectionStart;
-					else
-						softkeys.set(K.en, function () {
-							selectionorigin = a.selectionStart;
-						}, 0, 'XPO.iconcopy', 0),
-						selectionorigin = undefined;*/
-				
-				if (selectionorigin !== undefined) {
-					// determine direction
-					if (a.selectionStart < selectionorigin) // backwards
-						selectiondirection = 0;
-					else if (a.selectionStart > selectionorigin) // forwards
-						selectiondirection = 1;
-					
-					if (k == K.lf && a.selectionEnd == selectionorigin)
-						a.selectionEnd = selectionorigin, --a.selectionStart, pd();
-					else if (k == K.rt && a.selectionStart-a.selectionEnd)
-						a.selectionStart = selectionorigin, ++a.selectionEnd, pd();
-					else if (k == K.rt && a.selectionEnd < a.value.length)
-						++a.selectionEnd, pd();
-					else if (k == K.lf && a.selectionStart > -1)
-						--a.selectionStart, pd();
-					else if (k == K.lf && a.selectionStart)
-						--a.selectionStart, pd();
-				}
-				return;
-			} else {
-				selectionorigin = undefined;
-			}
 			
 			caught = caught || Hooks.rununtilconsumed('XPO.softkey', [k, e || {}, e && e.type, longpress]);
 			if (caught) return;
-//			$.log( 'softkeys.press', k );
 
 			var mmm = M[kraw] || M[k];
 
-			if (mmm && typeof mmm[0] == 'function')
-				mmm[0](k, e, e && e.type, longpress) && pd(); // prevent default if true is returned
-			else {
+			/* if defined key has ctrl yes; then just in that case let it through
+			*/
+			var let_through, callback = mmm ? mmm[0] : 0;
+
+			var event = e || {};
+			var uid = (event.ctrlKey?1:0) +'-'+ (event.altKey?1:0) +'-'+ (event.shiftKey?1:0) +'-'+ k;
+			if (M[uid]) {
+				mmm = M[uid];
+				callback = mmm.callback;
+				let_through = 1;
+			}
+
+			if ( (!editmode || e.altKey || let_through || global_keys.includes(k)) && mmm && isfun(callback)
+			) {
+				caught = callback(k, e, e && e.type, longpress);
+				if ( caught ) pd(); // prevent default if true is returned
+			} else {
 				/*if (k == K.dn) {
 					webapp.scrollx(40);
 					pd();
@@ -404,10 +487,23 @@ var softkeys, K, P;
 					pd();
 				}*/
 			}
+
+			if (isundef(caught) || caught == 1) { // true|1|undef = yes; 0|false = no
+				var softkey_element = elementbyid( 'XPO.sk'+k );
+				if (softkey_element) {
+					setdata(softkey_element, 'XPO.hawm', 1);
+					$.taxeer('XPO.sk'+k, function () {
+						popdata(softkey_element, 'XPO.hawm');
+					}, 400);
+				}
+			}
 		},
 	};
 	
 	softkeys.showhints();
+	softkeys.M = function () {
+		return M;
+	};
 	
 	var autoheight = function (a) {
 		if (a instanceof HTMLTextAreaElement) {
@@ -421,7 +517,7 @@ var softkeys, K, P;
 	var resize = function () {
 		var w = innerwidth(), sl = index[K.sl], sr = index[K.sr];
 		if (w > 720) {
-			var ww = ((innerwidth()-640)/2);
+			var ww = ((innerwidth()-590)/2);
 			if (sl) setcss(sl, 'width', ww+'px');
 			if (sr) setcss(sr, 'width', ww+'px');
 		} else {
@@ -437,8 +533,9 @@ var softkeys, K, P;
 		var a = document.activeElement;
 		// BUG idk why but this can't detect .altKey
 		if (a && (a instanceof HTMLInputElement
+		|| a.contentEditable == 'true'
 		||	a instanceof HTMLTextAreaElement) && a.type != 'range') {
-			
+			softkeys.showhints();
 		} else {
 			softkeys.showhints();
 			return 1;

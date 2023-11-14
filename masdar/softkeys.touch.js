@@ -46,6 +46,7 @@
 		}
 	});
 	var doclick = function (path) {
+		if (path)
 		for (var i = 0; i < path.length; ++i) {
 			if (path[i].onclick) {
 				path[i].onclick();
@@ -83,6 +84,7 @@
 	});
 	Hooks.set('XPO.navigationpress', function (args) {
 		var isbutton = 0;
+		if (isarr(args[2]))
 		args[2].forEach(function (item) {
 			if (item instanceof HTMLButtonElement
 			||	item instanceof HTMLInputElement

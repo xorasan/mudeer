@@ -1,10 +1,13 @@
-//+ mfateeh axad axav fahras ishtaghal zaahir
+//+ mfateeh dom_keys axad axav fahras ishtaghal zaahir is_active
 var view;
 ;(function(){
 	var index = {};
 	view = {
 		zaahir: function (name) {
 			return view.axav() === name;
+		},
+		is_active: function (name) {
+			return this.zaahir(name);
 		},
 		mfateeh: function (name) { // keys
 			var element = index[name];
@@ -63,4 +66,7 @@ var view;
 			return index;
 		},
 	};
+	
+	view.dom_keys = view.mfateeh;
+
 })();

@@ -14,3 +14,11 @@
 	[id=list]
 	hr
 	[id=ad]
+
+[template=settingsitem] .listitem .flex .vertical .centertext .pad .settingsitem
+	[id=icon] [icon=iconsettings] .icon
+	[id=title] .bold
+	[id=body] .dim
+
+
+

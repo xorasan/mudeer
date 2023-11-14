@@ -17,27 +17,6 @@ var datepicker = datepicker || 0;
 //	if ('onlargetextenabledchanged' in window)
 //		onlargetextenabledchanged = function () { webapp.textsize(); };
 
-	webapp.itlaa3 = function (text, time) {
-		var element = XPO.itlaa3.firstElementChild;
-		if (text) {
-			if (text instanceof Array) {
-				element.dataset.XPO.i18n = text[0];
-				translate.update(XPO.itlaa3);
-			} else {
-				delete element.dataset.XPO.i18n,
-				element.innerText = text;
-			}
-			XPO.itlaa3.hidden = 0;
-
-			$.taxeer('XPO.itlaa3', function () {
-				webapp.itlaa3();
-			}, time||3000);
-		} else {
-			delete element.dataset.XPO.i18n,
-			element.innerText = '',
-			XPO.itlaa3.hidden = 1;
-		}
-	};
 	webapp.taht3nsar = function (text, time, taht) { // below element
 		taht = document.activeElement || taht;
 		var element = XPO.taht3nsar.firstElementChild;
@@ -179,7 +158,7 @@ var datepicker = datepicker || 0;
 			else {
 				preferences.set(15, 1);
 			}
-		});
+		}, 'XPO.iconplayarrow');
 	});
 
 })();

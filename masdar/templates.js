@@ -43,7 +43,8 @@ var templates, namaavij;
 
 			if (o.onclick) clone.onclick = o.onclick;
 			for (var i in keys) {
-				/*
+				/* TODO document why this is so
+				 * this doesn't let you specify i18n in templates :(
 				 * cleanup previous mess from i18n
 				 * */
 				if (isundef(o[i+'$t'])) {
@@ -143,7 +144,7 @@ var templates, namaavij;
 		/*
 		 * you can pass either an element or a name that's already indexed
 		 * 
-		 * if only element is specified, then its clone is return
+		 * if only element is specified, then its clone is returned
 		 * 
 		 * if parent is also specified then it inserts the clone under parent
 		 * and returns a function that accepts {options} to setup the clone
@@ -153,7 +154,7 @@ var templates, namaavij;
 		 * id can be used to reuse old elements
 		 * */
 		get: function (element, parent, before, id) {
-			if (typeof element == 'string') element = index[element];
+			if (isstr(element)) element = index[element];
 			if (!(element instanceof HTMLElement)) return false;
 			
 			var clone, template;
@@ -185,6 +186,28 @@ var templates, namaavij;
 			}
 			
 			return clone;
+		},
+		/* replace element with a template
+		 * 
+		 */
+		replace_with: function (element, replacement) {
+			if (isstr(replacement)) replacement = index[ replacement ];
+
+			if (!(element instanceof HTMLElement)) return false;
+			if (!(replacement instanceof HTMLElement)) return false;
+
+			var clone, template;
+
+			clone = replacement.cloneNode(true),
+			template = clone.dataset.XPO.template,
+			delete clone.dataset.XPO.template,
+			clone.hidden = 0;
+
+			element.replaceWith(clone);
+
+			return function (o) {
+				return templates.set(clone, o, template);
+			};
 		},
 		/*
 		 * indexes any htm elements marked with [template=<name>]

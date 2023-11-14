@@ -241,15 +241,13 @@ var Files;
 			},
 			folder: function (path, cb, rf) {
 				if (typeof cb === 'function') {
-					if (rf)
-						Files.fs.remove(path, cb);
-					else
-						Files.fs.rmdir(path, cb);
+					Files.fs.rmdir(path, {
+						recursive: !!rf,
+					}, cb);
 				} else {
-					if (rf)
-						Files.fs.removeSync(path);
-					else
-						Files.fs.rmdirSync(path);
+					Files.fs.rmdirSync(path, {
+						recursive: !!rf,
+					}, cb);
 				}
 				return true;
 			}

@@ -40,7 +40,7 @@ var bahaclist, bahac;
 			if (backstack.states.view === 'XPO.bahac') {
 				webapp.header( results.length ? (results.length+' '+translate('XPO.results'))
 								: translate('XPO.search') );
-				bahaclist.select();
+				bahaclist.intaxabsaamitan();
 			}
 			
 			oldresults = results;
@@ -69,10 +69,15 @@ var bahaclist, bahac;
 	Hooks.set('XPO.viewready', function (args) {
 		switch (args.XPO.name) {
 			case 'XPO.main':
-				softkeys.set('*', function () {
-					Hooks.run('XPO.view', 'XPO.bahac');
-					return 1;
-				}, '*', 'XPO.iconsearch');
+				softkeys.add({ n: 'Search',
+					k: 'e', // TODO secondary *, waiting on SK secondary support
+					ctrl: 1,
+					i: 'XPO.iconsearch',
+					cb: function () {
+						Hooks.run('XPO.view', 'XPO.bahac');
+						return 1;
+					},
+				});
 				break;
 			case 'XPO.bahac':
 				webapp.header( translate('XPO.search') );
@@ -85,21 +90,27 @@ var bahaclist, bahac;
 				
 				softkeys.list.basic(bahaclist);
 
-				softkeys.set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], function (k) {
-					bahaclist.press(k);
-				});
+				// TODO BUG fix creates a number of entries in SK menu with label '0'
+//				softkeys.set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], function (k) {
+//					bahaclist.press(k);
+//				}, 0);
 
 				if (kitabat)
 					softkeys.set(K.sl, function () {
 						bahaclist.press(K.sl);
-					}, 0, 'XPO.iconedit');
+					}, '0', 'XPO.iconedit');
 
-				softkeys.set('*', function () {
-					bahaclist.selected = -1;
-					bahaclist.select();
-					keys.XPO.searchbox.focus();
-					return 1;
-				}, '*', 'XPO.iconsearch');
+				softkeys.add({ n: 'Search',
+					k: 'e', // TODO secondary *, waiting on SK secondary support
+					ctrl: 1,
+					i: 'XPO.iconsearch',
+					cb: function () {
+						bahaclist.selected = -1;
+						bahaclist.select();
+						keys.XPO.searchbox.focus();
+						return 1;
+					},
+				});
 				break;
 		}
 	});

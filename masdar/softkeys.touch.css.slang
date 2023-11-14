@@ -29,7 +29,7 @@ if min-width = 321px
 	#softkeysui .row2, #skdots
 		box-shadow		0 0 10px 0 @tertiary
 		display			flex
-		flex-direction	column-reverse
+		flex-direction	column
 		position		fixed
 		bottom			90px
 		right			0
@@ -88,5 +88,5 @@ if min-width = 321px
 		right			45px
 		position		relative
 	#softkeysui[data-hidden] .row2
-		right			-16px
+		right			-6px
 		border-color	transparent

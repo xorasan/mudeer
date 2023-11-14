@@ -192,27 +192,29 @@ var helpers;
 			else
 				return  mins + ' ' + xlate('XPO.minute');
 		},
-		alias: function (string, length) {
+		alias: function (string, length, dont_lower, dont_dash) {
 			string = string || '';
 			length = length || 255;
+			var dash = '-';
 			if (string.length === 0) return '';
+			if (!dont_lower) string = tolower(string);
+			if (dont_dash) dash = ' ';
 			return string.substr(0, length)
 						 .replace(/\%/g,						' pct'			)
 						 .replace(/\@/g,						' at '			)
 						 .replace(/\&/g,						' and '			)
-						 .replace(/[$-\-/:-?\{\}-~!"^_`\[\]@#]/g,	'-'				) // symbols
-						 .replace(/[^.\d\wa-zA-Z0-9ا-ےÄäÜüÖößЀ-ҁҊ-ӿÇçĞğŞşIıÜüﻙ]+/g,					'-'				) // most alphanums
-						 .replace(/\s[\s]+/g,					'-'				)
-						 .replace(/[\s]+/g,						'-'				)
+						 .replace(/[$-\-/:-?\{\}-~!"^_`\[\]@#]/g,	dash		) // symbols
+						 .replace(/[^.\d\wa-zA-Z0-9ا-ےÄäÜüÖößЀ-ҁҊ-ӿÇçĞğŞşIıÜüﻙ]+/g,		dash	) // most alphanums
+						 .replace(/\s[\s]+/g,					dash			)
+						 .replace(/[\s]+/g,						dash			)
 						 .replace(/^[\-]+/g,					''				)
 						 .replace(/[\-]+$/g,					''				)
-						 .replace(/\-\-/g,						'-'				)
+						 .replace(/\-\-/g,						dash			)
 						 .replace(/\.\-/g,						'.'				)
 						 .replace(/\-\./g,						'.'				)
 						 .replace(/^\./g,						''				)
 						 .replace(/\.$/g,						''				)
-						 .trim()
-						 .toLowerCase();
+						 .trim();
 		},
 		// TODO improve this
 		countwords: function (text) {

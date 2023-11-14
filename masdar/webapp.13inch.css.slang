@@ -1,6 +1,48 @@
 html, body, svg text
 	font-family		Segoe UI, Noto Naskh Arabic UI, sans-serif
 
+if min-width = 320px
+	#softkeysui .left
+		display			flex !important
+		flex-direction	row-reverse
+		align-items		center
+	#softkeysui .right
+		display			flex !important
+		flex-direction	row
+		align-items		center
+	#softkeysui .row2 button:hover .tooltip, #softkeysui[data-shown] .row2 button .tooltip
+		display			flex
+	#softkeysui[data-shown] .row2 button .tooltip label
+		display			none
+	#softkeysui .row2 button:hover .tooltip label
+		display			flex
+	#softkeysui .row2 button .tooltip
+		display			none
+	#softkeysui[data-shown] .row2 button .tooltip
+		font-size		80%
+	#softkeysui .row2 button .tooltip
+		position		absolute
+		right			70px
+		align-items		center
+		top				0
+		font-weight		normal
+		border			1px solid @secondaryd
+		background		@primaryl
+		font-size		100%
+		width			max-content
+		padding			8px
+		border-radius	8px
+	#softkeysui button .key
+		margin			2px
+		padding			2px
+		background		@secondaryd
+	#softkeysui button label
+		border			0 !important
+		height			auto
+	#softkeysui .row1 button .tooltip
+		font-size		90%
+		flex-direction	column
+
 if min-width = 640px
 	body
 		max-width	640px
@@ -15,6 +57,8 @@ if min-width = 640px
 		background					@text
 
 if min-width = 800px
+	body
+		max-width	700px
 	#itlaa3 .text
 		font-size		150%
 	#dialogui
@@ -28,6 +72,8 @@ if min-width = 800px
 		height			54px
 //		padding			0px 35px
 //		border-top		2px solid @secondary
+	#softkeysui .row2 button .tooltip
+		right			90px
 	#softkeysui .row2 button svg
 		height			48px
 		width			48px
@@ -37,20 +83,10 @@ if min-width = 800px
 		margin-bottom	80px
 
 if min-width = 1024px
+	body
+		max-width	840px
 	#eqonahui
 		display			inline-block
-	body
-		max-width	600px
-		margin		0 90px 0 auto !important
-	#pagermowjoodah
-		max-width	600px
-	[data-fullscreen]
-		position	fixed
-		top			0
-		left		0
-		width		calc(100vw - 700px) !important
-		bottom		0
-		overflow	auto
 	#skenter
 		width		96px
 	#softkeysui .row1 button

@@ -148,7 +148,7 @@ var translate, taraajim = taraajim || {}, xlate;
 	translate.direction = function (text) {
 		text = text || '';
 		var ltr = text.match(/[a-zA-Z]+/),
-			rtl = text.match(/[ا-ي]+/);
+			rtl = text.match(/[ا-ےا-ي]+/);
 		
 		if (rtl) return 1;
 		if (ltr) return 0;
@@ -170,7 +170,7 @@ var translate, taraajim = taraajim || {}, xlate;
 				index = 0;
 
 			translate.change(languages[index]);
-		});
+		}, 'XPO.icontranslate');
 	});
 	
 	xlate = translate;

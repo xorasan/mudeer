@@ -30,9 +30,14 @@
 	font-size		125%
 #softkeysui button .icon
 	display			inline-block
+[data-XPO.animations] #softkeysui button .icon
+	position		relative
+	transition		.2s right ease-out
+	right			0
 #softkeysui button svg
 	height			25px
 	width			25px
+
 #softkeysui button label
 	height			inherit
 	margin			0 3px 0 0
@@ -46,12 +51,22 @@
 	padding			0 5px
 	display			block
 	border-top		1px solid @secondaryd
+#softkeysui .row1 button:hover
+	box-shadow		0 0 25px 2px @secondary
+#softkeysui .row1 button:focus
+	box-shadow		0 0 25px 2px @accentd
+
 #softkeysui .row2 button
 	padding			0 5px 0 0
 	margin-right	1px
 	font-size		100%
 	margin-bottom	0
 	border-right	1px solid @secondaryd
+#softkeysui .row2 button:hover
+	box-shadow		-20px 0 15px 0px @secondary inset
+#softkeysui .row2 button:focus
+	box-shadow		-20px 0 15px 0px @accentd inset
+
 #softkeysui .left, #softkeysui .right
 	position		absolute
 	bottom			0

@@ -37,7 +37,6 @@ input.bare
 	padding			10px 15px
 	box-shadow		0 0 20px 0 @textd
 	border-radius	20px
-	font-weight		bold
 #taht3nsar .text
 	padding			5px
 	border-radius	5px

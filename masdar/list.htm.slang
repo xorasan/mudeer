@@ -5,22 +5,24 @@
 			.miqyaas [id=miqyaas] @hidden
 		.message @hidden
 			span [id=message]
+//		.prepad [id=prepad] 'prepad'
 		.items [id=items]
+//		.postpad [id=postpad] 'postpad'
 	[template=listitem] .item
 		.flex
 			img [id=image] @hidden
 			.grow .text
 				.title			[id=title] [dir]
-				.title			[id=titlei18n] [dir]
+//				.title			[id=titlei18n] [dir]
 				.title	.hide	[id=titlehide] [dir]
-				.title			[id=titlehtml] [dir]
+//				.title			[id=titlehtml] [dir]
 				.title			[id=titledays] [dir] [by=age]
 				.title			[id=titletime] [dir] [by=time]
 				.title			[id=titlehours] [dir] [by=hourly]
 				.subtitle .hide [id=subtitle] [dir]
 				.body	.hide	[id=body] [dir]
-				.body	.hide	[id=bodyi18n] [dir]
-				.body	.hide	[id=bodyhtml] [dir]
+//				.body	.hide	[id=bodyi18n] [dir]
+//				.body	.hide	[id=bodyhtml] [dir]
 				.body			[id=bodyshowhtml] [dir]
 				.body			[id=bodyshow] [dir]
 				.days			[id=days] [by=age]

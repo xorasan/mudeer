@@ -46,7 +46,7 @@
 .list .item[data-selected], .list .listitem[data-selected]
 	border-color	@textxd
 [data-rakkaz].list .item[data-selected], [data-rakkaz].list .listitem[data-selected]
-	background		linear-gradient(45deg, @secondary -110%, @tertiary 220%)
+	background		linear-gradient(45deg, @primaryl -110%, @secondaryd 220%)
 	border-color	@accent
 [dir=rtl] .list .item[data-selected], [dir=rtl] .list .listitem[data-selected]
 	background		linear-gradient(45deg, @tertiary -200%, @secondary 110%)

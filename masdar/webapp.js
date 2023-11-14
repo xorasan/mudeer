@@ -7,27 +7,28 @@ var webapp, appname = 'APPNAME' || '',
 	checkbox = checkbox || 0,
 	preferences = preferences || 0,
 	translate = translate || 0,
-	rakkazawwal, focusprev, focusnext, navigables,
+	// deprecate rakkazawwal
+	rakkazawwal, focus_first_element, focusprev, focusnext, navigables, is_navigable,
 	LAYERTOPMOST = 3000;
 ;(function(){
 	var doc = document, bod = doc.body, wakelockstatus, isalbixraaj;
 	
 	navigables = ['input', 'textarea', 'button', 'a', 'select'];
-	rakkazawwal = function (e) {
+	is_navigable = function (e) {
+		return navigables.includes(e.tagName.toLowerCase()) || e.contentEditable == 'true';
+	};
+	focus_first_element = rakkazawwal = function (e, scroll) {
 		if (e) {
-			var s = e.querySelector('input')
-				|| e.querySelector('textarea')
-				|| e.querySelector('button')
-				|| e.querySelector('a')
-				|| e.querySelector('select');
+			// TODO 
+			var s = e.querySelector('input, textarea, button, a, select, [contenteditable]');
 			
 			if (s) {
 				s.focus();
-				webapp.scrollto(s);
+				if (scroll) webapp.scrollto(s);
 				return s;
 			}
 		}
-	},
+	};
 	/* FOCUS how this works
 	 * for elements inside other formating elements, set data-focus on each parent
 	 * this hints to this algo to go up a parent
@@ -55,9 +56,9 @@ var webapp, appname = 'APPNAME' || '',
 				out = focusprev(element.lastElementChild, 1, ++num);
 				break;
 			}
-			else if ( navigables.includes( element.tagName.toLowerCase() ) ) {
+			else if ( is_navigable( element ) ) {
 				element.focus();
-				webapp.scrollto(element);
+//				webapp.scrollto(element);
 				out = element;
 				break;
 			}
@@ -75,7 +76,14 @@ var webapp, appname = 'APPNAME' || '',
 			 * */
 //			if (!out) webapp.scrolltotop();
 		}
-		element.onprev && element.onprev(element);
+
+		// BUG when landing on this element using keyup arrowup, this function gets triggered
+		// EXPECTATION this should only get triggered if this element is already focussed ig
+		// NAMING is horrible here, it really should be after_focus_prev or something
+		if (markooz() === element) {
+			element.onprev && element.onprev(element);
+		}
+
 		if (out) {
 			if (orig && orig.listobject) {
 				orig.listobject.deselect();
@@ -107,9 +115,9 @@ var webapp, appname = 'APPNAME' || '',
 				out = focusnext(element.firstElementChild, 1, ++num);
 				break;
 			}
-			else if ( navigables.includes( element.tagName.toLowerCase() ) ) {
+			else if ( is_navigable( element ) ) {
 				element.focus();
-				webapp.scrollto(element);
+//				webapp.scrollto(element);
 				out = element;
 				break;
 			}
@@ -383,7 +391,7 @@ var webapp, appname = 'APPNAME' || '',
 			}
 		},
 		uponresize: function () {
-			$.taxeer('XPO.taHjeem', function () {
+			$.taxeer('XPO.webappresize', function () {
 				if (innerwidth() <= 320) {
 					setdata(bod, 'XPO.aqil', 1);
 				} else {
@@ -409,11 +417,6 @@ var webapp, appname = 'APPNAME' || '',
 				} else {
 					popdata(bod, 'XPO.wastah');
 				}
-				if (innerwidth() >= 1024) {
-					setdata(bod, 'XPO.tvfs', 1);
-				} else {
-					popdata(bod, 'XPO.tvfs');
-				}
 			}, 100);
 
 			if (innerheight() <= 480) document.body.dataset.XPO.keyboardopen = 1;
@@ -421,15 +424,39 @@ var webapp, appname = 'APPNAME' || '',
 		},
 	};
 
+	webapp.itlaa3 = function (text, time) {
+		var element = XPO.itlaa3.firstElementChild;
+		if (text) {
+			if (text instanceof Array) {
+				element.dataset.XPO.i18n = text[0];
+				translate.update(XPO.itlaa3);
+			} else {
+				delete element.dataset.XPO.i18n,
+				element.innerText = text;
+			}
+			XPO.itlaa3.hidden = 0;
+
+			$.taxeer('XPO.itlaa3', function () {
+				webapp.itlaa3();
+			}, time||3000);
+		} else {
+			delete element.dataset.XPO.i18n,
+			element.innerText = '',
+			XPO.itlaa3.hidden = 1;
+		}
+	};
+	webapp.status = webapp.itlaa3;
+	// TODO notify
+
 	// prevent default behavior from changing page on dropped file
 	listener('dragover', function (e) {
-		$.log('dragover');
+		//$.log('dragover');
 		setdata(bod, 'XPO.tahweem', 1);
 		preventdefault(e);
 		return false;
 	});
 	listener('dragleave', function (e) {
-		$.log('dragleave');
+		//$.log('dragleave');
 //		popdata(bod, 'XPO.tahweem');
 		$.taxeer('XPO.dragleave', function () {
 			popdata(bod, 'XPO.tahweem');
@@ -443,7 +470,10 @@ var webapp, appname = 'APPNAME' || '',
 		preventdefault(e);
 		
 		var f = e.dataTransfer.files;
-		if (f && f.length) Hooks.run('XPO.huboot', f);
+		if (f && f.length) {
+			Hooks.run('XPO.huboot', f);
+		}
+		Hooks.run('XPO.dropped', e.dataTransfer);
 
 		return false;
 	});

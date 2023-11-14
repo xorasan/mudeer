@@ -13,7 +13,13 @@
 	background			@primaryt
 if min-width = 640px
 	#pagermowjoodah
-		width				640px
+		max-width				640px
+if min-width = 800px
+	#pagermowjoodah
+		max-width			700px
+if min-width = 1024px
+	#pagermowjoodah
+		max-width			840px
 #pagermowjoodah .pagerzir
 //	border-right		1px solid @tertiary
 	padding				2px 4px
@@ -42,9 +48,21 @@ if min-width = 640px
 	font-family			monospace
 	text-align			center
 	display				block
+	color				@textd
+#pagermowjoodah .pagerzir[selected] label
+	color				@primary
 #pagermowjoodah .pagerzir .icon
 	width				fit-content
 	margin				0 auto
 #pagermowjoodah .pagerzir .icon svg
 	width				36px
 	height				36px
+if min-width = 480px
+	#pagermowjoodah .pagerzir .icon svg
+		width				48px
+if min-width = 640px
+	#pagermowjoodah .pagerzir .icon svg
+		width				64px
+
+
+

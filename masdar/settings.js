@@ -12,10 +12,10 @@ var settings, currentad;
 		}],*/
 		['XPO.reportbug', 0, function () {
 			activity.abrad(myemail+'?subject='+appname+' bug '+BUILDNUMBER);
-		}],
+		}, 'XPO.iconbugreport'],
 		['XPO.requestfeat', 0, function () {
 			activity.abrad(myemail+'?subject='+appname+' request '+BUILDNUMBER);
-		}],
+		}, 'XPO.iconfeaturedplaylist'],
 		['XPO.timeformat', function () {
 			var is24 = preferences.get(24, 1);
 			return [is24 ? 'XPO.hours24' : 'XPO.hours12'];
@@ -23,7 +23,7 @@ var settings, currentad;
 			var is24 = preferences.get(24, 1);
 			if (is24) preferences.set(24, 0);
 			else preferences.set(24, 1);
-		}],
+		}, 'XPO.icontimer'],
 		['XPO.calendar', function () {
 			var isgregorian = preferences.get(26, 1);
 			return [isgregorian ? 'XPO.gregorian' : 'XPO.hijri'];
@@ -31,7 +31,7 @@ var settings, currentad;
 			var isgregorian = preferences.get(26, 1);
 			if (isgregorian) preferences.set(26, 0);
 			else preferences.set(26, 1);
-		}],
+		}, 'XPO.icondaterange'],
 		['XPO.transparency', function () {
 			var isit = preferences.get(23, 1);
 			webapp.transparency();
@@ -40,19 +40,19 @@ var settings, currentad;
 			var isit = preferences.get(23, 1);
 			if (isit) { preferences.set(23, 0); }
 			else { preferences.set(23, 1); }
-		}],
+		}, 'XPO.iconbluron'],
 		['XPO.largetext', function () {
 			var largetext = preferences.get(9, 1);
 			webapp.textsize();
 			return [largetext ? 'XPO.on' : 'XPO.off'];
 		}, function () {
 			preferences.set(9, preferences.get(9, 1) ? 0 : 1);
-		}]
+		}, 'XPO.iconformatsize']
 	], settingslist, myemail = 'hxorasani@gmail.com', keys;
 	
 	settings = {
-		adaaf: function (name, getvalue, onpress) { // add
-			settingsitems.push([name, getvalue, onpress]);
+		adaaf: function (name, getvalue, onpress, icon) { // add
+			settingsitems.push([name, getvalue, onpress, icon]);
 			settings.jaddad(settingsitems.length-1);
 			return settingsitems.length-1;
 		},
@@ -67,12 +67,11 @@ var settings, currentad;
 					uid: uid,
 				};
 				obj.XPO.index = uid;
-				obj.XPO.titlei18n = item[0];
+				obj.XPO.title$t = item[0];
+				obj.XPO.icon = item[3];
 				
-				if (body instanceof Array)
-					obj.XPO.bodyi18n = body[0];
-				else
-					obj.XPO.body = body;
+				if (body instanceof Array) obj.XPO.body$t = body[0];
+				else obj.XPO.body = body;
 					
 				if (settingslist) {
 					settingslist.set(obj);
@@ -87,7 +86,9 @@ var settings, currentad;
 	Hooks.set('XPO.ready', function () {
 		keys = view.mfateeh('XPO.settings');
 
-		settingslist = list( keys.XPO.list ).idprefix('XPO.settings');
+		settingslist = list( keys.XPO.list ).idprefix('XPO.settings')
+						.listitem('XPO.settingsitem')
+						.grid(3);
 		
 		settingslist.beforeset = function (item, id) {
 			return item;
@@ -145,12 +146,25 @@ var settings, currentad;
 	Hooks.set('XPO.viewready', function (args) {
 		switch (args.XPO.name) {
 			case 'XPO.main':
-				softkeys.set('9', function () {
-					Hooks.run('XPO.view', 'XPO.settings');
-				}, '9', 'XPO.iconsettings');
+				softkeys.add({ n: 'Settings',
+					ctrl: 1,
+					alt: 1,
+					k: 'p',
+					i: 'XPO.iconsettings',
+					c: function () {
+						Hooks.run('XPO.view', 'XPO.settings');
+					}
+				});
 				break;
 			case 'XPO.settings':
-				webapp.header( ['XPO.settings'] );
+				
+				if (pager) {
+					pager.intaxab('XPO.settings', 1);
+					webapp.header();
+				} else { // since pager already shows context
+					webapp.header( ['XPO.settings'] );
+				}
+				
 				softkeys.list.basic(settingslist);
 				softkeys.set(K.en, function () {
 					settingslist.press(K.en);
