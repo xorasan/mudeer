@@ -1,11 +1,11 @@
 /*
  * used by glatteis-repl
- * checks and edits tabee3ah.slang step-by-step
+ * checks and edits config.slang step-by-step
  * mods specified are added by default; to remove prefix with -modulename
- * mods passed to install are temp, and don't modify tabee3ah.slang
+ * mods passed to install are temp, and don't modify config.slang
  * 
  * */
-global.$ = require(__dirname+'/nawaat.js');
+global.$ = require(__dirname+'/kernel.js');
 $.path = __dirname; // this is the mudeer root directory
 var Cli, Files, Slang;
 
@@ -29,16 +29,16 @@ var list = function (title, items) {
 	Cli.echo(output);
 };
 var currentfolder = function () { return process.cwd().split('/').pop(); };
-var tabee3ah = function (args) {
+var config = function (args) {
 	if (args.keys.proceed === undefined) {
-		cache.eqonaat	= []; // icons
-		cache.taraajim	= []; // translations i18n
-		cache.ishtamal	= [ // managed ishtamals
+		cache.icons	= []; // icons
+		cache.langs	= []; // translations i18n
+		cache.include	= [ // managed includes
 			'hooks'
 		];
-		cache.xudoo3	= []; // dependence
-		cache.nawaat	= []; // kernel or engine
-		cache.masdar	= [ // library mods or tools
+		cache.deps	= []; // dependence
+		cache.kernel	= []; // kernel or engine
+		cache.src	= [ // library mods or tools
 			'hooks'
 		];
 	}
@@ -51,11 +51,11 @@ var tabee3ah = function (args) {
 	
 	var configslang = '', conf = false;
 	try {
-		configslang = Files.get.file('tabee3ah.slang');
+		configslang = Files.get.file('config.slang');
 	} catch (e) {
 		conf = {
-			nawaat: [],
-			masdar: [],
+			kernel: [],
+			src: [],
 		};
 	}
 	if (conf === false) {
@@ -68,9 +68,9 @@ var tabee3ah = function (args) {
 	/*
 	 * in the cur dir? yes
 	 * proj name, same
-	 * server+pwa needed?	yes	-> ishtamal pwa, server
-	 * database needed?		yes	-> ishtamal mysql, data
-	 * these are the mods that'll be pre-ishtamal'd
+	 * server+pwa needed?	yes	-> include pwa, server
+	 * database needed?		yes	-> include mysql, data
+	 * these are the mods that'll be pre-include'd
 	 * okay? yes, exit if no
 	 * do you need any more mods? yes, no skip
 	 * eng mods? ...
@@ -82,10 +82,10 @@ var tabee3ah = function (args) {
 	 * args.keys are fresh values
 	 * conf.* are old values
 	 * */
-	if ( ['x', '1'].includes(args.keys.sinf) ) args.keys.sinf = 'xaadim';
-	if ( ['z', '2'].includes(args.keys.sinf) ) args.keys.sinf = 'zaboon';
-	if ( !['xaadim', 'zaboon'].includes(args.keys.sinf) ) {
-		args.keys.sinf = undefined;
+	if ( ['s', '1'].includes(args.keys.kind) ) args.keys.kind = 'server';
+	if ( ['c', '2'].includes(args.keys.kind) ) args.keys.kind = 'client';
+	if ( !['server', 'client'].includes(args.keys.kind) ) {
+		args.keys.kind = undefined;
 	}
 
 	if ( typeof args.keys.proceed !== 'boolean' ) {
@@ -96,25 +96,25 @@ var tabee3ah = function (args) {
 		Cli.echo('\nif you want to install in the current directory, leave this as is.' );
 		Cli.question('^bright^name~~ of your project: ', args, 'name', currentfolder() );
 	} else
-	if ( !args.keys.sinf ) {
-		Cli.question('\nsinf: ^bright^1 x~~aadim or ^bright^2 z~~aboon? ', args,
-					'sinf', conf.sinf || 'zaboon');
+	if ( !args.keys.kind ) {
+		Cli.question('\nkind: ^bright^1 s~~erver or ^bright^2 c~~lient? ', args,
+					'kind', conf.kind || 'client');
 	} else
-	if ( args.keys.sinf == 'xaadim' && typeof args.keys.port !== 'number' ) {
-		Cli.question('\nxaadim will listen on port? ', args, 'port', conf.port, 'number');
+	if ( args.keys.kind == 'server' && typeof args.keys.port !== 'number' ) {
+		Cli.question('\nserver will listen on port? ', args, 'port', conf.port, 'number');
 	} else
-	if ( args.keys.mutassil === undefined ) {
-		if (args.keys.sinf == 'xaadim')
+	if ( args.keys.connected === undefined ) {
+		if (args.keys.kind == 'server')
 			Cli.echo('\nthis will add ^bright^server.web, polling~~ awzaar');
-		if (args.keys.sinf == 'zaboon')
+		if (args.keys.kind == 'client')
 			Cli.echo('\nthis will add ^bright^network~~ awzaar');
-		Cli.question('is mutassil? ', args, 'mutassil', !!conf.mutassil);
+		Cli.question('is connected? ', args, 'connected', !!conf.connected);
 	} else
-	if ( args.keys.sinf == 'zaboon' && args.keys.lamsah === undefined ) {
+	if ( args.keys.kind == 'client' && args.keys.touch === undefined ) {
 		Cli.echo('\nthis will add ^bright^webapp.touch, softkeys.touch~~ awzaar');
-		Cli.question('is lamsah capable? ', args, 'lamsah', !!conf.lamsah);
+		Cli.question('is touch capable? ', args, 'touch', !!conf.touch);
 	} else
-	if ( args.keys.sinf == 'xaadim' && args.keys.isdb === undefined ) {
+	if ( args.keys.kind == 'server' && args.keys.isdb === undefined ) {
 		Cli.question('\nneeds a database? ', args, 'isdb', !!conf.database, 'bool');
 	} else
 	if ( args.keys.username === undefined && args.keys.isdb === true ) {
@@ -126,75 +126,75 @@ var tabee3ah = function (args) {
 		Cli.question('database password: ', args, 'password', password);
 	} else
 	{
-		if (args.keys.sinf === 'zaboon') {
-			cache.masdar.push(
+		if (args.keys.kind === 'client') {
+			cache.src.push(
 				'reset', 'menu', 'profiles', 'webapp', 'softkeys', 'themes', 'sheet',
 				'preferences', 'translate', 'time', 'dialog', 'backstack', 'list',
-				'templates', 'headings', 'helpers', 'offline', 'shabakah', 'head',
+				'templates', 'headings', 'helpers', 'offline', 'network', 'head',
 				'settings', 'activity', 'view'
 			);
-			cache.ishtamal.push(
-				'reset', 'reset.zaboon', 'webapp', 'webapp.3inch', 'list', 'backstack',
+			cache.include.push(
+				'reset', 'reset.client', 'webapp', 'webapp.3inch', 'list', 'backstack',
 				'preferences', 'activity', 'view', 'time', 'settings', 'translate',
 				'templates', 'softkeys', 'softkeys.list', 'sheet', 'themes', 'dialog'
 			);
-			cache.taraajim.push(
+			cache.langs.push(
 				'en'
 			);
-			cache.eqonaat.push(
+			cache.icons.push(
 				'search', 'settings', 'theme', 'help', 'done', 'close', 'arrowback'
 			);
-			cache.nawaat.push('frontend');
+			cache.kernel.push('frontend');
 			
-			if (args.keys.lamsah) {
-				cache.eqonaat.push('morevert');
-				cache.ishtamal.push('webapp.touch', 'softkeys.touch');
+			if (args.keys.touch) {
+				cache.icons.push('morevert');
+				cache.include.push('webapp.touch', 'softkeys.touch');
 			}
 
-			if (args.keys.mutassil) {
-				cache.masdar.push('shabakah');
-				cache.ishtamal.push('shabakah');
+			if (args.keys.connected) {
+				cache.src.push('network');
+				cache.include.push('network');
 			}
 		}
-		if (args.keys.sinf === 'xaadim') {
-			cache.masdar.push('server', 'files');
-			cache.nawaat.push('frontend-srv');
-			cache.ishtamal.push('server', 'files');
+		if (args.keys.kind === 'server') {
+			cache.src.push('server', 'files');
+			cache.kernel.push('frontend-srv');
+			cache.include.push('server', 'files');
 
-			if (args.keys.mutassil) {
-				cache.masdar.push('polling', 'shabakah');
-				cache.ishtamal.push('server.web', 'polling', 'shabakah.xaadim');
+			if (args.keys.connected) {
+				cache.src.push('polling', 'network');
+				cache.include.push('server.web', 'polling', 'network.server');
 			}
 			
 			// TODO make this optional
-			cache.xudoo3.push('express', 'express-fileupload', 'body-parser');
+			cache.deps.push('express', 'express-fileupload', 'body-parser');
 		}
 		if (args.keys.isdb === true) {
-			cache.masdar.push('wuqu3aat');
-			cache.ishtamal.push('wuqu3aat', 'wuqu3aat.asaas');
+			cache.src.push('wuqu3aat');
+			cache.include.push('wuqu3aat', 'wuqu3aat.asaas');
 			// dependence on kaafir modules
-			cache.xudoo3.push('mysql');
+			cache.deps.push('mysql');
 		}
 		
 		// merge with previous values & remove duplicates
-		cache.nawaat	= $.array( cache.nawaat  .concat( conf.nawaat  || [] ) ).unique();
-		cache.masdar	= $.array( cache.masdar  .concat( conf.masdar  || [] ) ).unique();
-		cache.ishtamal	= $.array( cache.ishtamal.concat( conf.ishtamal|| [] ) ).unique();
-		cache.taraajim	= $.array( cache.taraajim.concat( conf.taraajim|| [] ) ).unique();
-		cache.eqonaat	= $.array( cache.eqonaat .concat( conf.eqonaat || [] ) ).unique();
-		cache.xudoo3	= $.array( cache.xudoo3  .concat( conf.xudoo3  || [] ) ).unique();
+		cache.kernel	= $.array( cache.kernel .concat( conf.kernel  || [] ) ).unique();
+		cache.src		= $.array( cache.src    .concat( conf.src     || [] ) ).unique();
+		cache.include	= $.array( cache.include.concat( conf.include || [] ) ).unique();
+		cache.langs		= $.array( cache.langs  .concat( conf.langs   || [] ) ).unique();
+		cache.icons		= $.array( cache.icons  .concat( conf.icons   || [] ) ).unique();
+		cache.deps		= $.array( cache.deps   .concat( conf.deps    || [] ) ).unique();
 		
 		// show a legend of changes to be made
 		// ? overwrite
-		conf.name			= args.keys.name	;
-		conf.mutassil		= args.keys.mutassil;
-		conf.eqonaat		= cache.eqonaat		;
-		conf.taraajim		= cache.taraajim	;
-		conf.ishtamal		= cache.ishtamal	;
-		conf.nawaat			= cache.nawaat		;
-		conf.xudoo3			= cache.xudoo3		;
-		conf.masdar			= cache.masdar		;
-		conf.sinf			= args.keys.sinf	;
+		conf.name			= args.keys.name		;
+		conf.connected		= args.keys.connected	;
+		conf.icons			= cache.icons			;
+		conf.langs			= cache.langs			;
+		conf.include		= cache.include			;
+		conf.kernel			= cache.kernel			;
+		conf.deps			= cache.deps			;
+		conf.src			= cache.src				;
+		conf.kind			= args.keys.kind		;
 		if (args.keys.port > -1 && args.keys.port < 65536) {
 			conf.port		= args.keys.port;
 		}
@@ -208,7 +208,7 @@ var tabee3ah = function (args) {
 		}
 		
 		var confdata = Slang.toslang( conf );
-		Files.set.file('tabee3ah.slang', confdata);
+		Files.set.file('config.slang', confdata);
 		
 		Cli.echo( '\n^bright^saved:~~\n' );
 		$.log( confdata );
@@ -221,8 +221,8 @@ $.preload( [ 'files', 'hooks', 'cli' ], function() {
 	Files		= $('files')			,
 	Uglify		= require('./uglify-js'),
 	Slang		= $.use('slang')		;
-	Hooks.set(Cli.events.answer, function (options) { tabee3ah(options); });
-	Hooks.set(Cli.events.init, function (options) { tabee3ah(options); });
-	Hooks.set(Cli.events.command, function (options) { tabee3ah(options); });
+	Hooks.set(Cli.events.answer, function (options) { config(options); });
+	Hooks.set(Cli.events.init, function (options) { config(options); });
+	Hooks.set(Cli.events.command, function (options) { config(options); });
 	Cli.init();
 });

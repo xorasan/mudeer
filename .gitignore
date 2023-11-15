@@ -1,3 +1,10 @@
+# codelite
+.codelite
+*.workspace
+
+# dolphin
+.directory
+
 # Logs
 logs
 *.log

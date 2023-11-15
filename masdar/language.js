@@ -1,5 +1,0 @@
-var language;
-;(function(){
-	language = {
-	};
-})();

@@ -1,15 +1,15 @@
 /*
- * imports dynamically generated nawaat based on tabee3ah.slang
- * links masdar files
+ * imports dynamically generated kernel based on config.slang
+ * links src files
  * creates directory structure
  * ...
  * auto convert names to english -_- :(
  * */
-global.$ = require(__dirname+'/nawaat.js');
+global.$ = require(__dirname+'/kernel.js');
 $.path = __dirname; // this is the mudeer root directory
 var Cli, Files, Slang,
 	dummyargs = { one: [], two: [], raw: [], keys: {}, };
-var nawaatpreset = [
+var kernelpreset = [
 	'shims', 'log', 'taxeer', 'regexp', 'mod-concat', 'modules', 'array', 'queue', 'fetch'
 ];
 var _templates = {
@@ -30,18 +30,18 @@ var _templates = {
 		txt		+=	'\n+include style.css.slang'
 				+	'\n+js';
 
-		txt +=	'\n+include nawaat.js';
+		txt +=	'\n+include kernel.js';
 
 		txt		+=	'\n+include script.js.slang'
 				+	'\n+svg'
-				+	'\n+include eqonaat.svg'
+				+	'\n+include icons.svg'
 				+	'\n';
 		return txt;
 	},
 	manifest: {
 		name: '',
 		short_name: '',
-		eqonaat: [{
+		icons: [{
 			src: 'icon.png',
 			sizes: 'any',
 		}],
@@ -98,11 +98,11 @@ var _templates = {
 	},
 	script:	function (conf) {
 		var txt = '\'use strict\';';
-		if (conf.sinf == 'xaadim')
+		if (conf.sinf == 'server')
 			txt += '\n$.path = __dirname;';
 
-		if (conf.taraajim)
-			txt += '\n+include taraajim.js';
+		if (conf.langs)
+			txt += '\n+include langs.js';
 
 		txt += '\n+include managed.js.slang';
 		
@@ -117,15 +117,15 @@ var _templates = {
 	},
 };
 var currentfolder = function () { return process.cwd().split('/').pop(); };
-var importmasdar = function (conf, pathprefix) {
+var importsrc = function (conf, pathprefix) {
 	// create new symlinks
-	pathprefix = pathprefix+'masdar/';
+	pathprefix = pathprefix+'src/';
 
-	if (conf.masdar instanceof Array) {
+	if (conf.src instanceof Array) {
 		Files.set.folder(pathprefix);
 		Files.set.folder(pathprefix+'linked');
 		/* EXPLAINING ABOVE
-		 * masdar/linked can be shared between server & frontend mod because
+		 * src/linked can be shared between server & frontend mod because
 		 * server mods are always named ge-(name).js
 		 * frontend mods are always named (name)[.feature].js
 		 * */
@@ -134,72 +134,72 @@ var importmasdar = function (conf, pathprefix) {
 		var mods = Files.get.folder(pathprefix+'linked');
 		for (var i in mods) Files.pop.file(pathprefix+'linked/'+mods[i]);
 
-		var masdarroot = $.path+'/masdar/';
-		mods = Files.get.folder(masdarroot);
-		for (var i in conf.masdar) {
-			var modname = conf.masdar[i];
+		var srcroot = $.path+'/src/';
+		mods = Files.get.folder(srcroot);
+		for (var i in conf.src) {
+			var modname = conf.src[i];
 
 			for (var j in mods) {
 				var mod = mods[j]; // full name
 				var devname = mod.split('.')[0];
 				if (devname === modname) { // if the first part match
-					Files.set.symlink(masdarroot+mod, pathprefix+'linked/'+mod);
+					Files.set.symlink(srcroot+mod, pathprefix+'linked/'+mod);
 				}
 			}
 		}
 	}
 };
-var importtaraajim = function (conf) {
+var importlangs = function (conf) {
 	// create new symlinks
-	var pathprefix = 'taraajim/';
+	var pathprefix = 'langs/';
 
-	if (conf.taraajim instanceof Array && conf.masdar instanceof Array) {
+	if (conf.langs instanceof Array && conf.src instanceof Array) {
 		Files.set.folder(pathprefix);
 		Files.set.folder(pathprefix+'linked');
 		
-		var taraajimroot = $.path+'/taraajim/';
-		var taraajimfiles = Files.get.folder(taraajimroot);
+		var langsroot = $.path+'/langs/';
+		var langsfiles = Files.get.folder(langsroot);
 		var oldones = Files.get.folder(pathprefix+'linked');
 		oldones.forEach(function (name) {
 			Files.pop.file(pathprefix+'linked/'+name);
 		});
 		
-		var mods = conf.masdar;
-		for (var i in conf.taraajim) {
-			var language = conf.taraajim[i];
+		var mods = conf.src;
+		for (var i in conf.langs) {
+			var language = conf.langs[i];
 
 			for (var j in mods) {
 				var mod = mods[j]; // full name
 				var newname = language+'.'+mod+'.slang';
 
-				if ( conf.masdar.indexOf(mod) > -1
-				&& taraajimfiles.indexOf(newname) > -1 ) {
-					Files.set.symlink(taraajimroot+newname, pathprefix+'linked/'+newname);
+				if ( conf.src.indexOf(mod) > -1
+				&& langsfiles.indexOf(newname) > -1 ) {
+					Files.set.symlink(langsroot+newname, pathprefix+'linked/'+newname);
 				}
 			}
 		}
 	}
 };
-var importeqonaat = function (conf) {
+var importicons = function (conf) {
 	// create new symlinks
-	var pathprefix = 'eqonaat/';
+	var pathprefix = 'icons/';
 
-	if (conf.eqonaat instanceof Array) {
+	if (conf.icons instanceof Array) {
 		Files.set.folder(pathprefix);
 		
-		eqonaatroot = $.path+'/eqonaat/';
+		iconsroot = $.path+'/icons/';
 		var oldones = Files.get.folder(pathprefix);
 		oldones.forEach(function (name) {
 			Files.pop.file(pathprefix+name);
 		});
 		
-		for (var i in conf.eqonaat) {
-			var mod = conf.eqonaat[i]+'.svg';
-			Files.set.symlink(eqonaatroot+mod, pathprefix+mod);
+		for (var i in conf.icons) {
+			var mod = conf.icons[i]+'.svg';
+			Files.set.symlink(iconsroot+mod, pathprefix+mod);
 		}
 	}
 };
-var importnawaat = function (mods, to) {
+var importkernel = function (mods, to) {
 	mods = mods || [];
 	var concat	= '';
 	if (mods.length > 0) {
@@ -223,7 +223,7 @@ var importnawaat = function (mods, to) {
 		mods = $.array(mods).order(preset);
 		for (var i in mods) {
 			var mod = mods[i];
-			var path = $.path+'/nawaat-masdar/' + mod + '.js';
+			var path = $.path+'/kernel/' + mod + '.js';
 			concat +=	'\n//' + mod + '\n'
 //					+	'//### ' + path + '\n'
 					+	Files.get.file( path ) + '\n';
@@ -235,35 +235,35 @@ var importnawaat = function (mods, to) {
 	}
 	return concat;
 };
-var importxudoo3 = function (conf, pathprefix) {
+var importdeps = function (conf, pathprefix) {
 	// create new symlinks
-	if (conf.xudoo3 instanceof Array) {
-		var nmodulesroot = $.path+'/xudoo3/';
+	if (conf.deps instanceof Array) {
+		var nmodulesroot = $.path+'/deps/';
 		
-		Files.set.folder(pathprefix+'xudoo3');
+		Files.set.folder(pathprefix+'deps');
 		
 		// empty the directory
-		var nodemods = Files.get.folder(pathprefix+'xudoo3');
+		var nodemods = Files.get.folder(pathprefix+'deps');
 		for (var i in nodemods) {
-			Files.pop.file(pathprefix+'xudoo3/'+nodemods[i]);
+			Files.pop.file(pathprefix+'deps/'+nodemods[i]);
 		}
 
-		Files.set.folder(pathprefix+'xudoo3');
+		Files.set.folder(pathprefix+'deps');
 		
-		for (var i in conf.xudoo3) {
-			var modname = conf.xudoo3[i];
+		for (var i in conf.deps) {
+			var modname = conf.deps[i];
 			
-			Files.set.symlink(nmodulesroot+modname, pathprefix+'xudoo3/'+modname);
+			Files.set.symlink(nmodulesroot+modname, pathprefix+'deps/'+modname);
 		}
 	}
 };
-var nasab = function () {
+var do_install = function () {
 	var args = Object.assign( dummyargs, args ), configslang = false;
 	try {
-		configslang = Files.get.file('tabee3ah.slang');
+		configslang = Files.get.file('config.slang');
 	} catch (e) {
 		Cli.echo(' '+process.cwd()+' ');
-		Cli.echo(' tabee3ah.slang not found, try ^bright^mudeer-nature~~ ');
+		Cli.echo(' config.slang not found, try ^bright^mudeer-create~~ ');
 		return;
 	}
 	if (configslang === false) return;
@@ -271,7 +271,7 @@ var nasab = function () {
 	var pathprefix = './', conf = configslang.toString();
 	
 	if (conf.length === 0) {
-		Cli.echo(' tabee3ah.slang is empty, install aborted! ');
+		Cli.echo(' config.slang is empty, install aborted! ');
 		return;
 	}
 	
@@ -294,58 +294,58 @@ var nasab = function () {
 	}
 	
 	try {
-		Files.set.folder(pathprefix+'insha');		// build
-		Files.set.folder(pathprefix+'manaashir');	// releases
-		Files.set.folder(pathprefix+'masdar');		// source
-		Files.set.folder(pathprefix+'fitan');		// tests
+		Files.set.folder(pathprefix+'build');		// build
+		Files.set.folder(pathprefix+'releases');	// releases
+		Files.set.folder(pathprefix+'src');		// source
+		Files.set.folder(pathprefix+'tests');		// tests
 	} catch (e) {
 		
 	}
 
 	var root = Files.get.folder(pathprefix) || [];
 
-	if (conf.sinf == 'zaboon') {
-		Files.set.folder(pathprefix+'eqonaat');
-		Files.set.folder(pathprefix+'taraajim');
-		Files.set.folder(pathprefix+'taraajim/linked');
+	if (conf.sinf == 'client') {
+		Files.set.folder(pathprefix+'icons');
+		Files.set.folder(pathprefix+'langs');
+		Files.set.folder(pathprefix+'langs/linked');
 	}
 
 	if (conf.sinf) {
-		var nawaatmods = $.array( conf.nawaat.concat( nawaatpreset ) ).unique();
+		var kernelmods = $.array( conf.kernel.concat( kernelpreset ) ).unique();
 		// TODO -[name] should remove that mod from this array
-		importnawaat(nawaatmods, pathprefix+'masdar/nawaat.js');
+		importkernel(kernelmods, pathprefix+'src/kernel.js');
 		
-		var masdar = Files.get.folder(pathprefix+'masdar') || [];
-		if ( !masdar.includes('script.js.slang') )
-			Files.set.file( pathprefix+'masdar/script.js.slang', _templates.script(conf) );
+		var src = Files.get.folder(pathprefix+'src') || [];
+		if ( !src.includes('script.js.slang') )
+			Files.set.file( pathprefix+'src/script.js.slang', _templates.script(conf) );
 
-		Files.set.file( pathprefix+'masdar/index.htm.slang', _templates.index(conf) );
+		Files.set.file( pathprefix+'src/index.htm.slang', _templates.index(conf) );
 
-		if (conf.sinf == 'zaboon') {
-//			if ( !masdar.includes('head.htm.slang') )
-//				Files.set.file( pathprefix+'masdar/head.htm.slang', _templates.head(conf) );
+		if (conf.sinf == 'client') {
+//			if ( !src.includes('head.htm.slang') )
+//				Files.set.file( pathprefix+'src/head.htm.slang', _templates.head(conf) );
 
-			if ( !masdar.includes('style.css.slang') )
-				Files.set.file( pathprefix+'masdar/style.css.slang', _templates.style(conf) );
+			if ( !src.includes('style.css.slang') )
+				Files.set.file( pathprefix+'src/style.css.slang', _templates.style(conf) );
 			
-			if ( !masdar.includes('main.htm.slang') )
-				Files.set.file( pathprefix+'masdar/main.htm.slang', _templates.main(conf) );
+			if ( !src.includes('main.htm.slang') )
+				Files.set.file( pathprefix+'src/main.htm.slang', _templates.main(conf) );
 		}
-		if ( !masdar.includes('main.js') )
-			Files.set.file( pathprefix+'masdar/main.js', _templates.mainjs(conf) );
+		if ( !src.includes('main.js') )
+			Files.set.file( pathprefix+'src/main.js', _templates.mainjs(conf) );
 	}
-	/* masdar/linked */
-	conf.masdar		&& importmasdar(conf, pathprefix);
+	/* src/linked */
+	conf.src		&& importsrc(conf, pathprefix);
 
-	if (conf.sinf == 'xaadim') {
-		conf.xudoo3		&& importxudoo3(conf, pathprefix+'manaashir/');
+	if (conf.sinf == 'server') {
+		conf.deps		&& importdeps(conf, pathprefix+'releases/');
 	}
 
-	if (conf.sinf == 'zaboon') {
-		/* taraajim/linked */
-		conf.taraajim	&& importtaraajim(conf);
-		/* eqonaat */
-		conf.eqonaat	&& importeqonaat(conf);
+	if (conf.sinf == 'client') {
+		/* langs/linked */
+		conf.langs	&& importlangs(conf);
+		/* icons */
+		conf.icons	&& importicons(conf);
 	}
 	
 	Cli.echo(' done');
@@ -355,8 +355,8 @@ $.preload( [ 'files', 'hooks', 'cli' ], function() {
 	Hooks		= $('hooks')			,
 	Files		= $('files')			,
 	Slang		= $.use('slang')		;
-	Hooks.set(Cli.events.answer, function (options) { nasab(options); });
-	Hooks.set(Cli.events.init, function (options) { nasab(options); });
-	Hooks.set(Cli.events.command, function (options) { nasab(options); });
+	Hooks.set(Cli.events.answer, function (options) { do_install(options); });
+	Hooks.set(Cli.events.init, function (options) { do_install(options); });
+	Hooks.set(Cli.events.command, function (options) { do_install(options); });
 	Cli.init();
 } );

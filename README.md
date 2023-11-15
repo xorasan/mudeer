@@ -41,12 +41,12 @@ Projects built on mudeer are encouraged to follow these guidelines
 
 ## Usage
 
-### shabakah (web / network)
+### shabakah ( Web / Network )
 requests are queued across two channels and sent one by one.  
 it also tries to bundle multiple requests into an array to avoid sending more requests.
-#### xaadim
+#### xaadim ( Server )
 
-#### zaboon
+#### zaboon ( Client / Browser )
 
 
 ## full documentation

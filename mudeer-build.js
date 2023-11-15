@@ -1,5 +1,5 @@
 /*
- * mudeer-ansha (build+release a mashroo3)
+ * mudeer-build (build+release a mashroo3)
  * 
  * you can optionally specify a path where it'll put the released file
  * 
@@ -8,7 +8,7 @@
  * */
 
 'use strict';
-global.$ = require(__dirname+'/nawaat.js');
+global.$ = require(__dirname+'/kernel.js');
 $.path = __dirname;
 var Hooks, Cli, Files, Uglify, Slang, path = require('path');
 
@@ -23,8 +23,8 @@ var version = function (v) {
 };
 var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 	var origin = 'app://';
-	var jazar = '';
-	if (conf.jazar) jazar += conf.jazar;
+	var root = '';
+	if (conf.root) root += conf.root;
 
 	if (conf.origin) origin += conf.origin;
 	else origin += (conf.appname||conf.name)+'.xorasan';
@@ -40,7 +40,7 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 		background_color: conf.bg || undefined,
 		type: conf.type,
 		role: conf.role,
-		launch_path: jazar+"/index.html",
+		launch_path: root+"/index.html",
 		developer: {
 			name: "Hasan Xorasani",
 			url: "mailto:hxorasani@gmail.com",
@@ -57,10 +57,10 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 	};
 
 	manifest.icons = [{
-		src: jazar+"/0.png",
+		src: root+"/0.png",
 		sizes: "56x56"
 	}, {
-		src: jazar+"/1.png",
+		src: root+"/1.png",
 		sizes: "112x112"
 	}];
 	
@@ -68,8 +68,8 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 
 	manifest.origin = origin;
 	manifest.icons = {
-		"56": jazar+"/0.png",
-		"112": jazar+"/1.png",
+		"56": root+"/0.png",
+		"112": root+"/1.png",
 	};
 	manifest.chrome = {
 		statusbar: 'overlap'
@@ -140,11 +140,11 @@ var indextranslation = function (path, filename, languages, translations) {
 	}
 };
 var updatetranslations = function (conf, path) {
-	var translations = {}, languages = conf.taraajim || [];
+	var translations = {}, languages = conf.langs || [];
 	
-	if (path) path += '/taraajim/';
+	if (path) path += '/langs/';
 
-	path = path||'taraajim/';
+	path = path||'langs/';
 	
 	var result = Files.get.folder(path);
 	result.forEach(function (filename) {
@@ -155,7 +155,7 @@ var updatetranslations = function (conf, path) {
 		result = Files.get.folder(path+'linked');
 	} catch (e) {
 		if ( e.code === 'ENOENT' ) {
-			Cli.echo( '\n ~red~ ! ~~ taraajim/linked not found ~blue~ i ~~ try ^bright^glatteis install~~ \n' );
+			Cli.echo( '\n ~red~ ! ~~ langs/linked not found ~blue~ i ~~ try ^bright^glatteis install~~ \n' );
 			process.exit(0);
 		}
 	}
@@ -167,7 +167,7 @@ var updatetranslations = function (conf, path) {
 };
 var managedincludes = function (conf, args) {
 	// manage auto +include for css|js|htm dev-imports
-	var pathprefix = 'masdar/';
+	var pathprefix = 'src/';
 
 	var includesjs = '', includescss = '', includeshtm = '';
 	if (conf.ishtamal instanceof Array) {
@@ -193,9 +193,9 @@ var managedincludes = function (conf, args) {
 		Files.set.file( pathprefix+'managed.js.slang', includesjs );
 	}
 };
-var eqonaat = function (options, folder) {
-	var beautify = require($.path+'/js-beautify').html;
-	var cheerio = require($.path+'/cheerio');
+var compile_icons = function (options, folder) {
+	var beautify = require($.path+'/deps/js-beautify').html;
+	var cheerio = require($.path+'/deps/cheerio');
 	// Merge task-specific and/or target-specific options with these defaults
 	var options = {
 		prefix: 'i-',
@@ -216,11 +216,11 @@ var eqonaat = function (options, folder) {
 	var	$resultDocument = cheerio.load('<svg><defs></defs></svg>', { xmlMode: true }),
 		$resultSvg = $resultDocument('svg'),
 		$resultDefs = $resultDocument('defs').first(),
-		iconNameViewBoxArray = [];  // Used to store information of all eqonaat that are added
+		iconNameViewBoxArray = [];  // Used to store information of all icons that are added
 								  // { name : '' }
 
 	// incase i need to hide this svg defs thing????
-	$resultSvg.attr('id', 'XPO.eqonaat');
+	$resultSvg.attr('id', 'XPO.icons');
 
 	// Merge in SVG attributes from option
 	for (var attr in options.svg) {
@@ -237,13 +237,13 @@ var eqonaat = function (options, folder) {
 
 	var urlPattern = /url\(\s*#([^ ]+?)\s*\)/g;
 	
-	var svgs = Files.get.folder('eqonaat/');
+	var svgs = Files.get.folder('icons/');
 	svgs.forEach(function (svg, i, arr) {
 		
 		var filename = arr[i].substr(0, arr[i].length-4);
 		var id = (filename || '').replace(' ', '-');
 		
-		svg = Files.get.file('eqonaat/'+svg);
+		svg = Files.get.file('icons/'+svg);
 //				$.log.s( svg.length );
 		
 		svg = cheerio.load(svg, {
@@ -494,10 +494,10 @@ var eqonaat = function (options, folder) {
 	var result = options.formatting ? beautify($resultDocument.html(), options.formatting) : $resultDocument.html();
 	
 //			$.log.s( result.length );
-	Files.set.file( (folder||'masdar')+'/eqonaat.svg', result);
+	Files.set.file( (folder||'src')+'/icons.svg', result);
 
 };
-var ansha = function (args, xpo) {
+var do_build = function (args, xpo) {
 	var configslang = false;
 	try {
 		configslang = Files.get.file('tabee3ah.slang');
@@ -560,8 +560,8 @@ var ansha = function (args, xpo) {
 	managedincludes(conf, args);
 
 	if (conf.sinf == 'zaboon') {
-		// compress svg eqonaat into dev-public/eqonaat.svg
-		eqonaat(0);
+		// compress svg icons into dev-public/icons.svg
+		compile_icons(0);
 
 		var translations = updatetranslations(conf);
 
@@ -571,7 +571,7 @@ var ansha = function (args, xpo) {
 		 * global vars
 		 * */
 		translations = 'var taraajim = '+JSON.stringify(translations)+';';
-		Files.set.file( 'masdar/taraajim.js', ( translations || '' ) );
+		Files.set.file( 'src/langs.js', ( translations || '' ) );
 	}
 
 	var options = {
@@ -580,8 +580,8 @@ var ansha = function (args, xpo) {
 		buildnumber:	BUILDNUMBER || 0				,
 		compress:		args.keys.c || args.keys.compress || false		,
 		linkify:		true,
-		xaadim:			conf.sinf == 'xaadim' || false,
-		zaboon:			conf.sinf == 'zaboon' || false,
+		server:			conf.sinf == 'server' || false,
+		zaboon:			conf.sinf == 'client' || false,
 		uglify:			args.keys.uglify || false		,
 //		nouglyjs:		args.keys.nouglyjs || false		,
 		minify:			args.keys.m || args.keys.minify || false		,
@@ -594,9 +594,9 @@ var ansha = function (args, xpo) {
 	};
 
 	options.admin = true;
-	var sourcefile = 'masdar/index.htm.slang';
+	var sourcefile = 'src/index.htm.slang';
 	// TODO make this a possibility in slang
-//	if (conf.sinf == 'xaadim') sourcefile = 'masdar/script.js.slang';
+//	if (conf.sinf == 'server') sourcefile = 'src/script.js.slang';
 
 	var parsedoutput = Slang.multi( sourcefile, options );
 
@@ -604,7 +604,7 @@ var ansha = function (args, xpo) {
 
 	if (args.keys.buildnum == undefined) ++BUILDNUMBER;
 
-	if (conf.sinf == 'xaadim') {
+	if (conf.sinf == 'server') {
 		var str2save = ( parsedoutput.rawjs || '' );
 		if (conf.database)
 		str2save = str2save .replace(/WUQU3AATUSERNAME/g, '"'+conf.database.username+'"')
@@ -620,9 +620,9 @@ var ansha = function (args, xpo) {
 		Files.set.file( xpath+'index.js', str2save );
 		printsize('index.js', str2save.length );
 //		Files.set.file( xpath+'xpo.slang', Slang.toslang(parsedoutput.map) );
-	} else if (conf.sinf == 'zaboon') {
+	} else if (conf.sinf == 'client') {
 		parsedoutput.parsed = parsedoutput.parsed
-						.replace(/JAZAR/g, conf.jazar||'');
+						.replace(/JAZAR/g, conf.root||'');
 		
 		Files.set.file( xpath+'index.html', ( parsedoutput.parsed || '' ) );
 		printsize('index.html', (parsedoutput.parsed||'').length );
@@ -630,7 +630,7 @@ var ansha = function (args, xpo) {
 		printsize('a.js', (parsedoutput.rawjs||'').length );
 		var swjs;
 		try {
-			swjs = Files.get.file('masdar/sw.js');
+			swjs = Files.get.file('src/sw.js');
 		} catch (e) {}
 		if (swjs) {
 			swjs = swjs.toString();
@@ -646,7 +646,7 @@ var ansha = function (args, xpo) {
 
 	}
 
-	if (conf.sinf == 'zaboon') makemanifest(args, conf, BUILDNUMBER, xpath);
+	if (conf.sinf == 'client') makemanifest(args, conf, BUILDNUMBER, xpath);
 
 	if (args.keys.buildnum == undefined)
 		Files.set.file( ipath+'number.slang', ''+( BUILDNUMBER || '' ) );
@@ -659,13 +659,13 @@ $.preload( [ 'files', 'hooks', 'cli' ], function() {
 	Cli			= $('cli')				,
 	Hooks		= $('hooks')			,
 	Files		= $('files')			,
-	Uglify		= require('./uglify-js'),
+	Uglify		= require('./deps/uglify-js'),
 	Slang		= $.use('slang')		;
 	if (require.main === module) { // called directly
-		Hooks.set(Cli.events.answer, function (options) { ansha(options); });
-		Hooks.set(Cli.events.init, function (options) { ansha(options); });
-		Hooks.set(Cli.events.command, function (options) { ansha(options); });
+		Hooks.set(Cli.events.answer, function (options) { do_build(options); });
+		Hooks.set(Cli.events.init, function (options) { do_build(options); });
+		Hooks.set(Cli.events.command, function (options) { do_build(options); });
 		Cli.init();
 	}
 });
-module.exports = ansha;
+module.exports = do_build;

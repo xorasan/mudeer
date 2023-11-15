@@ -5,8 +5,8 @@
 ;(function(){
 	'use strict';
 
-	var Cli		= require('./masdar/cli.js'),
-		Files	= require('./masdar/files.js');
+	var Cli		= require('./src/cli.js'),
+		Files	= require('./src/files.js');
 
 	var mods = [
 		'shims', 
@@ -23,10 +23,10 @@
 		'require'
 	];
 	var concat = '';
-	var dest = 'nawaat.js';
+	var dest = 'kernel.js';
 	for (var i in mods) {
 		var mod = mods[i];
-		var path = 'nawaat-masdar/' + mod + '.js';
+		var path = 'kernel/' + mod + '.js';
 		concat +=	'\n//' + mod + '\n'
 				+	Files.get.file( path ) + '\n';
 	}
