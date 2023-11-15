@@ -39,7 +39,7 @@ $.preload = function (mods, fn) { // loads mods then calls the fn
 			} else {
 				
 				// require from a default path
-				$.require($.path + '/masdar/' + name + '.js', function(mod) {
+				$.require($.path + '/src/' + name + '.js', function(mod) {
 					$._mods[name] = mod;
 					increment();
 				});

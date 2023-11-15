@@ -1,6 +1,7 @@
 # codelite
 .codelite
 *.workspace
+*.tern-project
 
 # dolphin
 .directory

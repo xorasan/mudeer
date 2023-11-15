@@ -1,6 +1,0 @@
-loading		بدا...
-exiting		خرج...
-unsupported	لا يستطيع هاتفك هذا التطبيق
-off			لا
-on			نعم
-animations	متحركات
