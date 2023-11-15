@@ -1,13 +1,12 @@
 /*
- * imports dynamically generated kernel based on config.slang
+ * imports dynamically generated kernel based on config.w
  * links src files
  * creates directory structure
  * ...
- * auto convert names to english -_- :(
  * */
 global.$ = require(__dirname+'/kernel.js');
 $.path = __dirname; // this is the mudeer root directory
-var Cli, Files, Slang,
+var Cli, Files, Weld,
 	dummyargs = { one: [], two: [], raw: [], keys: {}, };
 var kernelpreset = [
 	'shims', 'log', 'taxeer', 'regexp', 'mod-concat', 'modules', 'array', 'queue', 'fetch'
@@ -17,22 +16,22 @@ var _templates = {
 		var txt = '+htm'
 				+	'\n!doctype @html'
 				+	'\nhtml'
-				+	'\n\t+include linked/head.htm.slang'
-				+	'\n\t+include main.htm.slang'
+				+	'\n\t+include linked/head.htm.w'
+				+	'\n\t+include main.htm.w'
 				+	'\n+css';
 		/* TODO
-			* Slang still doesn't support intelligent \t detection for +include
-			* if +css +js is tabbed (\t) here, Slang can't find its parent.
+			* Weld still doesn't support intelligent \t detection for +include
+			* if +css +js is tabbed (\t) here, Weld can't find its parent.
 			* */
 //		if (conf.webapp)
-//			txt += '\n+include webapp.css.slang';
+//			txt += '\n+include webapp.css.w';
 
-		txt		+=	'\n+include style.css.slang'
+		txt		+=	'\n+include style.css.w'
 				+	'\n+js';
 
 		txt +=	'\n+include kernel.js';
 
-		txt		+=	'\n+include script.js.slang'
+		txt		+=	'\n+include script.js.w'
 				+	'\n+svg'
 				+	'\n+include icons.svg'
 				+	'\n';
@@ -79,7 +78,7 @@ var _templates = {
 				+	'\nbody';
 		
 		if (conf.ishtamal)
-			txt += '\n\t+include managed.htm.slang';
+			txt += '\n\t+include managed.htm.w';
 	
 		return txt;
 	},
@@ -104,7 +103,7 @@ var _templates = {
 		if (conf.langs)
 			txt += '\n+include langs.js';
 
-		txt += '\n+include managed.js.slang';
+		txt += '\n+include managed.js.w';
 		
 		txt += '\n+include main.js';
 
@@ -112,7 +111,7 @@ var _templates = {
 	},
 	style:	function (conf) {
 		var txt = '';
-		txt += '+include managed.css.slang';
+		txt += '+include managed.css.w';
 		return txt;
 	},
 };
@@ -170,7 +169,7 @@ var importlangs = function (conf) {
 
 			for (var j in mods) {
 				var mod = mods[j]; // full name
-				var newname = language+'.'+mod+'.slang';
+				var newname = language+'.'+mod+'.w';
 
 				if ( conf.src.indexOf(mod) > -1
 				&& langsfiles.indexOf(newname) > -1 ) {
@@ -258,27 +257,27 @@ var importdeps = function (conf, pathprefix) {
 	}
 };
 var do_install = function () {
-	var args = Object.assign( dummyargs, args ), configslang = false;
+	var args = Object.assign( dummyargs, args ), configw = false;
 	try {
-		configslang = Files.get.file('config.slang');
+		configw = Files.get.file('config.w');
 	} catch (e) {
 		Cli.echo(' '+process.cwd()+' ');
-		Cli.echo(' config.slang not found, try ^bright^mudeer-create~~ ');
+		Cli.echo(' config.w not found, try ^bright^mudeer-create~~ ');
 		return;
 	}
-	if (configslang === false) return;
+	if (configw === false) return;
 	
-	var pathprefix = './', conf = configslang.toString();
+	var pathprefix = './', conf = configw.toString();
 	
 	if (conf.length === 0) {
-		Cli.echo(' config.slang is empty, install aborted! ');
+		Cli.echo(' config.w is empty, install aborted! ');
 		return;
 	}
 	
 	Cli.echo(' mudeer-install... ');
 		
-	conf = Slang.parse( conf );
-	conf = Slang.config.parse( conf );
+	conf = Weld.parse( conf );
+	conf = Weld.config.parse( conf );
 	
 	// show a legend of changes to be made
 	// ? overwrite
@@ -316,20 +315,20 @@ var do_install = function () {
 		importkernel(kernelmods, pathprefix+'src/kernel.js');
 		
 		var src = Files.get.folder(pathprefix+'src') || [];
-		if ( !src.includes('script.js.slang') )
-			Files.set.file( pathprefix+'src/script.js.slang', _templates.script(conf) );
+		if ( !src.includes('script.js.w') )
+			Files.set.file( pathprefix+'src/script.js.w', _templates.script(conf) );
 
-		Files.set.file( pathprefix+'src/index.htm.slang', _templates.index(conf) );
+		Files.set.file( pathprefix+'src/index.htm.w', _templates.index(conf) );
 
 		if (conf.sinf == 'client') {
-//			if ( !src.includes('head.htm.slang') )
-//				Files.set.file( pathprefix+'src/head.htm.slang', _templates.head(conf) );
+//			if ( !src.includes('head.htm.w') )
+//				Files.set.file( pathprefix+'src/head.htm.w', _templates.head(conf) );
 
-			if ( !src.includes('style.css.slang') )
-				Files.set.file( pathprefix+'src/style.css.slang', _templates.style(conf) );
+			if ( !src.includes('style.css.w') )
+				Files.set.file( pathprefix+'src/style.css.w', _templates.style(conf) );
 			
-			if ( !src.includes('main.htm.slang') )
-				Files.set.file( pathprefix+'src/main.htm.slang', _templates.main(conf) );
+			if ( !src.includes('main.htm.w') )
+				Files.set.file( pathprefix+'src/main.htm.w', _templates.main(conf) );
 		}
 		if ( !src.includes('main.js') )
 			Files.set.file( pathprefix+'src/main.js', _templates.mainjs(conf) );
@@ -354,7 +353,7 @@ $.preload( [ 'files', 'hooks', 'cli' ], function() {
 	Cli			= $('cli')				,
 	Hooks		= $('hooks')			,
 	Files		= $('files')			,
-	Slang		= $.use('slang')		;
+	Weld		= require('./weld')		;
 	Hooks.set(Cli.events.answer, function (options) { do_install(options); });
 	Hooks.set(Cli.events.init, function (options) { do_install(options); });
 	Hooks.set(Cli.events.command, function (options) { do_install(options); });

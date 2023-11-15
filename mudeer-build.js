@@ -1,16 +1,15 @@
 /*
- * mudeer-build (build+release a mashroo3)
+ * mudeer-build (build+release a project)
  * 
  * you can optionally specify a path where it'll put the released file
  * 
- * @TODO change /linked to /marboot, remove /linked
- * 		 automate .gitignore
+ * @TODO automate .gitignore
  * */
 
 'use strict';
 global.$ = require(__dirname+'/kernel.js');
 $.path = __dirname;
-var Hooks, Cli, Files, Uglify, Slang, path = require('path');
+var Hooks, Cli, Files, Uglify, Weld, path = require('path');
 
 var printsize = function (name, sizebytes) {
 	Cli.echo( ' '+name+' ^dim^'+Math.round(sizebytes/1024)+'kB~~' );
@@ -125,10 +124,10 @@ var indextranslation = function (path, filename, languages, translations) {
 	var splat = filename.split('.');
 	var langname = splat[0];
 	var ext = splat.pop();
-	if (languages.includes(langname) && ext == 'slang') {
+	if (languages.includes(langname) && ext == 'w') {
 		var filedata = Files.get.file(path+filename).toString();
-		var parsed = Slang.parse( filedata ); 
-		parsed = Slang.config.parse( parsed ); 
+		var parsed = Weld.parse( filedata ); 
+		parsed = Weld.config.parse( parsed ); 
 		
 		var parsedwithxpo = {};
 		
@@ -179,18 +178,18 @@ var managedincludes = function (conf, args) {
 			
 			if (yes) {
 				if (conf.sinf == 'zaboon') {
-					includescss	+= '+include linked/'+name+'.css.slang\n';
-					includeshtm	+= '+include linked/'+name+'.htm.slang\n';
+					includescss	+= '+include linked/'+name+'.css.w\n';
+					includeshtm	+= '+include linked/'+name+'.htm.w\n';
 				}
 				includesjs	+= '+include linked/'+name+'.js\n';
 			}
 		}
 
 		if (conf.sinf == 'zaboon') {
-			Files.set.file( pathprefix+'managed.htm.slang', includeshtm );
-			Files.set.file( pathprefix+'managed.css.slang', includescss );
+			Files.set.file( pathprefix+'managed.htm.w', includeshtm );
+			Files.set.file( pathprefix+'managed.css.w', includescss );
 		}
-		Files.set.file( pathprefix+'managed.js.slang', includesjs );
+		Files.set.file( pathprefix+'managed.js.w', includesjs );
 	}
 };
 var compile_icons = function (options, folder) {
@@ -498,28 +497,28 @@ var compile_icons = function (options, folder) {
 
 };
 var do_build = function (args, xpo) {
-	var configslang = false;
+	var configw = false;
 	try {
-		configslang = Files.get.file('tabee3ah.slang');
+		configw = Files.get.file('tabee3ah.w');
 	} catch (e) {
 		Cli.echo(' '+process.cwd()+' ');
-		Cli.echo(' tabee3ah.slang not found, try ^bright^mudeer-tabee3ah~~ ');
+		Cli.echo(' tabee3ah.w not found, try ^bright^mudeer-tabee3ah~~ ');
 		return;
 	}
-	if (configslang === false) return;
-	var conf = configslang.toString();
+	if (configw === false) return;
+	var conf = configw.toString();
 
-	conf = Slang.parse( conf );
-	conf = Slang.config.parse( conf );
+	conf = Weld.parse( conf );
+	conf = Weld.config.parse( conf );
 
-	var xposlang = false, xpofile = args.keys.xpo || args.keys.x;
+	var xpow = false, xpofile = args.keys.xpo || args.keys.x;
 	xpo = xpo || {};
 	if (xpofile && xpofile.length) {
 		try {
-			xposlang = Files.get.file(xpofile);
-			xpo = xposlang.toString();
-			xpo = Slang.parse( xpo );
-			xpo = Slang.config.parse( xpo );
+			xpow = Files.get.file(xpofile);
+			xpo = xpow.toString();
+			xpo = Weld.parse( xpo );
+			xpo = Weld.config.parse( xpo );
 		} catch (e) {
 			Cli.echo(' '+xpofile+' not found ');
 			return;
@@ -548,7 +547,7 @@ var do_build = function (args, xpo) {
 	var BUILDNUMBER = args.keys.buildnum || 0;
 	if (args.keys.buildnum == undefined) {
 		try {
-			BUILDNUMBER = Files.get.file(ipath+'number.slang');
+			BUILDNUMBER = Files.get.file(ipath+'number.w');
 			BUILDNUMBER = BUILDNUMBER.toString();
 		} catch (e) {
 			// ignore because we can make do without both these files
@@ -594,11 +593,11 @@ var do_build = function (args, xpo) {
 	};
 
 	options.admin = true;
-	var sourcefile = 'src/index.htm.slang';
-	// TODO make this a possibility in slang
-//	if (conf.sinf == 'server') sourcefile = 'src/script.js.slang';
+	var sourcefile = 'src/index.htm.w';
+	// TODO make this a possibility in weld
+//	if (conf.sinf == 'server') sourcefile = 'src/script.js.w';
 
-	var parsedoutput = Slang.multi( sourcefile, options );
+	var parsedoutput = Weld.multi( sourcefile, options );
 
 	parsedoutput.rawjs = parsedoutput.rawjs.replace(/XAADIMPORT/g, conf.port||3000);
 
@@ -619,7 +618,7 @@ var do_build = function (args, xpo) {
 
 		Files.set.file( xpath+'index.js', str2save );
 		printsize('index.js', str2save.length );
-//		Files.set.file( xpath+'xpo.slang', Slang.toslang(parsedoutput.map) );
+//		Files.set.file( xpath+'xpo.w', Weld.to_weld(parsedoutput.map) );
 	} else if (conf.sinf == 'client') {
 		parsedoutput.parsed = parsedoutput.parsed
 						.replace(/JAZAR/g, conf.root||'');
@@ -649,7 +648,7 @@ var do_build = function (args, xpo) {
 	if (conf.sinf == 'client') makemanifest(args, conf, BUILDNUMBER, xpath);
 
 	if (args.keys.buildnum == undefined)
-		Files.set.file( ipath+'number.slang', ''+( BUILDNUMBER || '' ) );
+		Files.set.file( ipath+'number.w', ''+( BUILDNUMBER || '' ) );
 
 	Cli.echo(' done ');
 
@@ -660,7 +659,7 @@ $.preload( [ 'files', 'hooks', 'cli' ], function() {
 	Hooks		= $('hooks')			,
 	Files		= $('files')			,
 	Uglify		= require('./deps/uglify-js'),
-	Slang		= $.use('slang')		;
+	Weld		= require('./weld')		;
 	if (require.main === module) { // called directly
 		Hooks.set(Cli.events.answer, function (options) { do_build(options); });
 		Hooks.set(Cli.events.init, function (options) { do_build(options); });

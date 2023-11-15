@@ -1,13 +1,13 @@
 /*
  * used by glatteis-repl
- * checks and edits config.slang step-by-step
+ * checks and edits config.w step-by-step
  * mods specified are added by default; to remove prefix with -modulename
- * mods passed to install are temp, and don't modify config.slang
+ * mods passed to install are temp, and don't modify config.w
  * 
  * */
 global.$ = require(__dirname+'/kernel.js');
 $.path = __dirname; // this is the mudeer root directory
-var Cli, Files, Slang;
+var Cli, Files, Weld;
 
 var cache = {};
 var list = function (title, items) {
@@ -49,9 +49,9 @@ var config = function (args) {
 		return false;
 	}
 	
-	var configslang = '', conf = false;
+	var configw = '', conf = false;
 	try {
-		configslang = Files.get.file('config.slang');
+		configw = Files.get.file('config.w');
 	} catch (e) {
 		conf = {
 			kernel: [],
@@ -59,8 +59,8 @@ var config = function (args) {
 		};
 	}
 	if (conf === false) {
-		conf = Slang.parse(configslang.toString());
-		conf = Slang.config.parse(conf);
+		conf = Weld.parse(configw.toString());
+		conf = Weld.config.parse(conf);
 	}
 //	$.log.s( conf );
 //	return;
@@ -207,8 +207,8 @@ var config = function (args) {
 			delete conf.database;
 		}
 		
-		var confdata = Slang.toslang( conf );
-		Files.set.file('config.slang', confdata);
+		var confdata = Weld.to_weld( conf );
+		Files.set.file('config.w', confdata);
 		
 		Cli.echo( '\n^bright^saved:~~\n' );
 		$.log( confdata );
@@ -219,8 +219,8 @@ $.preload( [ 'files', 'hooks', 'cli' ], function() {
 	Cli			= $('cli')				,
 	Hooks		= $('hooks')			,
 	Files		= $('files')			,
-	Uglify		= require('./uglify-js'),
-	Slang		= $.use('slang')		;
+	Uglify		= require('./deps/uglify-js'),
+	Weld		= require('./weld')		;
 	Hooks.set(Cli.events.answer, function (options) { config(options); });
 	Hooks.set(Cli.events.init, function (options) { config(options); });
 	Hooks.set(Cli.events.command, function (options) { config(options); });
