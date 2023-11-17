@@ -14,8 +14,11 @@
  * 		cli-ask		{ question, options } returns answer
  */
 
+var Cli = Cli || {};
 ;(function () {
 	'use strict';
+	var Hooks		= $('hooks');
+	
 	var _ = {
 		events: {
 			cli:		3129,
@@ -166,7 +169,7 @@
 		},
 		commands: 'exit '.split(' '),
 		completer: function (line, callback) {
-			$('hooks').run( _.events.hint, {
+			Hooks.run( _.events.hint, {
 				line:		line,
 				callback:	callback
 			});
@@ -340,7 +343,7 @@
 					if (key !== undefined) {
 						callback.keys[key] = _.answerlogic(ans, def, type);
 					}
-					$('hooks').run( _.events.answer, callback);
+					Hooks.run( _.events.answer, callback);
 				}
 
 			});
@@ -351,7 +354,7 @@
 				_._onresize = true;
 				process.stdout.on('resize', function () {
 					_.sizes();
-					$('hooks').run(_.events.resize, {
+					Hooks.run(_.events.resize, {
 						rows: _.height,
 						cols: _.width
 					});
@@ -388,7 +391,7 @@
 						break;
 				}
 				
-				$('hooks').run( _.events.command, _.processargs(line.split(' ')) );
+				Hooks.run( _.events.command, _.processargs(line.split(' ')) );
 
 				if (_._autoprompt) {
 					_.prompt(true);
@@ -396,7 +399,7 @@
 			
 			}).on('SIGINT', function() {
 
-				$('hooks').set(_.events.close, _.events.cli, function () {
+				Hooks.set(_.events.close, _.events.cli, function () {
 					if (_._inquestion) {
 						_._inquestion = false;
 						_.echo('^C'); // @todo better way to cancel a question
@@ -407,7 +410,7 @@
 						process.exit(0);
 					}
 				});
-				$('hooks').rununtilconsumed(_.events.close);
+				Hooks.rununtilconsumed(_.events.close);
 			
 			});
 			
@@ -504,10 +507,10 @@
 			}
 			
 			// generate the first event
-			$('hooks').run(_.events.init, args);
+			Hooks.run(_.events.init, args);
 
 		}
 	};
 	
-	module.exports = _;
+	module.exports = Cli = _;
 })();

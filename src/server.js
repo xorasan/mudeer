@@ -26,6 +26,9 @@ var Server;
 		get: 200,
 	};
 
+	var node_path = require('path');
+	var public_path = node_path.resolve( Config.public || $.path )+'/';
+
 	Server = {
 		post: function (url, fn) {
 			routes.push({
@@ -46,10 +49,10 @@ var Server;
 		init: function (options) {
 			options = options || {};
 			options.port = options.port || 3000;
-			process.title = options.name || 'xaadim';
+			process.title = options.name || 'server';
 			
-			var express			= require('./xudoo3/express');			// web framework external module
-			var fileupload		= require('./xudoo3/express-fileupload');
+			var express			= require('./deps/express');			// web framework external module
+			var fileupload		= require('./deps/express-fileupload');
 //			var serveStatic		= require('serve-static');		// serve static files
 //			var socketIo		= require('socket.io');			// web socket external module
 
@@ -59,7 +62,7 @@ var Server;
 			app.disable('x-powered-by');
 
 			// this helps parse the POST data both json and url-encoded
-			var bodyParser = require('./xudoo3/body-parser');
+			var bodyParser = require('./deps/body-parser');
 			app.use( bodyParser.json() );
 			app.use( bodyParser.urlencoded({ extended: true }) );
 			
@@ -88,9 +91,9 @@ var Server;
 				}
 			});
 
-			app.use(express.static($.path+'/'));
+			app.use(express.static(public_path));
 			app.get('*', function (req, res) {
-				res.sendFile( $.path+'/index.html' );
+				res.sendFile( public_path+'index.html' );
 			});
 
 			app.listen(options.port);

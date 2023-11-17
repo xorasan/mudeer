@@ -3,13 +3,12 @@
  * 
  * you can optionally specify a path where it'll put the released file
  * 
- * @TODO automate .gitignore
  * */
 
 'use strict';
 global.$ = require(__dirname+'/kernel.js');
 $.path = __dirname;
-var Hooks, Cli, Files, Uglify, Weld, path = require('path');
+var Hooks, Cli, Files, Uglify, Weld, path = require('path'), prepad = 0;
 
 var printsize = function (name, sizebytes) {
 	Cli.echo( ' '+name+' ^dim^'+Math.round(sizebytes/1024)+'kB~~' );
@@ -102,6 +101,8 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 	var packagejson = {
 		name: conf.name,
 		main: xpath+'index.html',
+		// to show js files in devtools sources
+		"chromium-args": '--disable-features=ProcessPerSiteUpToMainFrameThreshold',
 	};
 	
 	if (conf.height || conf.width) {
@@ -117,7 +118,7 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 	}
 	
 //	Files.set.file( xpath+'package.json', JSON.stringify( packagejson, null, '\t' ) );
-	// BUG? why put package.json in manaashir/ ?, shouldn't it be in / for nwapp
+	// BUG? why put package.json in pub/ ?, shouldn't it be in / for nwapp
 	Files.set.file( 'package.json', JSON.stringify( packagejson, null, '\t' ) );
 };
 var indextranslation = function (path, filename, languages, translations) {
@@ -154,7 +155,7 @@ var updatetranslations = function (conf, path) {
 		result = Files.get.folder(path+'linked');
 	} catch (e) {
 		if ( e.code === 'ENOENT' ) {
-			Cli.echo( '\n ~red~ ! ~~ langs/linked not found ~blue~ i ~~ try ^bright^glatteis install~~ \n' );
+			Cli.echo( '\n ~red~ ! ~~ langs/linked not found ~blue~ i ~~ try ^bright^mudeer-install~~ \n' );
 			process.exit(0);
 		}
 	}
@@ -169,15 +170,15 @@ var managedincludes = function (conf, args) {
 	var pathprefix = 'src/';
 
 	var includesjs = '', includescss = '', includeshtm = '';
-	if (conf.ishtamal instanceof Array) {
-		for (var i in conf.ishtamal) {
-			var yes = 1, name = conf.ishtamal[i];
-			if ( !args.keys.production && conf.ishtamal[i].startsWith(':') ) {
-				name = conf.ishtamal[i].substr(1);
+	if (conf.include instanceof Array) {
+		for (var i in conf.include) {
+			var yes = 1, name = conf.include[i];
+			if ( !args.keys.production && conf.include[i].startsWith(':') ) {
+				name = conf.include[i].substr(1);
 			}
 			
 			if (yes) {
-				if (conf.sinf == 'zaboon') {
+				if (conf.kind == 'client') {
 					includescss	+= '+include linked/'+name+'.css.w\n';
 					includeshtm	+= '+include linked/'+name+'.htm.w\n';
 				}
@@ -185,7 +186,7 @@ var managedincludes = function (conf, args) {
 			}
 		}
 
-		if (conf.sinf == 'zaboon') {
+		if (conf.kind == 'client') {
 			Files.set.file( pathprefix+'managed.htm.w', includeshtm );
 			Files.set.file( pathprefix+'managed.css.w', includescss );
 		}
@@ -497,12 +498,15 @@ var compile_icons = function (options, folder) {
 
 };
 var do_build = function (args, xpo) {
+	prepad = args.keys.prepad || prepad;
+	var prespace = ' '.repeat( prepad );
+	
 	var configw = false;
 	try {
-		configw = Files.get.file('tabee3ah.w');
+		configw = Files.get.file('config.w');
 	} catch (e) {
-		Cli.echo(' '+process.cwd()+' ');
-		Cli.echo(' tabee3ah.w not found, try ^bright^mudeer-tabee3ah~~ ');
+		Cli.echo(prespace+' '+process.cwd()+' ');
+		Cli.echo(prespace+' config.w not found, try ^bright^mudeer-create~~ ');
 		return;
 	}
 	if (configw === false) return;
@@ -520,15 +524,15 @@ var do_build = function (args, xpo) {
 			xpo = Weld.parse( xpo );
 			xpo = Weld.config.parse( xpo );
 		} catch (e) {
-			Cli.echo(' '+xpofile+' not found ');
+			Cli.echo(prespace+' '+xpofile+' not found ');
 			return;
 		}
 	}
 
-	Cli.echo(' mudeer-build... ');
+	Cli.echo(prespace+' mudeer-build... ');
 	
-	args.keys.ipath	= args.keys.ipath	|| 'insha/';
-	args.keys.xpath	= args.keys.xpath	|| 'manaashir/';
+	args.keys.ipath	= args.keys.ipath	|| 'build/';
+	args.keys.xpath	= args.keys.xpath	|| 'pub/';
 	if (typeof args.keys.xpath == 'string')
 		if (!args.keys.xpath.endsWith('/')) args.keys.xpath += '/';
 	if (typeof args.keys.ipath == 'string')
@@ -558,7 +562,7 @@ var do_build = function (args, xpo) {
 
 	managedincludes(conf, args);
 
-	if (conf.sinf == 'zaboon') {
+	if (conf.kind == 'client') {
 		// compress svg icons into dev-public/icons.svg
 		compile_icons(0);
 
@@ -579,8 +583,8 @@ var do_build = function (args, xpo) {
 		buildnumber:	BUILDNUMBER || 0				,
 		compress:		args.keys.c || args.keys.compress || false		,
 		linkify:		true,
-		server:			conf.sinf == 'server' || false,
-		zaboon:			conf.sinf == 'client' || false,
+		server:			conf.kind == 'server' || false,
+		client:			conf.kind == 'client' || false,
 		uglify:			args.keys.uglify || false		,
 //		nouglyjs:		args.keys.nouglyjs || false		,
 		minify:			args.keys.m || args.keys.minify || false		,
@@ -590,12 +594,13 @@ var do_build = function (args, xpo) {
 		verbose:		args.keys.verbose || false		,
 		// reserved words & previously xpo'd words
 		map:			xpo,
+		prespace:		prespace,
 	};
 
 	options.admin = true;
 	var sourcefile = 'src/index.htm.w';
 	// TODO make this a possibility in weld
-//	if (conf.sinf == 'server') sourcefile = 'src/script.js.w';
+//	if (conf.kind == 'server') sourcefile = 'src/script.js.w';
 
 	var parsedoutput = Weld.multi( sourcefile, options );
 
@@ -603,7 +608,7 @@ var do_build = function (args, xpo) {
 
 	if (args.keys.buildnum == undefined) ++BUILDNUMBER;
 
-	if (conf.sinf == 'server') {
+	if (conf.kind == 'server') {
 		var str2save = ( parsedoutput.rawjs || '' );
 		if (conf.database)
 		str2save = str2save .replace(/WUQU3AATUSERNAME/g, '"'+conf.database.username+'"')
@@ -617,16 +622,16 @@ var do_build = function (args, xpo) {
 							.replace(/WUQU3AAT/g, 0);
 
 		Files.set.file( xpath+'index.js', str2save );
-		printsize('index.js', str2save.length );
+		printsize(prespace+'index.js', str2save.length );
 //		Files.set.file( xpath+'xpo.w', Weld.to_weld(parsedoutput.map) );
-	} else if (conf.sinf == 'client') {
+	} else if (conf.kind == 'client') {
 		parsedoutput.parsed = parsedoutput.parsed
 						.replace(/JAZAR/g, conf.root||'');
 		
 		Files.set.file( xpath+'index.html', ( parsedoutput.parsed || '' ) );
-		printsize('index.html', (parsedoutput.parsed||'').length );
+		printsize(prespace+'index.html', (parsedoutput.parsed||'').length );
 		Files.set.file( xpath+'a.js', ( parsedoutput.rawjs || '' ) );
-		printsize('a.js', (parsedoutput.rawjs||'').length );
+		printsize(prespace+'a.js', (parsedoutput.rawjs||'').length );
 		var swjs;
 		try {
 			swjs = Files.get.file('src/sw.js');
@@ -640,17 +645,17 @@ var do_build = function (args, xpo) {
 				mangle:				true,
 			});
 			Files.set.file( xpath+'_.js', ( parsedoutputswjs.code || '' ) );
-			printsize('_.js', (parsedoutputswjs.code||'').length );
+			printsize(prespace+'_.js', (parsedoutputswjs.code||'').length );
 		}
 
 	}
 
-	if (conf.sinf == 'client') makemanifest(args, conf, BUILDNUMBER, xpath);
+	if (conf.kind == 'client') makemanifest(args, conf, BUILDNUMBER, xpath);
 
 	if (args.keys.buildnum == undefined)
 		Files.set.file( ipath+'number.w', ''+( BUILDNUMBER || '' ) );
 
-	Cli.echo(' done ');
+	Cli.echo(prespace+' done ');
 
 	return parsedoutput.map;
 };

@@ -29,7 +29,7 @@ var list = function (title, items) {
 	Cli.echo(output);
 };
 var currentfolder = function () { return process.cwd().split('/').pop(); };
-var config = function (args) {
+var do_config = function (args) {
 	if (args.keys.proceed === undefined) {
 		cache.icons	= []; // icons
 		cache.langs	= []; // translations i18n
@@ -105,13 +105,13 @@ var config = function (args) {
 	} else
 	if ( args.keys.connected === undefined ) {
 		if (args.keys.kind == 'server')
-			Cli.echo('\nthis will add ^bright^server.web, polling~~ awzaar');
+			Cli.echo('\nthis will add ^bright^server.web, polling~~ modules');
 		if (args.keys.kind == 'client')
-			Cli.echo('\nthis will add ^bright^network~~ awzaar');
+			Cli.echo('\nthis will add ^bright^network~~ modules');
 		Cli.question('is connected? ', args, 'connected', !!conf.connected);
 	} else
 	if ( args.keys.kind == 'client' && args.keys.touch === undefined ) {
-		Cli.echo('\nthis will add ^bright^webapp.touch, softkeys.touch~~ awzaar');
+		Cli.echo('\nthis will add ^bright^webapp.touch, softkeys.touch~~ modules');
 		Cli.question('is touch capable? ', args, 'touch', !!conf.touch);
 	} else
 	if ( args.keys.kind == 'server' && args.keys.isdb === undefined ) {
@@ -134,7 +134,8 @@ var config = function (args) {
 				'settings', 'activity', 'view'
 			);
 			cache.include.push(
-				'reset', 'reset.client', 'webapp', 'webapp.3inch', 'list', 'backstack',
+				'reset', 'reset.client', 'webapp', 'webapp.3inch', 'webapp.13inch',
+				'list', 'backstack',
 				'preferences', 'activity', 'view', 'time', 'settings', 'translate',
 				'templates', 'softkeys', 'softkeys.list', 'sheet', 'themes', 'dialog'
 			);
@@ -142,7 +143,9 @@ var config = function (args) {
 				'en'
 			);
 			cache.icons.push(
-				'search', 'settings', 'theme', 'help', 'done', 'close', 'arrowback'
+				'search', 'help', 'done', 'close', 'arrowback', 'settings', 'daterange', 'timer',
+				'bugreport', 'featuredplaylist', 'formatsize', 'translate', 'playarrow', 'theme',
+				'brightness7', 'tab', 'bluron', 'mudeer'
 			);
 			cache.kernel.push('frontend');
 			
@@ -172,7 +175,7 @@ var config = function (args) {
 		if (args.keys.isdb === true) {
 			cache.src.push('wuqu3aat');
 			cache.include.push('wuqu3aat', 'wuqu3aat.asaas');
-			// dependence on kaafir modules
+			// dependence on external modules
 			cache.deps.push('mysql');
 		}
 		
@@ -221,8 +224,8 @@ $.preload( [ 'files', 'hooks', 'cli' ], function() {
 	Files		= $('files')			,
 	Uglify		= require('./deps/uglify-js'),
 	Weld		= require('./weld')		;
-	Hooks.set(Cli.events.answer, function (options) { config(options); });
-	Hooks.set(Cli.events.init, function (options) { config(options); });
-	Hooks.set(Cli.events.command, function (options) { config(options); });
+	Hooks.set(Cli.events.answer, function (options) { do_config(options); });
+	Hooks.set(Cli.events.init, function (options) { do_config(options); });
+	Hooks.set(Cli.events.command, function (options) { do_config(options); });
 	Cli.init();
 });

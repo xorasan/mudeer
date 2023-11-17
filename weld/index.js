@@ -1,21 +1,27 @@
 ;(function(){
 	'use strict';
+
+	function requireUncached(module) {
+		delete require.cache[require.resolve(module)];
+		return require(module);
+	}
 	
-	var Uglify = require('uglify-js');
+	var Uglify = require('../deps/uglify-js');
 	
-	var $ = require('./etc/glatteis.js');
+	var $ = requireUncached('../kernel.js');
 	$.path = __dirname;
 	
 	// synchronously get all modules beforehand
-	var Slang	= $('slang')	,
-		Files	= $('files')	,
-		Css		= $('css')		,
-		Htm		= $('htm')		,
-		Js		= $('js')		,
-		Sql		= $('sql')		,
-		Config	= $('config')	;
+	var Weld	= require('./src/w'       )	,
+		Files	= require('../src/files'  )	,
+		Css		= require('./src/css'     )	,
+		Htm		= require('./src/htm'     )	,
+		Js		= require('./src/js'      )	,
+		Sql		= require('./src/sql'     )	,
+		Config	= require('./src/config'  )	;
 
-	Slang.init();
+
+	Weld.init();
 	
 	var exp = {
 		css:		Css,
@@ -23,10 +29,11 @@
 		sql:		Sql,
 		js:			Js,
 		config:		Config,
-		toslang:	Slang.toslang,
-		multi:		Slang.multi,
-		splitter:	Slang.splitter,
-		parse:		Slang.parse
+		to_weld:	Weld.toslang,
+		toslang:	Weld.toslang,
+		multi:		Weld.multi,
+		splitter:	Weld.splitter,
+		parse:		Weld.parse
 	};
 
 	module.exports	= exp;

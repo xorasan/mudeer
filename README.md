@@ -1,3 +1,5 @@
+<p align=center><img src=./mudeer.svg width=128px /></p>
+
 # Mudeer (arabic for manager)
 Create tiny full-stacked PWAs (progressive web apps)  
 

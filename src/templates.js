@@ -107,12 +107,16 @@ var templates, namaavij;
 							keys[i].innerHTML = '';
 						}
 					} else
-					if (['XPO.icon', 'XPO.eqonah'].includes(i)) { // create SVG inside
+					if (['XPO.icon', 'XPO.eqonah'].includes(i)) { // create SVG inside or img if src = /...
 						if (typeof o[i] === 'string' && o[i].length) {
 							keys[i].hidden = 0;
-							var e = XPO.eqonaat.querySelector('#'+o[i]);
-							if (e)
-								keys[i].innerHTML	= '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
+							if (o[i].startsWith('/')) {
+								innerhtml(keys[i], '<img src="'+o[i]+'" />');
+							} else {
+								var e = XPO.icons.querySelector('#'+o[i]);
+								if (e)
+									keys[i].innerHTML	= '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
+							}
 //							keys[i].innerHTML = '<svg><use xlink:href=\'#'+o[i]+'\'></use></svg>';
 						} else {
 							keys[i].hidden = 1;

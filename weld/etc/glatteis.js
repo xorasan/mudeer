@@ -830,6 +830,8 @@ $.preload = function (mods, fn) { // loads mods then calls the fn
 
 $._c('files');
 
+var Hooks = require('../../src/hooks.js');
+
 //cli
 //### /home/nano/Documents/projects/glatteis/src/ge-cli.js
 /* 04 Jun 2018
@@ -1010,7 +1012,7 @@ $._c('files');
 
 		commands: 'exit '.split(' '),
 		completer: function (line, callback) {
-			$('hooks').run( _.events.hint, {
+			Hooks.run( _.events.hint, {
 				line:		line,
 				callback:	callback
 			});
@@ -1138,7 +1140,7 @@ $._c('files');
 					if (key !== undefined) {
 						callback.keys[key] = ans || def;
 					}
-					$('hooks').run( _.events.answer, callback);
+					Hooks.run( _.events.answer, callback);
 				}
 
 			});
@@ -1151,7 +1153,7 @@ $._c('files');
 				_._onresize = true;
 				process.stdout.on('resize', function () {
 					_.sizes();
-					$('hooks').run(_.events.resize, {
+					Hooks.run(_.events.resize, {
 						rows: _.height,
 						cols: _.width
 					});
@@ -1190,7 +1192,7 @@ $._c('files');
 						break;
 				}
 				
-				$('hooks').run( _.events.command, _.processargs(line.split(' ')) );
+				Hooks.run( _.events.command, _.processargs(line.split(' ')) );
 
 				if (_._autoprompt) {
 					_.prompt(true);
@@ -1198,7 +1200,7 @@ $._c('files');
 			
 			}).on('SIGINT', function() {
 
-				$('hooks').set(_.events.close, _.events.cli, function () {
+				Hooks.set(_.events.close, _.events.cli, function () {
 					if (_._inquestion) {
 						_._inquestion = false;
 						_.echo('^C'); // @todo better way to cancel a question
@@ -1208,7 +1210,7 @@ $._c('files');
 						process.exit(0);
 					}
 				});
-				$('hooks').rununtilconsumed(_.events.close);
+				Hooks.rununtilconsumed(_.events.close);
 			
 			});
 			
@@ -1287,7 +1289,7 @@ $._c('files');
 			}
 			
 			// generate the first event
-			$('hooks').run(_.events.init, args);
+			Hooks.run(_.events.init, args);
 
 		}
 

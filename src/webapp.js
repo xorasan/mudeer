@@ -147,7 +147,7 @@ var webapp, appname = 'APPNAME' || '',
 		}
 	};
 
-	var viewsindex = {},
+	var viewsindex = {}, header_keys,
 		getform = function (element) {
 			if (!(element instanceof HTMLElement)) return;
 
@@ -243,8 +243,7 @@ var webapp, appname = 'APPNAME' || '',
 	webapp = {
 		visible: 1,
 		isdimmed: 0,
-		/*
-		 * an array of features that can be check like
+		/* an array of features that can be check like
 		 * 'feature'	in window OR
 		 * 				in Navigator OR
 		 * 				in navigator
@@ -277,10 +276,25 @@ var webapp, appname = 'APPNAME' || '',
 			blur();
 			return ae;
 		},
-		header: function (text, align) {
-			if (align == 1) XPO.headerui.dataset.align = '1';
-			else if (align == 2) XPO.headerui.dataset.align = '2';
-			else delete XPO.headerui.dataset.align;
+		header: function (text, align, original_keys) {
+			// if text is [text] assumes i18n; unless it has at least two elements
+			
+			var header_icon, header_title = text, header_subtitle = '';
+			if (isarr(text) && text.length >= 2) {
+				header_title	= text[0];
+				header_subtitle	= text[1];
+				header_icon		= text[2];
+			}
+			
+			var keys = original_keys || header_keys;
+			var title = keys.XPO.title;
+			var subtitle = keys.XPO.subtitle;
+			var header = keys.XPO.header;
+			var icon = keys.XPO.icon;
+			
+			if (align == 1) header.dataset.align = '1';
+			else if (align == 2) header.dataset.align = '2';
+			else delete header.dataset.align;
 
 			if (backstack.darajah <= 1) {
 				if (text) {
@@ -289,17 +303,35 @@ var webapp, appname = 'APPNAME' || '',
 //						pager.matn(backstack.states.view, text);
 //						return;
 //					}
-					if (text instanceof Array) {
-						XPO.headerui.dataset.XPO.i18n = text[0];
+					if (header_title instanceof Array && header_title[0]) {
+						title.dataset.XPO.i18n = header_title[0];
 					} else {
-						delete XPO.headerui.dataset.XPO.i18n,
-						XPO.headerui.innerText = text;
+						delete title.dataset.XPO.i18n,
+						innertext(title, header_title || '');
 					}
-					XPO.headerui.hidden = 0;
-				} else
-					delete XPO.headerui.dataset.XPO.i18n,
-					XPO.headerui.innerText = '',
-					XPO.headerui.hidden = 1;
+					if (header_title instanceof Array && header_subtitle[0]) {
+						subtitle.dataset.XPO.i18n = header_subtitle[0];
+					} else {
+						delete subtitle.dataset.XPO.i18n,
+						innertext(subtitle, header_subtitle || '');
+					}
+					header.hidden = 0;
+				} else {
+					delete title.dataset.XPO.i18n;
+					title.innerText = '';
+					header.hidden = 1;
+				}
+				
+				if (isstr(header_icon) && header_icon.length) {
+					var e = XPO.icons.querySelector('#'+header_icon);
+					if (e) {
+						innerhtml(icon, '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>');
+					}
+				} else {
+					innerhtml(icon, '');
+				}
+				
+				if (!original_keys) this.header(text, align, tall_header_keys);
 			} else if (backstack.darajah === 2) {
 				sheet.header(text);
 			}
@@ -381,7 +413,7 @@ var webapp, appname = 'APPNAME' || '',
 			var elements = document.body.querySelectorAll('[data-XPO.icon]');
 			for (var i in elements) {
 				if ( elements.hasOwnProperty(i) && elements[i].dataset.XPO.icon ) {
-					var e = XPO.eqonaat.querySelector('#'+elements[i].dataset.XPO.icon);
+					var e = XPO.icons.querySelector('#'+elements[i].dataset.XPO.icon);
 					if (e)
 						elements[i].innerHTML	= '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
 //					elements[i].innerHTML	= '<svg><use xlink:href=\'#'
@@ -423,6 +455,22 @@ var webapp, appname = 'APPNAME' || '',
 			else delete document.body.dataset.XPO.keyboardopen;
 		},
 	};
+
+	function on_scroll() {
+		var height = XPO.tallscreenpadding.offsetHeight * .75;
+		var percent = document.scrollingElement.scrollTop / height;
+		if (percent > 1) {
+			percent = 1;
+			ixtaf(XPO.tallheaderui);
+		} else {
+			izhar(XPO.tallheaderui);
+		}
+		XPO.headerui.style.opacity = percent;
+		XPO.tallheaderui.style.opacity = 1 - percent;
+		XPO.tallheaderui.style.paddingTop = (12 * (1-percent))+'vh';
+	}
+
+	webapp.ask_on_exit = webapp.bixraaj;
 
 	webapp.itlaa3 = function (text, time) {
 		var element = XPO.itlaa3.firstElementChild;
@@ -495,6 +543,9 @@ var webapp, appname = 'APPNAME' || '',
 		Hooks.rununtilconsumed('XPO.keydown', e);
 	});
 	listener('load', function (e) {
+		header_keys = templates.keys(XPO.headerui);
+		tall_header_keys = templates.keys(XPO.tallheaderui);
+
 		webapp.header( xlate(appname) );
 //		webapp.itlaa3( xlate('XPO.loading') );
 
@@ -521,6 +572,21 @@ var webapp, appname = 'APPNAME' || '',
 			});
 			backstack.main();
 		}
+
+		document.addEventListener('scroll', on_scroll);
+		document.addEventListener('scrollend', function () {
+			var offset_height = XPO.tallscreenpadding.offsetHeight;
+			var height = offset_height * .75;
+			var percent = document.scrollingElement.scrollTop / height;
+			if (percent >= 0.4 && percent < 1.6) {
+				document.scrollingElement.scrollTop = 1 * offset_height;
+			} else if (percent > 0.1 && percent < 0.4) {
+				document.scrollingElement.scrollTop = 0;
+			}
+		});
+		$.taxeer('XPO.on_scroll', function () {
+			on_scroll();
+		}, 30);
 
 		document.addEventListener('visibilitychange', function () {
 			if (document.visibilityState === 'visible') {

@@ -10,6 +10,16 @@ var settings, currentad;
 				XPO.title: translate('XPO.quality'),
 			});
 		}],*/
+		['Mudeer '+$.b, function () {
+			return 'Framework';
+		}, function () {
+			open('https://github.com/xorasan/mudeer', '_blank');
+		}, 'XPO.iconmudeer'],
+		['APPNAME '+BUILDNUMBER, function () {
+			return 'Forum Software';
+		}, function () {
+			open('https://github.com/xorasan/dewaan', '_blank');
+		}, '/e.png'],
 		['XPO.reportbug', 0, function () {
 			activity.abrad(myemail+'?subject='+appname+' bug '+BUILDNUMBER);
 		}, 'XPO.iconbugreport'],
@@ -162,7 +172,7 @@ var settings, currentad;
 					pager.intaxab('XPO.settings', 1);
 					webapp.header();
 				} else { // since pager already shows context
-					webapp.header( ['XPO.settings'] );
+					webapp.header([['XPO.settings'], 0, 'XPO.iconsettings']);
 				}
 				
 				softkeys.list.basic(settingslist);

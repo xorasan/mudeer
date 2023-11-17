@@ -1,5 +1,6 @@
 /*
  * imports dynamically generated kernel based on config.w
+ * kernel's build number is in version.w
  * links src files
  * creates directory structure
  * ...
@@ -69,15 +70,15 @@ var _templates = {
 		+	'\n\tmeta @name(theme-color) @content(black)'
 		+	'\n\tmeta @name(background-color) @content(black)'
 //		+	'\n\tmeta @rel(apple-touch-icon) @href(/icon.png)'
-		+	'\n\tlink @rel(manifest) @href('+(conf.jazar||'')+'/manifest.json)'
-		+	'\n\tlink @rel(icon) @href('+(conf.jazar||'')+'icon.png) @type(image/x-icon)'
+		+	'\n\tlink @rel(manifest) @href('+(conf.root||'')+'/manifest.json)'
+		+	'\n\tlink @rel(icon) @href('+(conf.root||'')+'icon.png) @type(image/x-icon)'
 		+	'\n'
 	},
 	main:	function (conf) {
 		var txt = '+htm'
 				+	'\nbody';
 		
-		if (conf.ishtamal)
+		if (conf.include)
 			txt += '\n\t+include managed.htm.w';
 	
 		return txt;
@@ -97,7 +98,7 @@ var _templates = {
 	},
 	script:	function (conf) {
 		var txt = '\'use strict\';';
-		if (conf.sinf == 'server')
+		if (conf.kind == 'server')
 			txt += '\n$.path = __dirname;';
 
 		if (conf.langs)
@@ -229,6 +230,15 @@ var importkernel = function (mods, to) {
 		}
 		// this exports mudeer
 		concat +=	'$._r();';
+
+		var KERNEL_BUILD_NUMBER = 0;
+		try {
+			KERNEL_BUILD_NUMBER = Files.get.file($.path+'/version.w');
+			KERNEL_BUILD_NUMBER = parseInt( KERNEL_BUILD_NUMBER.toString() || 0 );
+		} catch (e) {
+			// ignore because we can make do without this file
+		}
+		concat += '\n$.b = '+KERNEL_BUILD_NUMBER+';\n';
 		
 		if (to) Files.set.file(to, concat);
 	}
@@ -294,22 +304,23 @@ var do_install = function () {
 	
 	try {
 		Files.set.folder(pathprefix+'build');		// build
-		Files.set.folder(pathprefix+'releases');	// releases
-		Files.set.folder(pathprefix+'src');		// source
+		Files.set.folder(pathprefix+'pub');			// public
+		Files.set.folder(pathprefix+'src');			// source
 		Files.set.folder(pathprefix+'tests');		// tests
+		
 	} catch (e) {
 		
 	}
 
 	var root = Files.get.folder(pathprefix) || [];
 
-	if (conf.sinf == 'client') {
+	if (conf.kind == 'client') {
 		Files.set.folder(pathprefix+'icons');
 		Files.set.folder(pathprefix+'langs');
 		Files.set.folder(pathprefix+'langs/linked');
 	}
 
-	if (conf.sinf) {
+	if (conf.kind) {
 		var kernelmods = $.array( conf.kernel.concat( kernelpreset ) ).unique();
 		// TODO -[name] should remove that mod from this array
 		importkernel(kernelmods, pathprefix+'src/kernel.js');
@@ -320,7 +331,7 @@ var do_install = function () {
 
 		Files.set.file( pathprefix+'src/index.htm.w', _templates.index(conf) );
 
-		if (conf.sinf == 'client') {
+		if (conf.kind == 'client') {
 //			if ( !src.includes('head.htm.w') )
 //				Files.set.file( pathprefix+'src/head.htm.w', _templates.head(conf) );
 
@@ -336,11 +347,11 @@ var do_install = function () {
 	/* src/linked */
 	conf.src		&& importsrc(conf, pathprefix);
 
-	if (conf.sinf == 'server') {
-		conf.deps		&& importdeps(conf, pathprefix+'releases/');
+	if (conf.kind == 'server') {
+		conf.deps		&& importdeps(conf, pathprefix+'pub/');
 	}
 
-	if (conf.sinf == 'client') {
+	if (conf.kind == 'client') {
 		/* langs/linked */
 		conf.langs	&& importlangs(conf);
 		/* icons */

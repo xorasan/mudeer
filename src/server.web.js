@@ -1,18 +1,15 @@
-/*
- * this technology belongs to Allah, so fear Him and seek His approval
- * 
- * this project 'webapp' is to moved to glatteis core
- * just like you can import src/ mods
- * you'll be able to link dev-public/ mods as well
- * the difference is, dev-public/ mods will be dynamically linked 
- * */
 // requires Server, Files, Polling
-//+ adaaf
 var Web;
 ;(function(){
 	'use strict';
-		
+
 	var loadedmodules = [], Cache = {};
+	var node_path = require('path');
+	var public_path = node_path.resolve( Config.public || $.path )+'/';
+	var echo = Cli.echo;
+	function print_prop(a, b) {
+		echo( ' ^bright^'+a+'~~ '+b+' ' )
+	}
 
 	Web = {
 		_out: function (req, res, obj, extra) {
@@ -35,7 +32,7 @@ var Web;
 				$.log.s(e);
 			}
 		},
-		adaaf: function (callback) {
+		adaaf: function (callback) { // add
 			loadedmodules.push(callback);
 		},
 		api: function (req, res) {
@@ -108,7 +105,8 @@ var Web;
 				Web._out(req, res, extra.obj, extra.payload);
 			});
 		},
-		init: function (mods) {
+		init: function (mods, options) {
+			options = options || {};
 			var q = $.queue();
 			if (mods instanceof Array)
 				q.set(function (done, queue) {
@@ -122,7 +120,7 @@ var Web;
 				});
 			if (WUQU3AAT)
 				q.set(function (done, queue) {
-//					$.log.s( 'connecting to database' );
+					$.log.s( 'connecting to database' );
 					wuqu3aat.init({
 						host: 'localhost',
 						multiple: true,
@@ -159,20 +157,17 @@ var Web;
 //				$.log.s( 'registering controller intercepts' );
 				var intercept = function (req, res) {
 //					$.log( 'intercept', req.headers );
-					var path = $.path+'/',
+					var path = public_path,
 						file = path+'index.html';
 
-					if (req.url === '/icon.png')
-						file = path+'icon.png';
-					else if (req.url.startsWith('/m3') || req.url.startsWith('/qss')) {
+					if (req.url.startsWith('/m3') || req.url.startsWith('/qss')) {
 						var file = process.cwd()+req.url;
 
 						/* 
 						 * make uploads get cached
 						 * for an avg of 30 days or something
 						 * 
-						 * chrome doesn't cache content from bad
-						 * certs
+						 * chrome doesn't cache content from bad certs
 						 * */
 						res.setHeader('Cache-Control', 'private, max-age=2592000, must-revalidate');
 
@@ -182,7 +177,7 @@ var Web;
 								if (err)
 									res.sendStatus(404);
 								else if (stats.mtime) {
-//											$.log.s( stats.mtime.toUTCString() === new Date(ifmodsince).toUTCString() );
+//									$.log.s( stats.mtime.toUTCString() === new Date(ifmodsince).toUTCString() );
 
 									res.setHeader('Last-Modified', stats.mtime.toUTCString() );
 									if (stats.mtime.toUTCString() === new Date(ifmodsince).toUTCString()) {
@@ -206,16 +201,17 @@ var Web;
 					}
 					
 //					var isallowed = $.conf.admin.includes(req.headers.host);
-					if (/*isallowed && */file === false)
+					if (/*isallowed && */file === false) {
 						file = path+'index.html';
-//					else if (file === false)
+//					} else if (file === false) {
 //						file = path+'index.html';
-					
+					}
+
 					if (typeof file === 'number') {
 						res.sendStatus(file);
 					} else {
 						// these files are the same for all sites
-						if ( [	'robots.txt', '/_.js', '/20.js', '/a.js',
+						if ( [	'robots.txt', '/_.js', '/20.js', '/a.js', '/e.png',
 								'/mb.css', '/mb.js', '/mbdr.css', '/mbdr.js',
 								'/manifest.webapp', '/insaan.shakl', '/pallete.js',
 								'/kmr.otf', '/kmb.otf', '/kml.otf'].includes( req.url ) ) {
@@ -271,17 +267,20 @@ var Web;
 			q.run(function () {
 //				$.log.s( 'starting server' );
 				Server.init({
-						port: XAADIMPORT,
-						name: "APPNAME"
-					});
-				$.log.s( 'insha: '+BUILDNUMBER );
-				$.log.s( 'xaadim port: '+XAADIMPORT );
+					port: XAADIMPORT,
+					name: "APPNAME"
+				});
+				print_prop( 'public path', public_path );
+				print_prop( 'build', BUILDNUMBER );
+				print_prop( 'server port', XAADIMPORT );
 				
 //				Tests.isaliasunique();
 //				Tests.permstest();
 			});
 		}
 	};
-	
+
+	Web.add = Web.adaaf;
+
 	module.exports = Web;
 })();

@@ -230,6 +230,19 @@ var Files;
 				Files.fs.copyFileSync(oldPath, newPath);
 			}
 		},
+		copy_recursive: function (oldPath, newPath, callback) {
+			if (typeof callback === 'function') {
+				Files.fs.cp(oldPath, newPath, {recursive: true}, function (err) {
+					if (err) {
+						callback(err);
+						return;
+					}
+					callback();
+				});
+			} else {
+				Files.fs.cpSync(oldPath, newPath, {recursive: true});
+			}
+		},
 		pop: {
 			file: function (path, cb) {
 				if (typeof cb === 'function') {

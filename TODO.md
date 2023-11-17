@@ -11,3 +11,8 @@
         * [ ] [Samsung Internet dark mode](https://developer.samsung.com/internet/blog/en-us/2020/12/15/dark-mode-in-samsung-internet)
         
 
+* [ ] Publish
+	* [ ] convert a server+client full stack mudeer app into a self-contained portable folder with full copied deps
+	
+* [ ] Database
+	* [ ] the database should be able to run as an independent server and communicate as a JSON API
