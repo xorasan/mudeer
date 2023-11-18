@@ -11,10 +11,10 @@
     * [ ] add system theme detection
         * [ ] [Samsung Internet dark mode](https://developer.samsung.com/internet/blog/en-us/2020/12/15/dark-mode-in-samsung-internet)
 	* [ ] [Notch support](https://css-tricks.com/the-notch-and-css/)
-	* [*] Tall & curved screens support
+	* [x] Tall & curved screens support
 
 * [ ] Publish
-	* [*] convert a server+client full stack mudeer app into a self-contained portable folder with full copied deps
+	* [x] convert a server+client full stack mudeer app into a self-contained portable folder with full copied deps
 	
 * [ ] Database
 	* [ ] the database should be able to run as an independent server and communicate as a JSON API
