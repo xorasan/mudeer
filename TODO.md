@@ -3,7 +3,7 @@
 This is an incomplete progress list of features & known bugs.
 
 * [ ] List
-    * [ ] recycler( {} )
+    * [ ] Recycle: Only render visible elements `recycle( yes )`
         * [ ] Dynamic items
         * [ ] Calculate scroll height on update
         * [ ] Remember scroll position or item
