@@ -1,6 +1,4 @@
-/*
- * 
- * lists have an adapter $.array, it contains the objects present in the dom list
+/* lists have an adapter $.array, it contains the objects present in the dom list
  * 
  * the adapter set/pop functions can be overriden to provide your own logic
  * 
@@ -12,7 +10,7 @@
 //+ bahac uponbahac rakkaz uponnavi uponrakkaz freeflow _muntahaabox muntahaa
 //+ _muntahaa mowdoo3 _katabmowdoo3 murakkaz baidaa eawwad ixtaf izhar afterset
 //+ mu3allaq ba3dihi namoovaj
-var list;
+var List, list;
 ;(function(){
 	'use strict';
 
@@ -359,7 +357,7 @@ var list;
 			 * id would actually change the html#id
 			 * so avoid it unless you know what you're doing
 			 * */
-			if (id) $.log('list.set, stop using id, use o.uid instead');
+			if (id) $.log('List.set, stop using id, use o.uid instead');
 			o = o || {};
 
 			var clone, LV = this, listitem = o._listitem || LV._listitem,
@@ -628,7 +626,18 @@ var list;
 		},
 		recycle: function (yes) {
 			this._recycle = yes;
+			if (yes) { // add to scroll listener
+				
+			} else {
+				
+			}
 			return this;
+		},
+		set_scrolling_element: function () {
+			
+		},
+		destroy: function () {
+			
 		},
 		idprefix: function (id) {
 			this.idprefix_raw = id;
@@ -659,7 +668,7 @@ var list;
 			return LV;
 		},
 	};
-	list = function (element) {
+	List = list = function (element) { // TODO deprecate list
 		var LV = Object.create(proto);
 		element.dataset.XPO.focus = 'XPO.list';
 		element.XPO.listobject = LV;
@@ -670,7 +679,7 @@ var list;
 		LV.keys = templates.keys( LV.element );
 		LV.selected = 0;
 		LV.muntahaa();
-		LV.mowdoo3();
+		LV.title();
 		/* IMPORTANT EXPLAIN
 		 * this is for use cases with a single list that is focussed by default
 		 * for multiple lists in a focus group, chain .rakkaz() to unset this

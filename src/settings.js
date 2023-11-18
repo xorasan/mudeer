@@ -1,66 +1,66 @@
 //+ adaaf jaddad axad
-var settings, currentad;
+var Settings, settings, currentad;
 ;(function(){
 	// TODO move this to settingslist.adapter
-	var settingsitems = [
-		// uid, getvalue, onpress
-		/*['XPO.quality', 0, function () {
-			Hooks.run('XPO.sheet', {
-				XPO.name: 'XPO.quality',
-				XPO.title: translate('XPO.quality'),
-			});
-		}],*/
-		['Mudeer '+$.b, function () {
-			return 'Framework';
+	var settingsitems = [];
+	function add(a) { settingsitems.push(a); }
+	// uid, getvalue, onpress
+	/*['XPO.quality', 0, function () {
+		Hooks.run('XPO.sheet', {
+			XPO.name: 'XPO.quality',
+			XPO.title: translate('XPO.quality'),
+		});
+	}],*/
+	add(['Mudeer '+$.b, function () {
+		return 'Web Framework';
+	}, function () {
+		open('https://github.com/xorasan/mudeer', '_blank');
+	}, 'XPO.iconmudeer']);
+	// TODO if show if app has a source url
+	if (Config.repo) {
+		add([Config.appname+' '+BUILDNUMBER, function () {
+			return Config.sub;
 		}, function () {
-			open('https://github.com/xorasan/mudeer', '_blank');
-		}, 'XPO.iconmudeer'],
-		['APPNAME '+BUILDNUMBER, function () {
-			return 'Forum Software';
-		}, function () {
-			open('https://github.com/xorasan/dewaan', '_blank');
-		}, '/e.png'],
-		['XPO.reportbug', 0, function () {
-			activity.abrad(myemail+'?subject='+appname+' bug '+BUILDNUMBER);
-		}, 'XPO.iconbugreport'],
-		['XPO.requestfeat', 0, function () {
-			activity.abrad(myemail+'?subject='+appname+' request '+BUILDNUMBER);
-		}, 'XPO.iconfeaturedplaylist'],
-		['XPO.timeformat', function () {
-			var is24 = preferences.get(24, 1);
-			return [is24 ? 'XPO.hours24' : 'XPO.hours12'];
-		}, function () {
-			var is24 = preferences.get(24, 1);
-			if (is24) preferences.set(24, 0);
-			else preferences.set(24, 1);
-		}, 'XPO.icontimer'],
-		['XPO.calendar', function () {
-			var isgregorian = preferences.get(26, 1);
-			return [isgregorian ? 'XPO.gregorian' : 'XPO.hijri'];
-		}, function () {
-			var isgregorian = preferences.get(26, 1);
-			if (isgregorian) preferences.set(26, 0);
-			else preferences.set(26, 1);
-		}, 'XPO.icondaterange'],
-		['XPO.transparency', function () {
-			var isit = preferences.get(23, 1);
-			webapp.transparency();
-			return [isit ? 'XPO.on' : 'XPO.off'];
-		}, function () {
-			var isit = preferences.get(23, 1);
-			if (isit) { preferences.set(23, 0); }
-			else { preferences.set(23, 1); }
-		}, 'XPO.iconbluron'],
-		['XPO.largetext', function () {
-			var largetext = preferences.get(9, 1);
-			webapp.textsize();
-			return [largetext ? 'XPO.on' : 'XPO.off'];
-		}, function () {
-			preferences.set(9, preferences.get(9, 1) ? 0 : 1);
-		}, 'XPO.iconformatsize']
-	], settingslist, myemail = 'hxorasani@gmail.com', keys;
+			open(Config.repo, '_blank');
+		}, '/e.png']);
+	}
+	add(['XPO.timeformat', function () {
+		var is24 = preferences.get(24, 1);
+		return [is24 ? 'XPO.hours24' : 'XPO.hours12'];
+	}, function () {
+		var is24 = preferences.get(24, 1);
+		if (is24) preferences.set(24, 0);
+		else preferences.set(24, 1);
+	}, 'XPO.icontimer']);
+	add(['XPO.calendar', function () {
+		var isgregorian = preferences.get(26, 1);
+		return [isgregorian ? 'XPO.gregorian' : 'XPO.hijri'];
+	}, function () {
+		var isgregorian = preferences.get(26, 1);
+		if (isgregorian) preferences.set(26, 0);
+		else preferences.set(26, 1);
+	}, 'XPO.icondaterange']);
+	// TODO if show if app supports transparency
+//	['XPO.transparency', function () {
+//		var isit = preferences.get(23, 1);
+//		webapp.transparency();
+//		return [isit ? 'XPO.on' : 'XPO.off'];
+//	}, function () {
+//		var isit = preferences.get(23, 1);
+//		if (isit) { preferences.set(23, 0); }
+//		else { preferences.set(23, 1); }
+//	}, 'XPO.iconbluron'],
+	add(['XPO.largetext', function () {
+		var largetext = preferences.get(9, 1);
+		webapp.textsize();
+		return [largetext ? 'XPO.on' : 'XPO.off'];
+	}, function () {
+		preferences.set(9, preferences.get(9, 1) ? 0 : 1);
+	}, 'XPO.iconformatsize']);
+
+	var settingslist, keys;
 	
-	settings = {
+	Settings = settings = {
 		adaaf: function (name, getvalue, onpress, icon) { // add
 			settingsitems.push([name, getvalue, onpress, icon]);
 			settings.jaddad(settingsitems.length-1);

@@ -320,7 +320,7 @@ var sessions,
 				// get new captcha if there isn't already one loaded
 				if (!cache.XPO.hash) {
 					webapp.dimmer(LAYERTOPMOST, xlate('XPO.fetchingcaptcha'));
-					shabakah.axav('XPO.adwaar', 'XPO.captcha', 1);
+					Network.get('XPO.sessions', 'XPO.captcha', 1);
 				} else {
 					setcaptcha();
 				}
@@ -427,7 +427,7 @@ var sessions,
 					if (!temp)
 						webapp.dimmer(LAYERTOPMOST, xlate('XPO.checkingusername'));
 
-					shabakah.axav('XPO.adwaar', 'XPO.mowjood', payload);
+					Network.get('XPO.sessions', 'XPO.mowjood', payload);
 				}
 			}
 		},
@@ -443,57 +443,57 @@ var sessions,
 				if (join) payload2.XPO.join = 1;
 				
 				webapp.dimmer( true, translate('XPO.loggingin') );
-				shabakah.axav('XPO.adwaar', 'XPO.duxool', payload2);
+				Network.get('XPO.sessions', 'XPO.duxool', payload2);
 			}
 		},
 	};
 	Hooks.set('XPO.ready', function (args) {
-		shabakah.tawassat('XPO.adwaar', 'XPO.miftaah', function (intahaa) {
+		Network.tawassat('XPO.sessions', 'XPO.miftaah', function (intahaa) {
 			intahaa(sessions.signedin() || undefined);
 		});
-		shabakah.jawaab.tawassat('XPO.adwaar', 'XPO.miftaah', function (jawaab) {
-			if (jawaab === false) {
+		Network.response.tawassat('XPO.sessions', 'XPO.miftaah', function (response) {
+			if (response === false) {
 				sessions.signout();
 			}
 		});
-		shabakah.jawaab.axav('XPO.adwaar', 'XPO.mowjood', function (jawaab) {
-			if (jawaab.XPO.join) {
-				usnmavlble['_'+jawaab.XPO.username] = jawaab.XPO.exists;
-				usernamexataa(jawaab.XPO.exists, jawaab.XPO.username, jawaab.XPO.proceed);
+		Network.response.get('XPO.sessions', 'XPO.mowjood', function (response) {
+			if (response.XPO.join) {
+				usnmavlble['_'+response.XPO.username] = response.XPO.exists;
+				usernamexataa(response.XPO.exists, response.XPO.username, response.XPO.proceed);
 				webapp.dimmer();
 			}
 		});
-		shabakah.jawaab.axav('XPO.adwaar', 'XPO.captcha', function (jawaab) {
-//			$.log( 'XPO.captcha', jawaab );
+		Network.response.get('XPO.sessions', 'XPO.captcha', function (response) {
+//			$.log( 'XPO.captcha', response );
 			webapp.dimmer();
 			if (mfateeh) {
-				cache.XPO.hash = jawaab.XPO.hash;
-				cache.XPO.captcha = jawaab.XPO.captcha;
+				cache.XPO.hash = response.XPO.hash;
+				cache.XPO.captcha = response.XPO.captcha;
 				setcaptcha();
 			}
 		});
-		shabakah.jawaab.axav('XPO.adwaar', 'XPO.miftaah', function (jawaab) {
-//			$.log( 'XPO.miftaah', jawaab );
+		Network.response.get('XPO.sessions', 'XPO.miftaah', function (response) {
+//			$.log( 'XPO.miftaah', response );
 		});
-		shabakah.jawaab.axav('XPO.adwaar', 'XPO.duxool', function (jawaab) {
+		Network.response.get('XPO.sessions', 'XPO.duxool', function (response) {
 			webapp.dimmer();
-			if (jawaab.XPO.password) {
-				passwordxataa(jawaab.XPO.password);
+			if (response.XPO.password) {
+				passwordxataa(response.XPO.password);
 			}
-			if (jawaab.XPO.answer) {
-				answerxataa(jawaab.XPO.answer);
+			if (response.XPO.answer) {
+				answerxataa(response.XPO.answer);
 			}
-			if (jawaab.XPO.miftaah) {
+			if (response.XPO.miftaah) {
 				var signedin = sessions.signedin();
-				preferences.set(  1 , jawaab.XPO.miftaah		);
-				preferences.set( 81 , jawaab.XPO.latitude	);
-				preferences.set( 82 , jawaab.XPO.longitude	);
-				preferences.set(  2 , jawaab.XPO.uid			);
-				preferences.set( 20 , jawaab.XPO.username	);
-				preferences.set( 21 , jawaab.XPO.displayname	);
-				preferences.set( 22 , jawaab.XPO.type		);
+				preferences.set(  1 , response.XPO.miftaah		);
+				preferences.set( 81 , response.XPO.latitude	);
+				preferences.set( 82 , response.XPO.longitude	);
+				preferences.set(  2 , response.XPO.uid			);
+				preferences.set( 20 , response.XPO.username	);
+				preferences.set( 21 , response.XPO.displayname	);
+				preferences.set( 22 , response.XPO.type		);
 				if (!signedin) { // only do this if wasn't prev logged in
-					Hooks.run('XPO.sessionchange', jawaab.XPO.miftaah);
+					Hooks.run('XPO.sessionchange', response.XPO.miftaah);
 					webapp.itlaa3( xlate('XPO.loggedin') );
 					pager.intaxab('XPO.main', 1);
 				}

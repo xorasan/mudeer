@@ -11,14 +11,14 @@
 img #eqonahui .fixed .top .right @src(e.png)
 #tallheaderui .fixed .z100 .left .right .headerui
 	[id=header] .big .centertext [dir=1] @hidden
-		[id=icon] .large .icon
+		[id=icon] .giant .icon
 		[id=title] .big .bold
 		[id=subtitle] .dim
 #headerui .relative .headerui
 	[id=header] [dir=1] @hidden
 		.flex .padv .accent
 			.vcenter .pad
-				[id=icon] .medium .icon
+				[id=icon] .huge .icon
 			.vcenter .pad
 				[id=title] .big .bold
 				[id=subtitle] .dim

@@ -267,12 +267,12 @@ var Web;
 			q.run(function () {
 //				$.log.s( 'starting server' );
 				Server.init({
-					port: XAADIMPORT,
+					port: Config.port,
 					name: "APPNAME"
 				});
 				print_prop( 'public path', public_path );
 				print_prop( 'build', BUILDNUMBER );
-				print_prop( 'server port', XAADIMPORT );
+				print_prop( 'server port', Config.port );
 				
 //				Tests.isaliasunique();
 //				Tests.permstest();

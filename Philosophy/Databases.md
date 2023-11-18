@@ -19,3 +19,21 @@ Entry
 
 ## Caching
 For small databases, it makes total sense to keep them in memory during runtime, save to storage whenever changes are made using delayed timers and intervals.
+
+# Core Concepts
+An independent database server, that you can ask to create a database for you, each backed by text or mariadb.  
+It stores this index of these databases in a [Weld](../weld) text file called `index.w`.  
+
+The text databases are simple JSON like object stores.
+
+
+
+
+
+
+
+
+
+
+
+

@@ -69,7 +69,7 @@ var templates, namaavij;
 							if (o[i].startsWith('app://'))
 								keys[i].src = o[i];
 							else
-								keys[i].src = 'file://'+o[i];
+								keys[i].src = o[i];
 							keys[i].hidden = 0;
 						} else {
 							keys[i].hidden = 1;

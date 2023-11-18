@@ -4,21 +4,21 @@
  */
 //+ hisaab miftaah hasheesh
 var sessions,
-	tbl_adwr = 'adwaar0'
-	tbl_hsbt = 'hisaabaat0',
-	tbl_wqti = 'waqti0';
+	tbl_adwr = 'sessions0'
+	tbl_hsbt = 'accounts0',
+	tbl_wqti = 'temporary0';
 
 sessions = {
-	sendcaptcha: function (jawaab) {
-		captcha.get(jawaab.extra.boxdatabase, function (svg) {
-			jawaab.haajah('XPO.captcha')
+	sendcaptcha: function (response) {
+		captcha.get(response.extra.boxdatabase, function (svg) {
+			response.haajah('XPO.captcha')
 				  .axav('XPO.captcha', svg.raw)
 				  .axav('XPO.hash', svg.hash)
 				  .intahaa();
 		});
 	},
-	format: function (sessionrow, accountrow, jawaab) {
-		jawaab.axav({
+	format: function (sessionrow, accountrow, response) {
+		response.axav({
 			XPO.miftaah		: sessionrow.hasheesh0	,
 			XPO.uid			: accountrow.uid0		,
 			XPO.ism			: accountrow.ism0		,
@@ -27,10 +27,10 @@ sessions = {
 			XPO.xattiltool	: accountrow.xattiltool0,
 			XPO.sinf		: accountrow.sinf0		,
 		});
-		sessions.hisaab2extra(sessionrow, accountrow, jawaab);
+		sessions.hisaab2extra(sessionrow, accountrow, response);
 	},
-	hisaab2extra: function (sessionrow, accountrow, jawaab) {
-		jawaab.extra.hisaab = {
+	hisaab2extra: function (sessionrow, accountrow, response) {
+		response.extra.hisaab = {
 			XPO.sid			: sessionrow.uid0			, // session uid
 			XPO.miftaah		: sessionrow.hasheesh0		, // session key
 			XPO.uid			: accountrow.uid0			, // unique id
@@ -66,7 +66,7 @@ sessions = {
 			XPO.updated		: accountrow.updated0		, // updated when
 		};
 	},
-	set: function (database, accountrow, jawaab, callback) {
+	set: function (database, accountrow, response, callback) {
 		var key = helpers.weakhash()+helpers.weakhash();
 		helpers.set(database, tbl_adwr, [{
 			hasheesh0:		key,
@@ -74,9 +74,9 @@ sessions = {
 			_created0:		new Date().getTime(),
 			updated0:		new Date().getTime(),
 		}], function (outcome) {
-			sessions.format(outcome.rows[0], accountrow, jawaab);
+			sessions.format(outcome.rows[0], accountrow, response);
 			
-			typeof callback === 'function' && callback(jawaab);
+			typeof callback === 'function' && callback(response);
 		}, {
 			checkism: false
 		});
@@ -143,17 +143,17 @@ sessions = {
 };
 
 // miftaah attached, verify & add hisaab info
-shabakah.fadl(AWWAL).tawassat('XPO.adwaar', 'XPO.miftaah', function (jawaab) {
-	var database = jawaab.extra.database;
+Network.favor(PRIMARY).intercession('XPO.sessions', 'XPO.miftaah', function (response) {
+	var database = response.extra.database;
 
-	if (!isstr(jawaab.qadr)) {
-		jawaab.tawassat(false).intahaa();
+	if (!isstr(response.qadr)) {
+		response.intercession(false).intahaa();
 		return;
 	}
 
 	// does the session exist
 	helpers.get(database, tbl_adwr, {
-		hasheesh0:	parsestring(jawaab.qadr),
+		hasheesh0:	parsestring(response.qadr),
 	}, function (sessionrow) {
 		// yes
 		if (sessionrow) {
@@ -169,34 +169,34 @@ shabakah.fadl(AWWAL).tawassat('XPO.adwaar', 'XPO.miftaah', function (jawaab) {
 				}, function (accountrow) {
 					// yes, just return true
 					if (accountrow) {
-						jawaab.tawassat(true);
-						sessions.hisaab2extra(sessionrow, accountrow, jawaab);
+						response.intercession(true);
+						sessions.hisaab2extra(sessionrow, accountrow, response);
 					// no, return false to force logout
 					} else
-						jawaab.tawassat(false);
+						response.intercession(false);
 
-					jawaab.intahaa();
+					response.intahaa();
 				});
 			}, {
 				checkism: false
 			});
 		// no, return false to force logout
 		} else {
-			jawaab.tawassat(false);
-			jawaab.intahaa();
+			response.intercession(false);
+			response.intahaa();
 		}
 	});
 });
 // requested captcha
-shabakah.axav('XPO.adwaar', 'XPO.captcha', function (jawaab) {
-	$.log( 'adwaar', 'captcha' );
-	sessions.sendcaptcha(jawaab);
+Network.axav('XPO.sessions', 'XPO.captcha', function (response) {
+	$.log( 'sessions', 'captcha' );
+	sessions.sendcaptcha(response);
 });
 // requested sign in
-shabakah.axav('XPO.adwaar', 'XPO.duxool', function (jawaab) {
-	var creds = jawaab.qadr;
-	var boxdatabase = jawaab.extra.boxdatabase;
-	var database = jawaab.extra.database;
+Network.axav('XPO.sessions', 'XPO.duxool', function (response) {
+	var creds = response.qadr;
+	var boxdatabase = response.extra.boxdatabase;
+	var database = response.extra.database;
 	if (typeof creds.XPO.answer === 'string') {
 		helpers.get(boxdatabase, tbl_wqti, {
 			hasheesh0: parsestring(creds.XPO.hash),
@@ -209,7 +209,7 @@ shabakah.axav('XPO.adwaar', 'XPO.duxool', function (jawaab) {
 				var password	= helpers.passwordisvalid( creds.XPO.password );
 				// errors
 				if (username.code && password.code) {
-					jawaab.axav('XPO.username', username.code)
+					response.axav('XPO.username', username.code)
 						  .axav('XPO.password', password.code)
 						  .intahaa();
 				// no errors
@@ -220,8 +220,8 @@ shabakah.axav('XPO.adwaar', 'XPO.duxool', function (jawaab) {
 						// join
 						if ( creds.XPO.join ) {
 							if (accountrow) {
-								jawaab.axav('XPO.username', 'XPO.usernametaken');
-								sessions.sendcaptcha(jawaab);
+								response.axav('XPO.username', 'XPO.usernametaken');
+								sessions.sendcaptcha(response);
 							} else {
 								helpers.hashpassword( creds.XPO.password, function (cryptpassword) {
 									helpers.set(database, tbl_hsbt, [{
@@ -234,8 +234,8 @@ shabakah.axav('XPO.adwaar', 'XPO.duxool', function (jawaab) {
 										// tie newly created account to a new session
 										accountrow = outcome.rows[0];
 										
-										sessions.set(database, accountrow, jawaab, function () {
-											jawaab.intahaa();
+										sessions.set(database, accountrow, response, function () {
+											response.intahaa();
 										});
 									});
 								});
@@ -259,8 +259,8 @@ shabakah.axav('XPO.adwaar', 'XPO.duxool', function (jawaab) {
 											// tie newly created account to a new session
 											accountrow = outcome.rows[0];
 											
-											sessions.set(database, accountrow, jawaab, function () {
-												jawaab.intahaa();
+											sessions.set(database, accountrow, response, function () {
+												response.intahaa();
 											});
 										}, {
 											checkism: false
@@ -271,59 +271,59 @@ shabakah.axav('XPO.adwaar', 'XPO.duxool', function (jawaab) {
 														   accountrow.hasheesh0,
 														   creds.XPO.password, function (matched) {
 										if (matched) {
-											sessions.set(database, accountrow, jawaab, function () {
-												jawaab.intahaa();
+											sessions.set(database, accountrow, response, function () {
+												response.intahaa();
 											});
 										} else {
-											jawaab.axav('XPO.password', 'XPO.passwordwrong');
-											sessions.sendcaptcha(jawaab);
+											response.axav('XPO.password', 'XPO.passwordwrong');
+											sessions.sendcaptcha(response);
 										}
 									});
 								}
 							} else {
-								jawaab.axav('XPO.password', 'XPO.passwordwrong');
-								sessions.sendcaptcha(jawaab);
+								response.axav('XPO.password', 'XPO.passwordwrong');
+								sessions.sendcaptcha(response);
 							}
 						}
 					});
 				}
 			}
 			else {
-				jawaab.axav('XPO.answer', 'XPO.answerwrong');
-				sessions.sendcaptcha(jawaab);
+				response.axav('XPO.answer', 'XPO.answerwrong');
+				sessions.sendcaptcha(response);
 			}
 		});
-	} else jawaab.axav(false).intahaa();
+	} else response.axav(false).intahaa();
 });
 // requested sign out
-shabakah.axav('XPO.adwaar', 'XPO.xurooj', function (jawaab) {
-	jawaab.axav(true).intahaa();
+Network.axav('XPO.sessions', 'XPO.xurooj', function (response) {
+	response.axav(true).intahaa();
 });
 // username exists ?
-shabakah.axav('XPO.adwaar', 'XPO.mowjood', function (jawaab) {
-	var creds = jawaab.qadr,
-		database = jawaab.extra.database;
+Network.axav('XPO.sessions', 'XPO.mowjood', function (response) {
+	var creds = response.qadr,
+		database = response.extra.database;
 
 	if (creds.XPO.exists && creds.XPO.join) {
 		var username = helpers.usernameisvalid( creds.XPO.username );
-		jawaab.axav('XPO.proceed', creds.XPO.proceed)
+		response.axav('XPO.proceed', creds.XPO.proceed)
 			  .axav('XPO.join', 1)
 			  .axav('XPO.username', username.username);
 
 		// errors
 		if (username.code) {
-			jawaab.axav('XPO.exists', username.code)
+			response.axav('XPO.exists', username.code)
 				  .intahaa();
 		// no errors
 		} else {
 			helpers.get(database, tbl_hsbt, {
 				ism0:	username.username,
 			}, function (accountrow) {
-				jawaab.axav('XPO.exists', accountrow ? 'XPO.usernametaken' : 'XPO.usernameavailable')
+				response.axav('XPO.exists', accountrow ? 'XPO.usernametaken' : 'XPO.usernameavailable')
 					  .intahaa();
 			});
 		}
-	} else jawaab.intahaa();
+	} else response.intahaa();
 });
 Web.adaaf(function (done, queue, extra) {
 	done(queue, extra);
@@ -337,9 +337,9 @@ Web.adaaf(function (done, queue, extra) {
 	// already logged in
 	if (payload.XPO.key) {
 	}
-	else if ( payload.XPO.axav && payload.XPO.axav.XPO.adwaar ) {
-		var creds = payload.XPO.axav.XPO.adwaar;
-		obj.XPO.adwaar = account;
+	else if ( payload.XPO.axav && payload.XPO.axav.XPO.sessions ) {
+		var creds = payload.XPO.axav.XPO.sessions;
+		obj.XPO.sessions = account;
 		
 		// no payload??
 //		else done(queue, extra);

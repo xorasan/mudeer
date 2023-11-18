@@ -1,221 +1,221 @@
 /*
  * Web.adaaf
- * shabakah.axav( ism, haajah, cb )
- * shabakah.waaqat( ... )
+ * network.get( name, need, cb )
+ * network.sync( ... )
  * 
- * json.axav.ism.haajah = qadr
- * json.waaqat.ism.haajah = qadr
+ * json.get.name.need = value
+ * json.sync.name.need = value
  * 
- * nashar is very lightweight
+ * broadcast is very lightweight
  * 
- * mirror this on zaboon side
- * you are able to listen for specific jawaabaat for your own juzw
- * you can add batch (duf3ah) commands to be executed every 24h
+ * mirror this on client side
+ * you are able to listen for specific responses for your own juzw
+ * you can add batch commands to be executed every 24h
  * */
-//+ axav waaqat nashar intahaa mundarij hisaab qadr haajah ism wasaatat tawassat
-//+ rafa3
-var shabakahfadaail = {}, AWWAL = 100, WAST = 500, AAXIR = 1000,
-	shabakahduf3aat = {};
-[AWWAL, WAST, AAXIR].forEach(function (fadl) {
-	shabakahfadaail[fadl] = {
-		wasaatat		: {},
-		axav			: {},
-		waaqat			: {},
-		rafa3			: {},
+//+ get sync broadcast finish mundarij account value need name intercession intercept
+//+ upload
+var network_favors = {}, PRIMARY = 100, SECONDARY = 500, TERTIARY = 1000,
+	network_batches = {};
+[PRIMARY, SECONDARY, TERTIARY].forEach(function (favor) {
+	network_favors[favor] = {
+		intercession	: {},
+		get				: {},
+		sync			: {},
+		upload			: {},
 	};
 });
-var shabakah = {
-	tawassat: function (ism, haajah, cb) {
-		if (typeof haajah == 'function') cb = haajah, haajah = 0;
-		haajah = haajah || 'XPO.xarq';
-		var fadl = shabakahfadaail[this._fadl || WAST];
-		fadl.wasaatat[ ism ] = fadl.wasaatat[ ism ] || {};
-		fadl.wasaatat[ ism ][ haajah ] = cb;
+var Network = network = {
+	intercept: function (name, need, cb) {
+		if (typeof need == 'function') cb = need, need = 0;
+		need = need || 'XPO.default';
+		var favor = network_favors[this._favor || SECONDARY];
+		favor.intercession[ name ] = favor.intercession[ name ] || {};
+		favor.intercession[ name ][ need ] = cb;
 	},
-	axav: function (ism, haajah, cb) {
-		if (typeof haajah == 'function') cb = haajah, haajah = 0;
-		haajah = haajah || 'XPO.xarq';
-		var fadl = shabakahfadaail[this._fadl || WAST];
-		fadl.axav[ ism ] = fadl.axav[ ism ] || {};
-		fadl.axav[ ism ][ haajah ] = cb;
+	get: function (name, need, cb) {
+		if (typeof need == 'function') cb = need, need = 0;
+		need = need || 'XPO.default';
+		var favor = network_favors[this._favor || SECONDARY];
+		favor.get[ name ] = favor.get[ name ] || {};
+		favor.get[ name ][ need ] = cb;
 	},
-	waaqat: function (ism, haajah, cb) {
-		if (typeof haajah == 'function') cb = haajah, haajah = 0;
-		haajah = haajah || 'XPO.xarq';
-		var fadl = shabakahfadaail[this._fadl || WAST];
-		fadl.waaqat[ ism ] = fadl.waaqat[ ism ] || {};
-		fadl.waaqat[ ism ][ haajah ] = cb;
+	sync: function (name, need, cb) {
+		if (typeof need == 'function') cb = need, need = 0;
+		need = need || 'XPO.default';
+		var favor = network_favors[this._favor || SECONDARY];
+		favor.sync[ name ] = favor.sync[ name ] || {};
+		favor.sync[ name ][ need ] = cb;
 	},
-	rafa3: function (ism, haajah, cb) {
-		if (typeof haajah == 'function') cb = haajah, haajah = 0;
-		haajah = haajah || 'XPO.xarq';
-		var fadl = shabakahfadaail[this._fadl || WAST];
-		fadl.rafa3[ ism ] = fadl.rafa3[ ism ] || {};
-		fadl.rafa3[ ism ][ haajah ] = cb;
+	upload: function (name, need, cb) {
+		if (typeof need == 'function') cb = need, need = 0;
+		need = need || 'XPO.default';
+		var favor = network_favors[this._favor || SECONDARY];
+		favor.upload[ name ] = favor.upload[ name ] || {};
+		favor.upload[ name ][ need ] = cb;
 	},
-	fadl: function (fadl) {
-		var s = Object.assign({}, shabakah);
-		s._fadl = fadl;
+	favor: function (favor) {
+		var s = Object.assign({}, network);
+		s._favor = favor;
 		return s;
 	},
-	duf3ah: function (ism, haajah, cb) {
-		if (typeof haajah == 'function') cb = haajah, haajah = 0;
-		haajah = haajah || 'XPO.xarq';
-		shabakahduf3aat[ ism ] = shabakahduf3aat[ ism ] || {};
-		shabakahduf3aat[ ism ][ haajah ] = cb;
+	batch: function (name, need, cb) {
+		if (typeof need == 'function') cb = need, need = 0;
+		need = need || 'XPO.default';
+		network_batches[ name ] = network_batches[ name ] || {};
+		network_batches[ name ][ need ] = cb;
 	},
-	duf3ahajraa: function () {
+	batch_process: function () {
 		setTimeout(function () {
-//			$.log( 'shabakah.duf3ahajraa' );
-			var d = shabakahduf3aat;
+//			$.log( 'network.batch_process' );
+			var d = network_batches;
 			for (var i in d) {
 				if (d[i]) for (var h in d[i]) {
 					isfun(d[i][h]) && d[i][h]();
 				}
 			}
-			shabakah.duf3ahajraa();
+			network.batch_process();
 		}, 1 * 15 * 60 * 1000); // 15m for now, 24h later
 	},
 };
-// waqt attached, verify & add new waqt
-shabakah.fadl(AWWAL).tawassat('XPO.shabakah', 'XPO.waqt', function (jawaab) {
+// time attached, verify & add new time
+network.favor(PRIMARY).intercept('XPO.network', 'XPO.time', function (response) {
 	/*
-	 * waqt is set only for perm and nashar channels
-	 * on-demand doesn't send waqt at all
+	 * time is set only for perm and broadcast channels
+	 * on-demand doesn't send time at all
 	 * 
-	 * setting waqt here helps because while the response for this request
+	 * setting time here helps because while the response for this request
 	 * is being processed, if new items are added by someone else, this
-	 * waqt will be before the creation dates of those new items and
+	 * time will be before the creation dates of those new items and
 	 * they'll get synced on the next request
 	 * */
-	if (jawaab.qadr) jawaab.extra.waqt = jawaab.qadr || 0;
-	else jawaab.extra.waqt = 0;
+	if (response.value) response.extra.time = response.value || 0;
+	else response.extra.time = 0;
 
 	/*
-	 * only return waqt if client says that it doesn't have waqt
-	 * so that only nashar qanaat can send out waqt in all other cases
+	 * only return time if client says that it doesn't have time
+	 * so that only broadcast qanaat can send out time in all other cases
 	 * */
-	if (!jawaab.qadr || jawaab.nashar)
-		jawaab.tawassat( new Date().getTime() );
+	if (!response.value || response.broadcast)
+		response.intercept( new Date().getTime() );
 
-	jawaab.intahaa();
+	response.finish();
 });
 Web.adaaf(function (done, queue, extra) {
 	var payload		= extra.payload	;
 	var obj			= extra.obj		;
 	var queuesub	= $.queue()		;
 
-	var jawaab = function (donesub, ism, haajah, qadrminzaboon) {
-		var jwb = {
-			intahaa: function () {
+	var response = function (donesub, name, need, value_from_client) {
+		var rsp = {
+			finish: function () {
 				donesub(queuesub, extra);
 			},
-			munfaq: function () {
-				extra.munfaq = 1; // handled consumed
+			consumed: function () {
+				extra.consumed = 1; // handled consumed
 				donesub(queuesub, extra);
 			},
-			axav: function (qadrx, qadr2, haajah2) {
-				var h = haajah2 || haajah || 'XPO.xarq';
-				obj.axav					= obj.axav			|| {};
-				obj.axav[ ism ]				= obj.axav[ ism ]	|| {};
-				if (qadr2 !== undefined) {
-					obj.axav[ ism ][ h ] = obj.axav[ ism ][ h ] || {};
-					obj.axav[ ism ][ h ][ qadrx ] = obj.axav[ ism ][ h ][ qadrx ] || {};
-					obj.axav[ ism ][ h ][ qadrx ] = qadr2;
+			get: function (valuex, value2, need2) {
+				var h = need2 || need || 'XPO.default';
+				obj.get					= obj.get			|| {};
+				obj.get[ name ]				= obj.get[ name ]	|| {};
+				if (value2 !== undefined) {
+					obj.get[ name ][ h ] = obj.get[ name ][ h ] || {};
+					obj.get[ name ][ h ][ valuex ] = obj.get[ name ][ h ][ valuex ] || {};
+					obj.get[ name ][ h ][ valuex ] = value2;
 				} else {
-					obj.axav[ ism ][ h ] = qadrx;
+					obj.get[ name ][ h ] = valuex;
 				}
-				return jwb;
+				return rsp;
 			},
-			waaqat: function (qadrx, qadr2, haajah2) {
-				var h = haajah2 || haajah || 'XPO.xarq';
-				obj.waaqat					= obj.waaqat		|| {};
-				obj.waaqat[ ism ]			= obj.waaqat[ ism ]	|| {};
-				if (qadr2 !== undefined) {
-					obj.waaqat[ ism ][ h ] = obj.waaqat[ ism ][ h ] || {};
-					obj.waaqat[ ism ][ h ][ qadrx ] = obj.waaqat[ ism ][ h ][ qadrx ] || {};
-					obj.waaqat[ ism ][ h ][ qadrx ] = qadr2;
+			sync: function (valuex, value2, need2) {
+				var h = need2 || need || 'XPO.default';
+				obj.sync					= obj.sync		|| {};
+				obj.sync[ name ]			= obj.sync[ name ]	|| {};
+				if (value2 !== undefined) {
+					obj.sync[ name ][ h ] = obj.sync[ name ][ h ] || {};
+					obj.sync[ name ][ h ][ valuex ] = obj.sync[ name ][ h ][ valuex ] || {};
+					obj.sync[ name ][ h ][ valuex ] = value2;
 				} else {
-					obj.waaqat[ ism ][ h ] = qadrx;
+					obj.sync[ name ][ h ] = valuex;
 				}
-				return jwb;
+				return rsp;
 			},
-			tawassat: function (qadrx, qadr2, haajah2) {
-				var h = haajah2 || haajah || 'XPO.xarq';
-				obj.wasaatat			= obj.wasaatat		|| {};
-				obj.wasaatat[ ism ]		= obj.wasaatat[ ism ]	|| {};
-				if (qadr2 !== undefined) {
-					obj.wasaatat[ ism ][ h ] = obj.wasaatat[ ism ][ h ] || {};
-					obj.wasaatat[ ism ][ h ][ qadrx ] = obj.wasaatat[ ism ][ h ][ qadrx ] || {};
-					obj.wasaatat[ ism ][ h ][ qadrx ] = qadr2;
+			intercept: function (valuex, value2, need2) {
+				var h = need2 || need || 'XPO.default';
+				obj.intercession			= obj.intercession		|| {};
+				obj.intercession[ name ]		= obj.intercession[ name ]	|| {};
+				if (value2 !== undefined) {
+					obj.intercession[ name ][ h ] = obj.intercession[ name ][ h ] || {};
+					obj.intercession[ name ][ h ][ valuex ] = obj.intercession[ name ][ h ][ valuex ] || {};
+					obj.intercession[ name ][ h ][ valuex ] = value2;
 				} else {
-					obj.wasaatat[ ism ][ h ] = qadrx;
+					obj.intercession[ name ][ h ] = valuex;
 				}
-				return jwb;
+				return rsp;
 			},
-			rafa3: function (qadrx, qadr2, haajah2) {
-				var h = haajah2 || haajah || 'XPO.xarq';
-				obj.rafa3				= obj.rafa3		|| {};
-				obj.rafa3[ ism ]		= obj.rafa3[ ism ]	|| {};
-				if (qadr2 !== undefined) {
-					obj.rafa3[ ism ][ h ] = obj.rafa3[ ism ][ h ] || {};
-					obj.rafa3[ ism ][ h ][ qadrx ] = obj.rafa3[ ism ][ h ][ qadrx ] || {};
-					obj.rafa3[ ism ][ h ][ qadrx ] = qadr2;
+			upload: function (valuex, value2, need2) {
+				var h = need2 || need || 'XPO.default';
+				obj.upload				= obj.upload			|| {};
+				obj.upload[ name ]		= obj.upload[ name ]	|| {};
+				if (value2 !== undefined) {
+					obj.upload[ name ][ h ] = obj.upload[ name ][ h ] || {};
+					obj.upload[ name ][ h ][ valuex ] = obj.upload[ name ][ h ][ valuex ] || {};
+					obj.upload[ name ][ h ][ valuex ] = value2;
 				} else {
-					obj.rafa3[ ism ][ h ] = qadrx;
+					obj.upload[ name ][ h ] = valuex;
 				}
-				return jwb;
+				return rsp;
 			},
-			haajah: function (ism) {
-				var jwb2 = Object.assign({}, jwb);
-				jwb2.axav = function (qadrx, qadr2) {
-					jwb.axav(qadrx, qadr2, ism);
-					return jwb2;
+			need: function (name) {
+				var rsp2 = Object.assign({}, rsp);
+				rsp2.get = function (valuex, value2) {
+					rsp.get(valuex, value2, name);
+					return rsp2;
 				};
-				jwb2.waaqat = function (qadrx, qadr2) {
-					jwb.waaqat(qadrx, qadr2, ism);
-					return jwb2;
+				rsp2.sync = function (valuex, value2) {
+					rsp.sync(valuex, value2, name);
+					return rsp2;
 				};
-				jwb2.tawassat = function (qadrx, qadr2) {
-					jwb.tawassat(qadrx, qadr2, ism);
-					return jwb2;
+				rsp2.intercept = function (valuex, value2) {
+					rsp.intercept(valuex, value2, name);
+					return rsp2;
 				};
-				jwb2.rafa3 = function (qadrx, qadr2) {
-					jwb.rafa3(qadrx, qadr2, ism);
-					return jwb2;
+				rsp2.upload = function (valuex, value2) {
+					rsp.upload(valuex, value2, name);
+					return rsp2;
 				};
-				return jwb2;
+				return rsp2;
 			},
-			hisaab: extra.hisaab,
-			waqt: extra.waqt,
-			qadr: qadrminzaboon,
+			account: extra.account,
+			time: extra.time,
+			value: value_from_client,
 			extra: extra,
-			nashar: !!payload.nashar,
+			broadcast: !!payload.broadcast,
 		};
-		if (extra.files && extra.files.rafa3) {
-			jwb.marfoo3 = extra.files.rafa3;
+		if (extra.files && extra.files.upload) {
+			rsp.payload = extra.files.upload;
 		}
-		return jwb;
+		return rsp;
 	};
 	
 	var arr = [], count = 0;
 	
-	var schedule = function (item, fadl) { // priority
-		for (var ism in payload[item]) {
-			if (fadl[item][ism]) {
-				var haajaat = payload[item][ism];
-				for (var haajah in haajaat) {
+	var schedule = function (item, favor) { // priority
+		for (var name in payload[item]) {
+			if (favor[item][name]) {
+				var needs = payload[item][name];
+				for (var need in needs) {
 					arr.push({
-						ism: ism,
-						haajah: haajah,
-						qadr: haajaat[haajah],
+						name: name,
+						need: need,
+						value: needs[need],
 					});
 					queuesub.set(function (donesub) {
 						var o = arr[count];
 						count++;
-						if (typeof fadl[item][o.ism][o.haajah] == 'function') {
-							fadl[item][o.ism][o.haajah](
-								jawaab(donesub, o.ism, o.haajah, o.qadr)
+						if (typeof favor[item][o.name][o.need] == 'function') {
+							favor[item][o.name][o.need](
+								response(donesub, o.name, o.need, o.value)
 							);
 						} else donesub(queuesub);
 					});
@@ -224,10 +224,10 @@ Web.adaaf(function (done, queue, extra) {
 		}
 	};
 
-	['XPO.wasaatat', 'XPO.axav', 'XPO.waaqat', 'XPO.rafa3'].forEach(function (item) {
+	['XPO.intercession', 'XPO.get', 'XPO.sync', 'XPO.upload'].forEach(function (item) {
 		if (payload[item]) {
-			[AWWAL, WAST, AAXIR].forEach(function (fadl) {
-				schedule( item, shabakahfadaail[fadl] );
+			[PRIMARY, SECONDARY, TERTIARY].forEach(function (favor) {
+				schedule( item, network_favors[favor] );
 			});
 		}
 	});
@@ -237,4 +237,4 @@ Web.adaaf(function (done, queue, extra) {
 	});
 });
 
-shabakah.duf3ahajraa();
+network.batch_process();

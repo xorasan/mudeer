@@ -67,6 +67,7 @@ var view;
 		},
 	};
 	
+	view.get = view.axav;
 	view.dom_keys = view.mfateeh;
 
 })();

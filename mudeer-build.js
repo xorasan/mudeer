@@ -604,6 +604,7 @@ var do_build = function (args, xpo) {
 
 	var parsedoutput = Weld.multi( sourcefile, options );
 
+	// TODO make this tots dynamic
 	parsedoutput.rawjs = parsedoutput.rawjs.replace(/XAADIMPORT/g, conf.port||3000);
 
 	if (args.keys.buildnum == undefined) ++BUILDNUMBER;
@@ -630,6 +631,19 @@ var do_build = function (args, xpo) {
 		
 		Files.set.file( xpath+'index.html', ( parsedoutput.parsed || '' ) );
 		printsize(prespace+'index.html', (parsedoutput.parsed||'').length );
+		
+		
+		var trimmed_conf = Object.assign({}, conf);
+
+		delete trimmed_conf.kernel;
+		delete trimmed_conf.src;
+		delete trimmed_conf.icons;
+		delete trimmed_conf.include;
+		delete trimmed_conf.langs;
+		delete trimmed_conf.connected;
+		delete trimmed_conf.kind;
+
+		parsedoutput.rawjs = 'var Config='+JSON.stringify(trimmed_conf)+';\n'+parsedoutput.rawjs;
 		Files.set.file( xpath+'a.js', ( parsedoutput.rawjs || '' ) );
 		printsize(prespace+'a.js', (parsedoutput.rawjs||'').length );
 		var swjs;

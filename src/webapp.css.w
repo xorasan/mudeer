@@ -183,19 +183,25 @@ if min-height = 600px
 	flex-grow		2
 .flex .more, .inlineflex .more
 	flex-grow		3
-.icon svg
+.icon svg, .icon img
 	width			24px
 	height			24px
 	fill			@textl
 	pointer-events	none
 	vertical-align	middle
-.large.icon svg, .large .icon svg
+.giant.icon svg, .giant .icon svg, .giant.icon img, .giant .icon img
+	width			128px
+	height			128px
+.huge.icon svg, .huge .icon svg, .huge.icon img, .huge .icon img
+	width			96px
+	height			96px
+.large.icon svg, .large .icon svg, .large.icon img, .large .icon img
 	width			64px
 	height			64px
-.medium.icon svg, .medium .icon svg
+.medium.icon svg, .medium .icon svg, .medium.icon img, .medium .icon img
 	width			48px
 	height			48px
-.small.icon svg, .small .icon svg
+.small.icon svg, .small .icon svg, .small.icon img, .small .icon img
 	width			12px
 	height			12px
 .flex .vertical, .inlineflex .vertical, .flex.vertical, .inlineflex.vertical

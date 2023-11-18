@@ -1,5 +1,5 @@
 //+ textsize dimmer runview view views icons exit visible lavaazim header
-//+ isdimmed statusbarpadding sahhar nawwam
+//+ isdimmed status_bar_padding sahhar nawwam
 var webapp, appname = 'APPNAME' || '',
 	// to avoid missing module errors
 	maxzan = maxzan || 0,
@@ -323,9 +323,13 @@ var webapp, appname = 'APPNAME' || '',
 				}
 				
 				if (isstr(header_icon) && header_icon.length) {
-					var e = XPO.icons.querySelector('#'+header_icon);
-					if (e) {
-						innerhtml(icon, '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>');
+					if (header_icon.startsWith('/')) {
+						innerhtml(icon, '<img src="'+header_icon+'" />');
+					} else {
+						var e = XPO.icons.querySelector('#'+header_icon);
+						if (e) {
+							innerhtml(icon, '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>');
+						}
 					}
 				} else {
 					innerhtml(icon, '');
@@ -337,7 +341,7 @@ var webapp, appname = 'APPNAME' || '',
 			}
 			translate.update();
 		},
-		sahhar: function (what) { // keep awake wakelock
+		sahhar: function (what) { // keep awake wakelock TODO convert to english
 			if (navigator && navigator.requestWakeLock) {
 				webapp.nawwam();
 				wakelockstatus = navigator.requestWakeLock(what||'screen');
@@ -375,7 +379,7 @@ var webapp, appname = 'APPNAME' || '',
 			document.scrollingElement.style.overflow = zindex ? 'hidden' : '';
 			translate.update(XPO.dimmer);
 		},
-		statusbarpadding: function (yes) {
+		statusbarpadding: function (yes) { // TODO deprecate
 			if (yes) {
 				XPO.statusbarpadding.hidden	= 0;
 				XPO.statusbarshadow.hidden	= 0;
@@ -383,6 +387,9 @@ var webapp, appname = 'APPNAME' || '',
 				XPO.statusbarpadding.hidden	= 1;
 				XPO.statusbarshadow.hidden	= 1;
 			}
+		},
+		status_bar_padding: function (yes) {
+			this.statusbarpadding(yes);
 		},
 		transparency: function (yes) {
 			yes = yes === undefined ? preferences && preferences.get(23, 1) : yes;
@@ -535,6 +542,18 @@ var webapp, appname = 'APPNAME' || '',
 	});
 	listener('scroll', function (e) {
 		Hooks.run('XPO.scroll', document.scrollingElement.scrollTop);
+		on_scroll();
+	});
+	listener('scrollend', function (e) {
+		Hooks.run('XPO.scrollend', document.scrollingElement.scrollTop);
+		var offset_height = XPO.tallscreenpadding.offsetHeight;
+		var height = offset_height * .75;
+		var percent = document.scrollingElement.scrollTop / height;
+		if (percent >= 0.4 && percent < 1.6) {
+			document.scrollingElement.scrollTop = 1 * offset_height;
+		} else if (percent > 0.1 && percent < 0.4) {
+			document.scrollingElement.scrollTop = 0;
+		}
 	});
 	listener('keyup', function (e) {
 		Hooks.rununtilconsumed('XPO.keyup', e);
@@ -573,20 +592,9 @@ var webapp, appname = 'APPNAME' || '',
 			backstack.main();
 		}
 
-		document.addEventListener('scroll', on_scroll);
-		document.addEventListener('scrollend', function () {
-			var offset_height = XPO.tallscreenpadding.offsetHeight;
-			var height = offset_height * .75;
-			var percent = document.scrollingElement.scrollTop / height;
-			if (percent >= 0.4 && percent < 1.6) {
-				document.scrollingElement.scrollTop = 1 * offset_height;
-			} else if (percent > 0.1 && percent < 0.4) {
-				document.scrollingElement.scrollTop = 0;
-			}
-		});
 		$.taxeer('XPO.on_scroll', function () {
 			on_scroll();
-		}, 30);
+		}, 10);
 
 		document.addEventListener('visibilitychange', function () {
 			if (document.visibilityState === 'visible') {

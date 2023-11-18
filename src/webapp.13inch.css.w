@@ -3,7 +3,7 @@ html, body, svg text
 
 if min-height = 600px
 	html, body
-		padding			0px 5px 20vh 5px
+		padding			0px 5px 25vh 5px
 
 if min-width = 320px
 	#softkeysui .left

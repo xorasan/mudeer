@@ -1,26 +1,26 @@
 /*
- * it has 3 qanawaat for comm with xaadim
- * axav		get something from the xaadim immediately
+ * it has 3 qanawaat for comm with server
+ * get		get something from the server immediately
  * 			
- * waaqat	sync changes, zaboon -> xaadim
- * 			uses .waqt to maintain sync between zaboon & xaadim
+ * sync		sync changes, client -> server
+ * 			uses .time to maintain sync between client & server
  * 			the response is empty
  * 			responds through broadcast
- * nashar	listens for changes
- * 			returns on triggers like waaqat from you or others
- * 			always returns .waqt on success
+ * broadcast	listens for changes
+ * 			returns on triggers like sync from you or others
+ * 			always returns .time on success
  * */
-//+ nashar axav waaqat jawaab mundarij wasaatat rafa3
-var shabakah, sessions = sessions || 0;
+//+ broadcast get sync response channels intercession upload
+var Network, network, sessions = sessions || 0;
 ;(function(){
 	'use strict';
-	var xitaab = 'http://localhost:XAADIMPORT/', buildexpired = false, offlinewaqt,
-		shabakahkeys;
+	var address = 'http://localhost:'+Config.port+'/', buildexpired = false, offlinetime,
+		networkkeys;
 	
-	var xataalog = function (v) {
+	var error_log = function (v) {
 //		$.log( v );
 	};
-	var hasdisconnected = function (res) {
+	var has_disconnected = function (res) {
 		// only mark online when really getting an ok result from server
 		if (!res.err)
 			setnetwork(1);
@@ -31,46 +31,46 @@ var shabakah, sessions = sessions || 0;
 	var setnetwork = function (on) {
 		if (on) {
 			// only update if it isn't already online
-			if (offlinewaqt !== false) {
-				offlinewaqt = false;
+			if (offlinetime !== false) {
+				offlinetime = false;
 				preferences.pop('@0');
-				Hooks.run('XPO.ittasaal', true); // connection
+				Hooks.run('XPO.connection', true); // connection
 				// cancel reconnection attempts
-				$.taxeercancel('XPO.shabakahittasaal');
+				$.taxeercancel('XPO.networkconnection');
 			}
 			setnotifybar();
 		} else {
-			// update waqt if it hasn't been marked offline yet
-			if (offlinewaqt === false) {
-				offlinewaqt = new Date().getTime();
-				preferences.set('@0', offlinewaqt);
-				Hooks.run('XPO.ittasaal', offlinewaqt); // connection
+			// update time if it hasn't been marked offline yet
+			if (offlinetime === false) {
+				offlinetime = new Date().getTime();
+				preferences.set('@0', offlinetime);
+				Hooks.run('XPO.connection', offlinetime); // connection
 				// handles reconnection attempts
-				$.taxeer('XPO.shabakahittasaal', function () {
+				$.taxeer('XPO.networkconnection', function () {
 					if (sessions)
-					shabakah.axav({
-						i: 'XPO.shabakah',
-						h: 'XPO.ittasaal',
+					network.get({
+						i: 'XPO.network',
+						h: 'XPO.connection',
 					});
 				}, 15*1000);
 			}
 			
 			// notify anyway
-			setnotifybar( 'XPO.offlinesince' , offlinewaqt || '');
+			setnotifybar( 'XPO.offlinesince' , offlinetime || '');
 		}
 
 	};
 	var setnotifybar = function (v, t) {
 		if (v) {
 			$.taxeer('XPO.setnotifybar', function () {
-				setdata(shabakahkeys.mowdoo3, 'XPO.i18n', v);
-				setdata(shabakahkeys.waqt, 'XPO.time', t);
-				time(XPO.shabakahui);
-				xlate.update(XPO.shabakahui);
+				setdata(networkkeys.topic, 'XPO.i18n', v);
+				setdata(networkkeys.time, 'XPO.time', t);
+				time(XPO.networkui);
+				xlate.update(XPO.networkui);
 			}, t);
-			XPO.shabakahui.hidden = 0;
+			XPO.networkui.hidden = 0;
 		} else {
-			XPO.shabakahui.hidden = 1;
+			XPO.networkui.hidden = 1;
 		}
 	};
 	var sizeunits = function (num) {
@@ -96,402 +96,402 @@ var shabakah, sessions = sessions || 0;
 			var percentage	=	sizeunits(loaded) +' / '+ sizeunits(total) +', '
 							+	(((loaded / total) * 100).toFixed() || 0) + '%';
 
-			webapp.itlaa3( percentage );
+			webapp.status( percentage );
 		}
 	};
-	var hasinshaexpired = function (jawaab) {
+	var has_build_expired = function (response) {
 		// build expired
-		if (jawaab.e$) {
+		if (response.e$) {
 //			$.log.s( 'e$' );
 			buildexpired = 1;
 			window.caches.delete('def').then(function(del) {
 				webapp.dimmer(LAYERTOPMOST, xlate('XPO.appneedsreload'));
 			});
-			nasharanhaa();
-			$.fetchcancel( 'XPO.axav' );
-			$.fetchcancel( 'XPO.waaqat' );
+			broadcast_finish();
+			$.fetchcancel( 'XPO.get' );
+			$.fetchcancel( 'XPO.sync' );
 		}
 	};
-	var handlejawaab = function (jawaab) {
-		if (jawaab.rafa3)
-		for (var ism in jawaab.rafa3) {
-			if (shabakah.mundarij.rafa3[ism]) {
-				var haajaat = jawaab.rafa3[ism];
-				for (var haajah in haajaat) {
-					if (typeof shabakah.mundarij.rafa3[ism][haajah] == 'function') {
-						shabakah.mundarij.rafa3[ism][haajah](
-							haajaat[haajah]
+	var handle_response = function (response) {
+		if (response.upload)
+		for (var name in response.upload) {
+			if (network.channels.upload[name]) {
+				var needs = response.upload[name];
+				for (var need in needs) {
+					if (typeof network.channels.upload[name][need] == 'function') {
+						network.channels.upload[name][need](
+							needs[need]
 						);
 					}
 				}
 			}
 		}
 
-		if (jawaab.wasaatat)
-		for (var ism in jawaab.wasaatat) {
-			if (shabakah.mundarij.wasaatat[ism]) {
-				var haajaat = jawaab.wasaatat[ism];
-				for (var haajah in haajaat) {
-					if (typeof shabakah.mundarij.wasaatat[ism][haajah] == 'function') {
-						shabakah.mundarij.wasaatat[ism][haajah](
-							haajaat[haajah]
+		if (response.intercession)
+		for (var name in response.intercession) {
+			if (network.channels.intercession[name]) {
+				var needs = response.intercession[name];
+				for (var need in needs) {
+					if (typeof network.channels.intercession[name][need] == 'function') {
+						network.channels.intercession[name][need](
+							needs[need]
 						);
 					}
 				}
 			}
 		}
 
-		if (jawaab.axav) {
-			for (var ism in jawaab.axav) {
-				if (shabakah.mundarij.axav[ism]) {
-					var haajaat = jawaab.axav[ism];
-					for (var haajah in haajaat) {
-						if (typeof shabakah.mundarij.axav[ism][haajah] == 'function') {
-							shabakah.mundarij.axav[ism][haajah](
-								haajaat[haajah]
+		if (response.get) {
+			for (var name in response.get) {
+				if (network.channels.get[name]) {
+					var needs = response.get[name];
+					for (var need in needs) {
+						if (typeof network.channels.get[name][need] == 'function') {
+							network.channels.get[name][need](
+								needs[need]
 							);
 						}
 					}
 				}
 			}
-			Hooks.run('XPO.jawaabaxav', jawaab.waaqat);
+			Hooks.run('XPO.responseget', response.sync);
 		}
 
-		if (jawaab.waaqat) {
-			for (var ism in jawaab.waaqat) {
-				if (shabakah.mundarij.waaqat[ism]) {
-					var haajaat = jawaab.waaqat[ism];
-					for (var haajah in haajaat) {
-						if (typeof shabakah.mundarij.waaqat[ism][haajah] == 'function') {
-							shabakah.mundarij.waaqat[ism][haajah](
-								haajaat[haajah]
+		if (response.sync) {
+			for (var name in response.sync) {
+				if (network.channels.sync[name]) {
+					var needs = response.sync[name];
+					for (var need in needs) {
+						if (typeof network.channels.sync[name][need] == 'function') {
+							network.channels.sync[name][need](
+								needs[need]
 							);
 						}
 					}
 				}
 			}
-			Hooks.run('XPO.jawaabwaaqat', jawaab.waaqat);
+			Hooks.run('XPO.responsesync', response.sync);
 		}
 	};
 
-	var cachedkey, nasharhaalah = 0, nashartaxeer = 500;
-	var nasharishtaghal = function (payload, wasaatat) {
-		if (!cachedkey || !nasharhaalah) return;
+	var cachedkey, broadcast_state = 0, broadcast_delay = 500;
+	var broadcast_process = function (payload, intercession) {
+		if (!cachedkey || !broadcast_state) return;
 		
-		if ($.fetchchannels.XPO.nashar
-		&&	$.fetchchannels.XPO.nashar.active) return;
+		if ($.fetchchannels.XPO.broadcast
+		&&	$.fetchchannels.XPO.broadcast.active) return;
 
 		payload = payload || {};
 
 		payload = Object.assign(payload, {
-			XPO.nashar	:	1				, // mutawaaqit min qabl (synced before)
-			e$			:	BUILDNUMBER		, // insha 3adad
+			XPO.broadcast	:	1				, // synced before
+			e$			:	BUILDNUMBER		, // build number
 		});
 
-		if (wasaatat) payload = Object.assign(payload, wasaatat);
+		if (intercession) payload = Object.assign(payload, intercession);
 
-		xataalog(payload);
-		$.fetch( xitaab, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.nashar', progressfn, 3*60*1000 )
+		error_log(payload);
+		$.fetch( address, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.broadcast', progressfn, 3*60*1000 )
 		.then(function (res) {
 			if (res.err) {
-				// don't mark offline, this qanaat is designed to timeout! :)
-				nashartaxeer = 4 * 15 * 1000; // 60s
+				// don't mark offline, this channel is designed to timeout! :)
+				broadcast_delay = 4 * 15 * 1000; // 60s
 			} else {
-				hasdisconnected(res);
-				var jawaab = {};
+				has_disconnected(res);
+				var response = {};
 				try {
-					jawaab = JSON.parse( (res||{}).body );
+					response = JSON.parse( (res||{}).body );
 				} catch (e) {
-					jawaab.nashar = 1;
-					jawaab.xataa = 1;
+					response.broadcast = 1;
+					response.error = 1;
 				}
 				
-				if (!jawaab.xataa) nashartaxeer = 500;
+				if (!response.error) broadcast_delay = 500;
 				
-				if (hasinshaexpired(jawaab)) return;
+				if (has_build_expired(response)) return;
 				
-				handlejawaab(jawaab);
+				handle_response(response);
 			}
 			
-			$.taxeer('XPO.shabakahnashar', function () {
-				wasaatatishtaghal(function (ashyaa) {
-					nasharishtaghal({}, ashyaa);
-				}, 'XPO.nashar');
-			}, nashartaxeer);
+			$.taxeer('XPO.networkbroadcast', function () {
+				intercession_process(function (objects) {
+					broadcast_process({}, objects);
+				}, 'XPO.broadcast');
+			}, broadcast_delay);
 		});
 	};
-	var nasharbadaa = function () {
-		$.taxeer('XPO.nasharbadaa', function () {
-			nasharhaalah = 1;
-			wasaatatishtaghal(function (ashyaa) {
-				nasharishtaghal({}, ashyaa);
-			}, 'XPO.nashar');
+	var broadcast_start = function () {
+		$.taxeer('XPO.broadcast_start', function () {
+			broadcast_state = 1;
+			intercession_process(function (objects) {
+				broadcast_process({}, objects);
+			}, 'XPO.broadcast');
 		}, 1000);
 	};
-	var nasharanhaa = function () {
-		nasharhaalah = 0;
-		$.fetchcancel('XPO.nashar');
+	var broadcast_finish = function () {
+		broadcast_state = 0;
+		$.fetchcancel('XPO.broadcast');
 	};
 
-	var mu3allaq = {}; // pending requests
-	var ajraa = function (payload, wasaatat) { // flush pending axav requests
-		if (Object.keys(mu3allaq).length === 0) return;
+	var pending = {}; // pending requests
+	var fulfill = function (payload, intercession) { // flush pending get requests
+		if (Object.keys(pending).length === 0) return;
 	
 		payload = payload || {};
 
 		payload = Object.assign(payload, {
-			e$		:	BUILDNUMBER		, // insha 3adad
+			e$		:	BUILDNUMBER		, // build number
 		});
 
-		if (wasaatat) payload = Object.assign(payload, wasaatat);
+		if (intercession) payload = Object.assign(payload, intercession);
 
-		payload.XPO.axav = payload.XPO.axav || {};
+		payload.XPO.get = payload.XPO.get || {};
 
-		for (var i in mu3allaq) {
-			var m		= mu3allaq[i]	,
-				ism		= m[0]			,
-				haajah	= m[1]			,
-				qadr	= m[2]			;
+		for (var i in pending) {
+			var m		= pending[i]	,
+				name	= m[0]			,
+				need	= m[1]			,
+				value	= m[2]			;
 
-			payload.XPO.axav[ism] = payload.XPO.axav[ism] || {};
-			payload.XPO.axav[ism][haajah] = qadr;
+			payload.XPO.get[name] = payload.XPO.get[name] || {};
+			payload.XPO.get[name][need] = value;
 		}
 		
-		xataalog(payload);
-		$.fetch( xitaab, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.axav', progressfn, 30*1000 )
+		error_log(payload);
+		$.fetch( address, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.get', progressfn, 30*1000 )
 		.then(function (res) {
-			hasdisconnected(res);
+			has_disconnected(res);
 			
-			var jawaab = {};
+			var response = {};
 			try {
-				jawaab = JSON.parse( (res||{}).body );
+				response = JSON.parse( (res||{}).body );
 			} catch (e) {
-				jawaab.axav = 1;
-				jawaab.xataa = 1;
+				response.get = 1;
+				response.error = 1;
 			}
 			
-			if (hasinshaexpired(jawaab)) return;
+			if (has_build_expired(response)) return;
 
-			handlejawaab(jawaab);
+			handle_response(response);
 		});
 
-		mu3allaq = {};
+		pending = {};
 	};
 
-	var wasaatat = {}; // intercession
-	var wasaatatishtaghal = function (callback, qanaat) {
-		var j = 0, arr = Object.keys(wasaatat);
+	var intercession = {}; // intercession
+	var intercession_process = function (callback, channel) {
+		var j = 0, arr = Object.keys(intercession);
 		if (arr.length === 0) {
 			callback();
 			return;
 		}
 		
-		var q = $.queue(), ashyaa = { XPO.wasaatat: {} };
-		for (var i in wasaatat) {
+		var q = $.queue(), objects = { XPO.intercession: {} };
+		for (var i in intercession) {
 			q.set(function (done) {
-				var o = wasaatat[ arr[j] ];
-				o[2](function (shayy) {
-					if (shayy !== undefined) {
-						ashyaa.XPO.wasaatat[ o[0] ] = ashyaa.XPO.wasaatat[ o[0] ] || {};
-						ashyaa.XPO.wasaatat[ o[0] ][ o[1] ] = shayy;
+				var o = intercession[ arr[j] ];
+				o[2](function (object) {
+					if (object !== undefined) {
+						objects.XPO.intercession[ o[0] ] = objects.XPO.intercession[ o[0] ] || {};
+						objects.XPO.intercession[ o[0] ][ o[1] ] = object;
 					}
 					j++;
 					done(q);
-				}, qanaat);
+				}, channel);
 			});
 		}
 		q.run(function () {
-			callback && callback(ashyaa);
+			callback && callback(objects);
 		});
 	};
 
-	var mutawaaqit = {};
-	var waaqatishtaghal = function (payload, wasaatat) {
-		if (Object.keys(mutawaaqit).length === 0) return;
+	var synced = {};
+	var sync_process = function (payload, intercession) {
+		if (Object.keys(synced).length === 0) return;
 	
 		payload = payload || {};
 
 		payload = Object.assign(payload, {
-			e$			:	BUILDNUMBER				, // insha 3adad
+			e$			:	BUILDNUMBER				, // build number
 		});
 
-		if (wasaatat) payload = Object.assign(payload, wasaatat);
+		if (intercession) payload = Object.assign(payload, intercession);
 
-		payload.XPO.waaqat = payload.XPO.waaqat || {};
+		payload.XPO.sync = payload.XPO.sync || {};
 
-		for (var i in mutawaaqit) {
-			var m		= mutawaaqit[i]	,
-				ism		= m[0]			,
-				haajah	= m[1]			,
-				qadr	= m[2]			;
+		for (var i in synced) {
+			var m		= synced[i]		,
+				name	= m[0]			,
+				need	= m[1]			,
+				value	= m[2]			;
 
-			payload.XPO.waaqat[ism] = payload.XPO.waaqat[ism] || {};
-			payload.XPO.waaqat[ism][haajah] = qadr;
+			payload.XPO.sync[name] = payload.XPO.sync[name] || {};
+			payload.XPO.sync[name][need] = value;
 		}
 
-		xataalog(payload);
-		$.fetch( xitaab, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.waaqat', progressfn, 30*1000 )
+		error_log(payload);
+		$.fetch( address, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.sync', progressfn, 30*1000 )
 		.then(function (res) {
-			hasdisconnected(res);
+			has_disconnected(res);
 			
-			var jawaab = {};
+			var response = {};
 			try {
-				jawaab = JSON.parse( (res||{}).body );
+				response = JSON.parse( (res||{}).body );
 			} catch (e) {
-				jawaab.waaqat = 1;
-				jawaab.xataa = 1;
+				response.sync = 1;
+				response.error = 1;
 			}
 			
-			if (hasinshaexpired(jawaab)) return;
+			if (has_build_expired(response)) return;
 
-			handlejawaab(jawaab);
+			handle_response(response);
 		});
 
-		mutawaaqit = {};
+		synced = {};
 	};
 
-	var rafa3 = function (ism, haajah, qadr, marfoo3, wasaatat) {
+	var upload = function (name, need, value, payload_raw, intercession) {
 		var payload = {};
 		payload = Object.assign(payload, {
-			e$		:	BUILDNUMBER		, // insha 3adad
+			e$		:	BUILDNUMBER		, // build number
 		});
 
-		if (wasaatat) payload = Object.assign(payload, wasaatat);
+		if (intercession) payload = Object.assign(payload, intercession);
 
-		payload.rafa3 = {};
-		payload.rafa3[ism] = {};
-		payload.rafa3[ism][haajah] = qadr;
+		payload.upload = {};
+		payload.upload[name] = {};
+		payload.upload[name][need] = value;
 		
 		var fd = new FormData();
 		fd.append('XPO.json', JSON.stringify(payload) );
-		fd.append('XPO.rafa3', marfoo3);
-		fetch(xitaab, { method: 'post', body: fd }).then(function (res) {
-			hasdisconnected(res);
+		fd.append('XPO.upload', payload_raw);
+		fetch(address, { method: 'post', body: fd }).then(function (res) {
+			has_disconnected(res);
 			
-			res.json().then(function (jawaab) {
-				if (hasinshaexpired(jawaab)) return;
+			res.json().then(function (response) {
+				if (has_build_expired(response)) return;
 
-				handlejawaab(jawaab);
+				handle_response(response);
 			});
 		});
 	};
 
-	shabakah = {
-		xitaab: xitaab,
-		mundarij: {
-			axav: {},
-			waaqat: {},
-			wasaatat: {},
-			rafa3: {},
+	Network = network = {
+		address: address,
+		channels: {
+			get: {},
+			sync: {},
+			intercession: {},
+			upload: {},
 		},
-		rafa3: function (ism, haajah, qadr, marfoo3) {
-			if (!ism) return;
-			if (!marfoo3) return;
+		upload: function (name, need, value, payload) {
+			if (!name) return;
+			if (!payload) return;
 			
-			haajah	= haajah	||	'XPO.xarq'	; // default
-			qadr	= qadr		||	0			;
+			need	= need	||	'XPO.default'	; // default
+			value	= value		||	0			;
 			
-			wasaatatishtaghal(function (ashyaa) {
-				rafa3(ism, haajah, qadr, marfoo3, ashyaa);
-			}, 'XPO.rafa3');
+			intercession_process(function (objects) {
+				upload(name, need, value, payload, objects);
+			}, 'XPO.upload');
 		},
-		nashar: function () {
+		broadcast: function () {
 			if (cachedkey) {
-				nasharbadaa();
+				broadcast_start();
 			} else {
-				nasharanhaa();
+				broadcast_finish();
 			}
 		},
-		waaqat: function (ism, haajah, qadr) {
-			if (!ism) return;
+		sync: function (name, need, value) {
+			if (!name) return;
 			
-			haajah	= haajah	||	'XPO.xarq'	; // default
-			qadr	= qadr		||	0			;
+			need	= need	||	'XPO.default'	; // default
+			value	= value		||	0			;
 			
-			mutawaaqit[ ism+'.'+haajah ] = [ism, haajah, qadr];
+			synced[ name+'.'+need ] = [name, need, value];
 			
-			$.taxeer('XPO.shabakahwaaqat', function () {
-				wasaatatishtaghal(function (ashyaa) {
-					waaqatishtaghal({}, ashyaa);
-				}, 'XPO.waaqat');
+			$.taxeer('XPO.networksync', function () {
+				intercession_process(function (objects) {
+					sync_process({}, objects);
+				}, 'XPO.sync');
 			}, 100);
 		},
-		axav: function (ism, haajah, qadr) { // { ism, haajah, qadr }
-			if (!ism) return;
-			if (arguments.length === 2) qadr = haajah, haajah = 0;
+		get: function (name, need, value) { // { name, need, value }
+			if (!name) return;
+			if (arguments.length === 2) value = need, need = 0;
 			
-			haajah	= haajah	||	'XPO.xarq'	; // default
-			qadr	= qadr		||	0			;
+			need	= need	||	'XPO.default'	; // default
+			value	= value		||	0			;
 			
-			mu3allaq[ ism+'.'+haajah ] = [ism, haajah, qadr];
+			pending[ name+'.'+need ] = [name, need, value];
 			
-			$.taxeer('XPO.shabakahajraa', function () {
-				wasaatatishtaghal(function (ashyaa) {
-					ajraa({}, ashyaa);
-				}, 'XPO.axav');
+			$.taxeer('XPO.networkfulfill', function () {
+				intercession_process(function (objects) {
+					fulfill({}, objects);
+				}, 'XPO.get');
 			}, 100);
 		},
-		jawaab: {
-			axav: function (ism, haajah, cb) {
-				if (typeof haajah == 'function') cb = haajah, haajah = 0;
-				haajah = haajah || 'XPO.xarq';
-				shabakah.mundarij.axav[ ism ] = shabakah.mundarij.axav[ ism ] || {};
-				shabakah.mundarij.axav[ ism ][ haajah ] = cb;
+		response: {
+			get: function (name, need, cb) {
+				if (typeof need == 'function') cb = need, need = 0;
+				need = need || 'XPO.default';
+				network.channels.get[ name ] = network.channels.get[ name ] || {};
+				network.channels.get[ name ][ need ] = cb;
 			},
-			waaqat: function (ism, haajah, cb) {
-				if (typeof haajah == 'function') cb = haajah, haajah = 0;
-				haajah = haajah || 'XPO.xarq';
-				shabakah.mundarij.waaqat[ ism ] = shabakah.mundarij.waaqat[ ism ] || {};
-				shabakah.mundarij.waaqat[ ism ][ haajah ] = cb;
+			sync: function (name, need, cb) {
+				if (typeof need == 'function') cb = need, need = 0;
+				need = need || 'XPO.default';
+				network.channels.sync[ name ] = network.channels.sync[ name ] || {};
+				network.channels.sync[ name ][ need ] = cb;
 			},
-			tawassat: function (ism, haajah, cb) {
-				if (typeof haajah == 'function') cb = haajah, haajah = 0;
-				haajah = haajah || 'XPO.xarq';
-				shabakah.mundarij.wasaatat[ ism ] = shabakah.mundarij.wasaatat[ ism ] || {};
-				shabakah.mundarij.wasaatat[ ism ][ haajah ] = cb;
+			intercept: function (name, need, cb) {
+				if (typeof need == 'function') cb = need, need = 0;
+				need = need || 'XPO.default';
+				network.channels.intercession[ name ] = network.channels.intercession[ name ] || {};
+				network.channels.intercession[ name ][ need ] = cb;
 			},
-			rafa3: function (ism, haajah, cb) {
-				if (typeof haajah == 'function') cb = haajah, haajah = 0;
-				haajah = haajah || 'XPO.xarq';
-				shabakah.mundarij.rafa3[ ism ] = shabakah.mundarij.rafa3[ ism ] || {};
-				shabakah.mundarij.rafa3[ ism ][ haajah ] = cb;
+			upload: function (name, need, cb) {
+				if (typeof need == 'function') cb = need, need = 0;
+				need = need || 'XPO.default';
+				network.channels.upload[ name ] = network.channels.upload[ name ] || {};
+				network.channels.upload[ name ][ need ] = cb;
 			},
 		},
-		tawassat: function (ism, haajah, cb) { // intercept
-			if (typeof haajah == 'function') cb = haajah, haajah = 0;
-			haajah	= haajah	||	'XPO.xarq'	; // default
-			wasaatat[ ism+'.'+haajah ] = [ism, haajah, cb];
+		intercept: function (name, need, cb) { // intercept
+			if (typeof need == 'function') cb = need, need = 0;
+			need	= need	||	'XPO.default'	; // default
+			intercession[ name+'.'+need ] = [name, need, cb];
 		},
 	};
 	
-	/* TODO hook visibility to nashar
+	/* TODO hook visibility to broadcast
 	 * 
-	 * hook sessionchange, start/stop nashar
+	 * hook sessionchange, start/stop broadcast
 	 * 
-	 * hook ready, if signedin, start nashar
+	 * hook ready, if signedin, start broadcast
 	 * 
-	 * on hook [axav|nashar], run hook jawaab { [axav|nashar]: bool, xataa: bool }
+	 * on hook [get|broadcast], run hook response { [get|broadcast]: bool, error: bool }
 	 * 
-	 * have shabakah.xaadim
+	 * have network.server
 	 * */
 	Hooks.set('XPO.sessionchange', function (key) {
 		cachedkey = key || 0;
 		if (cachedkey) {
-			shabakah.nashar();
-			shabakah.waaqat();
+			network.broadcast();
+			network.sync();
 		}
 	});
 	Hooks.set('XPO.ready', function () {
-		shabakahkeys = templates.keys(XPO.shabakahui);
+		networkkeys = templates.keys(XPO.networkui);
 		
-		shabakah.tawassat('XPO.shabakah', 'XPO.waqt', function (intahaa, qanaat) {
+		network.intercept('XPO.network', 'XPO.time', function (intahaa, channel) {
 			intahaa( preferences.get('@') );
 		});
-		shabakah.jawaab.tawassat('XPO.shabakah', 'XPO.waqt', function (jawaab) {
-			if (jawaab && cachedkey) preferences.set('@', jawaab);
+		network.response.intercept('XPO.network', 'XPO.time', function (response) {
+			if (response && cachedkey) preferences.set('@', response);
 		});
 		
-		offlinewaqt = preferences.get('@0', 1) || false;
+		offlinetime = preferences.get('@0', 1) || false;
 		listener('online', function (e) {
 			setnetwork(1);
 		});
@@ -502,8 +502,8 @@ var shabakah, sessions = sessions || 0;
 		if (sessions) {
 			cachedkey = sessions.signedin() || 0;
 			if (cachedkey) {
-				shabakah.nashar();
-				shabakah.waaqat();
+				network.broadcast();
+				network.sync();
 			}
 		}
 	});
