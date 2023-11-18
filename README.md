@@ -20,6 +20,7 @@ Mudeer is a javascript framework that runs both on the server and the browser.
 * **keep it simple**: why use database management systems like (mariadb, mongodb, ...),
   when a text file (.md, .txt) can do the job [Discussion](Philosophy/Databases.md)
 * less noise, less clutter, more automation, more **peace** of mind
+* [TODO: progress on features & known bugs](TODO.md)
 
 ## Guidelines
 Projects built on mudeer are encouraged to follow these guidelines  
