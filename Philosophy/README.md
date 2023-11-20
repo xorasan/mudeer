@@ -7,7 +7,7 @@ It's a bad idea to have your apps own you.
 
 Some important questions to explore:
 * If you want to learn more about how something works, is it possible for you to get to the bottom of it or will be met with a dead end after researching it a while?
-* Can you get verify the code in a timely manner or is there just too much of it that you'll have to take it on blind faith?
+* Can you verify the code in a timely manner or is there just too much of it that you'll have to take it on blind faith?
 * Is it easy to read or is it designed to avoid being deciphered and make it harder to learn, follow, adapt and build upon? How magical is it?
 * Is it modular or a giant monolith where it you remove one tiny part of it, the entire system collapses?
 
