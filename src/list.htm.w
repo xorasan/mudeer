@@ -5,9 +5,9 @@
 			.miqyaas [id=miqyaas] @hidden
 		.message @hidden
 			span [id=message]
-//		.prepad [id=prepad] 'prepad'
+//		.prepad [id=prepad]
 		.items [id=items]
-//		.postpad [id=postpad] 'postpad'
+//		.postpad [id=postpad]
 	[template=listitem] .item
 		.flex
 			img [id=image] @hidden

@@ -401,6 +401,8 @@ var List, list;
 			}
 			LV.adapter.set(o.uid, o);
 
+			if (LV._recycle) return; // defer rendering to scroll events
+
 //			$.log(actual_height, available_height);
 //			if (actual_height > available_height) {
 //				// setup prepad and postpad

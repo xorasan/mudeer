@@ -294,10 +294,10 @@
 					command.line = command.line.replace(regex, '') || '';
 					
 					// .class .class .class
-					matches = command.line.match(/ +\.([a-zA-Z0-9\-]*)/g) || '';
+					matches = command.line.match(/ +\.([a-zA-Z0-9\-\_]*)/g) || '';
 					if (matches.length) {
 						for (var j in matches) {
-							var attrib = matches[j].match(/\.([a-zA-Z0-9\-]*)/);
+							var attrib = matches[j].match(/\.([a-zA-Z0-9\-\_]*)/);
 							if (attrib) {
 								tag.classes.push( attrib[1] );
 							}

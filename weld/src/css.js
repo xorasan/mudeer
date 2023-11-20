@@ -38,10 +38,10 @@
 			}
 
 			// .class .class .class
-			matches = line.match(/\.([a-zA-Z0-9\-]*)/g) || '';
+			matches = line.match(/\.([a-zA-Z0-9\-\_]*)/g) || '';
 			if (matches.length) {
 				for (var j in matches) {
-					var attrib = matches[j].match(/\.([a-zA-Z0-9\-]*)/);
+					var attrib = matches[j].match(/\.([a-zA-Z0-9\-\_]*)/);
 					if (attrib) {
 						tag.classes.push( attrib[1] );
 					}
@@ -49,10 +49,10 @@
 			}
 
 			// [data-*] auto uglify the * part
-			matches = line.match(/\[data\-([a-zA-Z0-9\-\=\'\"]*)\]/g) || '';
+			matches = line.match(/\[data\-([a-zA-Z0-9\-\_\=\'\"]*)\]/g) || '';
 			if (matches.length) {
 				for (var j in matches) {
-					var attrib = matches[j].match(/\-([a-zA-Z0-9\-\=\'\"]*)/);
+					var attrib = matches[j].match(/\-([a-zA-Z0-9\-\_\=\'\"]*)/);
 					if (attrib) {
 						var splat = attrib[1].split('=');
 						tag.data.push( splat[0] );
