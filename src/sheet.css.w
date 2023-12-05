@@ -7,7 +7,7 @@
 	overflow-x		auto
 	background		@primary
 	z-index			500
-	border-radius	10px 10px 0 0
+	border-radius	15px 15px 0 0
 #sheetui .header
 	position	sticky
 	left		0

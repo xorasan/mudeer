@@ -1,5 +1,4 @@
-/*
- * Web.adaaf
+/* Web.adaaf
  * network.get( name, need, cb )
  * network.sync( ... )
  * 
@@ -9,11 +8,9 @@
  * broadcast is very lightweight
  * 
  * mirror this on client side
- * you are able to listen for specific responses for your own juzw
+ * you are able to listen for specific responses for your own module
  * you can add batch commands to be executed every 24h
  * */
-//+ get sync broadcast finish mundarij account value need name intercession intercept
-//+ upload
 var network_favors = {}, PRIMARY = 100, SECONDARY = 500, TERTIARY = 1000,
 	network_batches = {};
 [PRIMARY, SECONDARY, TERTIARY].forEach(function (favor) {
@@ -24,43 +21,56 @@ var network_favors = {}, PRIMARY = 100, SECONDARY = 500, TERTIARY = 1000,
 		upload			: {},
 	};
 });
+var debug_network = 0;
 var Network = network = {
 	intercept: function (name, need, cb) {
 		if (typeof need == 'function') cb = need, need = 0;
-		need = need || 'XPO.default';
+		need = need || 'default';
+
+		if (debug_network) Cli.echo(' ^bright^Network~~ '+name+' intercept ^dim^'+need+'~~ ');
+
 		var favor = network_favors[this._favor || SECONDARY];
 		favor.intercession[ name ] = favor.intercession[ name ] || {};
 		favor.intercession[ name ][ need ] = cb;
 	},
 	get: function (name, need, cb) {
 		if (typeof need == 'function') cb = need, need = 0;
-		need = need || 'XPO.default';
+		need = need || 'default';
+
+		if (debug_network) Cli.echo(' ^bright^Network~~ '+name+' get ^dim^'+need+'~~ ');
+
 		var favor = network_favors[this._favor || SECONDARY];
 		favor.get[ name ] = favor.get[ name ] || {};
 		favor.get[ name ][ need ] = cb;
 	},
 	sync: function (name, need, cb) {
 		if (typeof need == 'function') cb = need, need = 0;
-		need = need || 'XPO.default';
+		need = need || 'default';
+
+		if (debug_network) Cli.echo(' ^bright^Network~~ '+name+' sync ^dim^'+need+'~~ ');
+
 		var favor = network_favors[this._favor || SECONDARY];
 		favor.sync[ name ] = favor.sync[ name ] || {};
 		favor.sync[ name ][ need ] = cb;
 	},
 	upload: function (name, need, cb) {
 		if (typeof need == 'function') cb = need, need = 0;
-		need = need || 'XPO.default';
+		need = need || 'default';
+
+		if (debug_network) Cli.echo(' ^bright^Network~~ '+name+' upload ^dim^'+need+'~~ ');
+
 		var favor = network_favors[this._favor || SECONDARY];
 		favor.upload[ name ] = favor.upload[ name ] || {};
 		favor.upload[ name ][ need ] = cb;
 	},
 	favor: function (favor) {
-		var s = Object.assign({}, network);
+		var s = Object.assign({}, Network);
 		s._favor = favor;
 		return s;
 	},
 	batch: function (name, need, cb) {
 		if (typeof need == 'function') cb = need, need = 0;
-		need = need || 'XPO.default';
+		need = need || 'default';
 		network_batches[ name ] = network_batches[ name ] || {};
 		network_batches[ name ][ need ] = cb;
 	},
@@ -78,7 +88,7 @@ var Network = network = {
 	},
 };
 // time attached, verify & add new time
-network.favor(PRIMARY).intercept('XPO.network', 'XPO.time', function (response) {
+Network.favor(PRIMARY).intercept('network', 'time', function (response) {
 	/*
 	 * time is set only for perm and broadcast channels
 	 * on-demand doesn't send time at all
@@ -93,14 +103,14 @@ network.favor(PRIMARY).intercept('XPO.network', 'XPO.time', function (response) 
 
 	/*
 	 * only return time if client says that it doesn't have time
-	 * so that only broadcast qanaat can send out time in all other cases
+	 * so that only broadcast channel can send out time in all other cases
 	 * */
 	if (!response.value || response.broadcast)
 		response.intercept( new Date().getTime() );
 
 	response.finish();
 });
-Web.adaaf(function (done, queue, extra) {
+Web.add(function (done, queue, extra) {
 	var payload		= extra.payload	;
 	var obj			= extra.obj		;
 	var queuesub	= $.queue()		;
@@ -115,7 +125,7 @@ Web.adaaf(function (done, queue, extra) {
 				donesub(queuesub, extra);
 			},
 			get: function (valuex, value2, need2) {
-				var h = need2 || need || 'XPO.default';
+				var h = need2 || need || 'default';
 				obj.get					= obj.get			|| {};
 				obj.get[ name ]				= obj.get[ name ]	|| {};
 				if (value2 !== undefined) {
@@ -128,7 +138,7 @@ Web.adaaf(function (done, queue, extra) {
 				return rsp;
 			},
 			sync: function (valuex, value2, need2) {
-				var h = need2 || need || 'XPO.default';
+				var h = need2 || need || 'default';
 				obj.sync					= obj.sync		|| {};
 				obj.sync[ name ]			= obj.sync[ name ]	|| {};
 				if (value2 !== undefined) {
@@ -141,7 +151,7 @@ Web.adaaf(function (done, queue, extra) {
 				return rsp;
 			},
 			intercept: function (valuex, value2, need2) {
-				var h = need2 || need || 'XPO.default';
+				var h = need2 || need || 'default';
 				obj.intercession			= obj.intercession		|| {};
 				obj.intercession[ name ]		= obj.intercession[ name ]	|| {};
 				if (value2 !== undefined) {
@@ -154,7 +164,7 @@ Web.adaaf(function (done, queue, extra) {
 				return rsp;
 			},
 			upload: function (valuex, value2, need2) {
-				var h = need2 || need || 'XPO.default';
+				var h = need2 || need || 'default';
 				obj.upload				= obj.upload			|| {};
 				obj.upload[ name ]		= obj.upload[ name ]	|| {};
 				if (value2 !== undefined) {
@@ -224,7 +234,7 @@ Web.adaaf(function (done, queue, extra) {
 		}
 	};
 
-	['XPO.intercession', 'XPO.get', 'XPO.sync', 'XPO.upload'].forEach(function (item) {
+	['intercession', 'get', 'sync', 'upload'].forEach(function (item) {
 		if (payload[item]) {
 			[PRIMARY, SECONDARY, TERTIARY].forEach(function (favor) {
 				schedule( item, network_favors[favor] );
@@ -237,4 +247,5 @@ Web.adaaf(function (done, queue, extra) {
 	});
 });
 
-network.batch_process();
+Network.batch_process();
+

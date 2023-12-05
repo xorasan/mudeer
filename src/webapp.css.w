@@ -33,7 +33,7 @@
 .z100
 	z-index			100
 #tallheaderui
-	touch-action	none
+	pointer-events	none
 	top				0
 	padding-top		12vh
 .headerui .header[data-align="1"]

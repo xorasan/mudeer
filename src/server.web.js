@@ -1,9 +1,12 @@
 // requires Server, Files, Polling
+/*
+ *
+ */
 var Web;
 ;(function(){
 	'use strict';
 
-	var loadedmodules = [], Cache = {};
+	var loadedmodules = [], init_modules = [], Cache = {};
 	var node_path = require('path');
 	var public_path = node_path.resolve( Config.public || $.path )+'/';
 	var echo = Cli.echo;
@@ -12,6 +15,9 @@ var Web;
 	}
 
 	Web = {
+		get_public_path: function () {
+			return public_path;
+		},
 		_out: function (req, res, obj, extra) {
 			obj = obj || {};
 			
@@ -19,12 +25,12 @@ var Web;
 //			obj.host = host[0];
 //			obj.port = host[1];
 			/*
-			 * only the perm and nashar channels are allowed to send waqt
+			 * only the perm and nashar channels are allowed to send time
 			 * and they handle it elsewhere :p
-			 * this was for the on-demand channel and that one doesn't send waqt
+			 * this was for the on-demand channel and that one doesn't send time
 			 * anymore
 			 * */
-//			obj.XPO.waqt = obj.XPO.waqt || new Date().getTime();
+//			obj.time = obj.time || new Date().getTime();
 			
 			try {
 				res.json(obj);
@@ -32,8 +38,11 @@ var Web;
 				$.log.s(e);
 			}
 		},
-		adaaf: function (callback) { // add
+		add: function (callback) { // adaaf
 			loadedmodules.push(callback);
+		},
+		during_init: function (callback) {
+			init_modules.push(callback);
 		},
 		api: function (req, res) {
 //			$.log( 'api', req.headers );
@@ -43,8 +52,8 @@ var Web;
 				extra = {
 					payload:		{}		,
 					obj:			{}		,
-					boxdatabase:	WUQU3AATNAME,
-					database:		WUQU3AATNAME,
+					boxdatabase:	Config.database.name,
+					database:		Config.database.name,
 					host:			host[0]	,
 					port:			host[1]	,
 					req:			req		,
@@ -54,19 +63,19 @@ var Web;
 			
 			var q = $.queue();
 			q.set(function (done, queue) {
-				if ( (req.body || {}).XPO.json ) {
+				if ( (req.body || {}).json ) {
 					try {
-						extra.payload = JSON.parse( req.body.XPO.json );
+						extra.payload = JSON.parse( req.body.json );
 
 //						$.log( req.files );
 						
 						extra.files = req.files;
 						
 						if (req.headers) {
-							if (req.headers.XPO.kaleed)
-								extra.payload.XPO.kaleed = req.headers.XPO.kaleed;
-							if (req.headers.XPO.rafa3)
-								extra.payload.XPO.rafa3 = req.headers.XPO.rafa3;
+							if (req.headers.kaleed)
+								extra.payload.kaleed = req.headers.kaleed;
+							if (req.headers.upload)
+								extra.payload.upload = req.headers.upload;
 							if (req.headers.e$)
 								extra.payload.e$ = req.headers.e$;
 						}
@@ -105,54 +114,21 @@ var Web;
 				Web._out(req, res, extra.obj, extra.payload);
 			});
 		},
-		init: function (mods, options) {
-			options = options || {};
+		init: function (callback) {
 			var q = $.queue();
-			if (mods instanceof Array)
-				q.set(function (done, queue) {
-					$.log.s( 'loading modules' );
-					$.preload(mods, function () {
-						mods.forEach(function (mod) {
-							loadedmodules.push( $(mod) );
-						});
-						done(queue);
-					});
+			if (isarr(callback)) {
+				$.log.e( ' Web.init( mods.. ) is deprecated ' );
+				$.log.s( ' Use Web.add( fn ) instead ' );
+			}
+
+			try {
+				init_modules.forEach(function (mod) {
+					q.set(mod);
 				});
-			if (WUQU3AAT)
-				q.set(function (done, queue) {
-					$.log.s( 'connecting to database' );
-					wuqu3aat.init({
-						host: 'localhost',
-						multiple: true,
-						u: WUQU3AATUSERNAME,
-						p: WUQU3AATPASSWORD,
-						charset: 'utf8mb4',
-						errcb: function (e) {
-							if (e && e.code === 'ER_NOT_SUPPORTED_AUTH_MODE') {
-								$.log.s( 'mysql server connection not supported' );
-								$.log.s( 'maybe you forgot to add your user:pass to mysql?' );
-								process.exit();
-							}
-							else if (e && e.code === 'ER_ACCESS_DENIED_ERROR') {
-								$.log.s( 'mysql server username password incorrect' );
-								$.log.s( e.sqlMessage );
-								process.exit();
-							}
-							else if (e && e.code === 'ECONNREFUSED') {
-								$.log.s( 'mysql server is down' );
-								process.exit();
-							}
-							else if (e && e.fatal) {
-								$.log.s( 'mysql server unknown error dying' );
-								process.exit();
-							}
-							else {
-								$.log.s( 'mysql connected' );
-							}
-							done(queue);
-						}
-					});
-				});
+			} catch (e) {
+				$.log.s( 'q.set*', e );
+			}
+
 			q.set(function (done, queue) {
 //				$.log.s( 'registering controller intercepts' );
 				var intercept = function (req, res) {
@@ -211,7 +187,7 @@ var Web;
 						res.sendStatus(file);
 					} else {
 						// these files are the same for all sites
-						if ( [	'robots.txt', '/_.js', '/20.js', '/a.js', '/e.png',
+						if ( [	'robots.txt', '/_.js', '/20.js', '/a.js', '/e.png', '/0.png', '/1.png',
 								'/mb.css', '/mb.js', '/mbdr.css', '/mbdr.js',
 								'/manifest.webapp', '/insaan.shakl', '/pallete.js',
 								'/kmr.otf', '/kmb.otf', '/kml.otf'].includes( req.url ) ) {
@@ -220,27 +196,6 @@ var Web;
 						// this files needs some changes
 						else if ( '/favicon.ico' === req.url) {
 							res.sendStatus(404);
-						}
-						else if ( '/manifest.json' === req.url) {
-							Files.get.file(path+'manifest.json', function (data, err) {
-								if (err) {
-//									$.log.s( err );
-									res.sendStatus(404);
-								} else if (data) {
-									data = data.toString();
-									res.setHeader('Last-Modified', new Date().toUTCString() );
-									try {
-										data = JSON.parse(data);
-										data.name		= "APPNAME";
-										data.short_name	= "APPNAME";
-										
-										res.json(data);
-									} catch (ignore) {
-										$.log.e( ignore );
-										res.sendStatus(500);
-									}
-								}
-							});
 						}
 						else {
 							res.sendFile(file, null, function (err) {
@@ -270,17 +225,14 @@ var Web;
 					port: Config.port,
 					name: "APPNAME"
 				});
-				print_prop( 'public path', public_path );
-				print_prop( 'build', BUILDNUMBER );
-				print_prop( 'server port', Config.port );
+				print_prop( 'Public Path', public_path );
+				print_prop( 'Build', BUILDNUMBER );
+				print_prop( 'Server Port', Config.port );
 				
-//				Tests.isaliasunique();
-//				Tests.permstest();
+				if (isfun(callback)) callback();
 			});
 		}
 	};
-
-	Web.add = Web.adaaf;
 
 	module.exports = Web;
 })();

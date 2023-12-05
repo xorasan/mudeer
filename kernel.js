@@ -99,6 +99,17 @@ $.log = function () {
 			}
 			eval('console.error('+a+');');
 		},
+		w: function () {
+			var a = '', str = '';
+			for (var b in arguments) {
+				if (b > 0) {
+					a = a+', ';
+				}
+				a = a+'arguments['+b+']';
+				str += ' '+ arguments[b];
+			}
+			eval('console.warn('+a+');');
+		},
 		i: function () {
 			var a = '';
 			for (var b in arguments) {
@@ -830,4 +841,4 @@ $.preload = function (mods, fn) { // loads mods then calls the fn
 	};
 })();
 
-$.b = 1;
+$.b = 2;

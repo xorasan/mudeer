@@ -182,3 +182,37 @@ var wuqu3aat;
 	module.exports = _mod;
 	wuqu3aat = _mod;
 })();
+Web.during_init(function (done, queue) {
+	$.log.s( 'connecting to database' );
+	wuqu3aat.init({
+		host: 'localhost',
+		multiple: true,
+		u: WUQU3AATUSERNAME,
+		p: WUQU3AATPASSWORD,
+		charset: 'utf8mb4',
+		errcb: function (e) {
+			if (e && e.code === 'ER_NOT_SUPPORTED_AUTH_MODE') {
+				$.log.s( 'mysql server connection not supported' );
+				$.log.s( 'maybe you forgot to add your user:pass to mysql?' );
+				process.exit();
+			}
+			else if (e && e.code === 'ER_ACCESS_DENIED_ERROR') {
+				$.log.s( 'mysql server username password incorrect' );
+				$.log.s( e.sqlMessage );
+				process.exit();
+			}
+			else if (e && e.code === 'ECONNREFUSED') {
+				$.log.s( 'mysql server is down' );
+				process.exit();
+			}
+			else if (e && e.fatal) {
+				$.log.s( 'mysql server unknown error dying' );
+				process.exit();
+			}
+			else {
+				$.log.s( 'mysql connected' );
+			}
+			done(queue);
+		}
+	});
+});

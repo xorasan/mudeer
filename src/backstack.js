@@ -1,8 +1,8 @@
 /* @TODO
- * add .tasdeeq, which adds having to press back/esc twice to exit with taxeer
- * also make the exit button red when in taxeer
+ * add .back_twice_to_exit, which adds having to press back/esc twice to exit with taxeer
+ * also make the exit button red when in delay
+ * is_darajah is_level or is_stage or is_state
  * */
-//+ main view sheet dialog states darajah tasdeeq
 var backstack;
 ;(function(){
 	var s,

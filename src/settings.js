@@ -168,12 +168,12 @@ var Settings, settings, currentad;
 				break;
 			case 'XPO.settings':
 				
-				if (pager) {
-					pager.intaxab('XPO.settings', 1);
-					webapp.header();
-				} else { // since pager already shows context
+//				if (pager) {
+//					pager.intaxab('XPO.settings', 1);
+//					webapp.header();
+//				} else { // since pager already shows context
 					webapp.header([['XPO.settings'], 0, 'XPO.iconsettings']);
-				}
+//				}
 				
 				softkeys.list.basic(settingslist);
 				softkeys.set(K.en, function () {
@@ -195,7 +195,7 @@ var Settings, settings, currentad;
 				 * it can find functions by looping
 				 * */
 				// restore scroll position
-				settingslist.select();
+				settingslist.select(undefined, 0);
 				break;
 		}
 	});

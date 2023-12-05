@@ -1,33 +1,296 @@
 /*
- * TODO make offline.list to add offline functionality to lists
- * this will include auto saving changes to the list adapter to offline stores
+ * TODO make Offline.list to add Offline functionality to lists
+ * this will include auto saving changes to the list adapter to Offline stores
  * */
-//+ version warning states
-var config, offline, Offline;
+var Offline, offline;
 ;(function(){
 	'use strict';
-	var database	= 'db', db = false,
-		exclusions	= ['XPO.unsaved'];
+	var database	= 'db', db = false, maxaazin = {},
+		unsavedname = 'unsaved'+'default',
+		exclusions	= [unsavedname],
+		delaydefault = 30*1000,
+		gcallback,
+		debug_offline = 1;
 
-	config = function (v) {
-		var conf = preferences.get(170, 1);
-		try {
-			if (typeof conf === 'string')
-				conf = JSON.parse( conf || '{}' );
-		} catch (e) {
-			conf = {};
-		}
-		if (conf) return conf[v];
-		else return null;
+	var ajraa = function (callback) {
+		// get pending items from all offline stores
+		Offline.getall( Offline.allstores(), {
+			filter: {
+				pending: 1,
+			},
+			// helps only keep relevant props for network transport
+			format: true,
+		}, function (kinds) {
+			for (var i in kinds) {
+				var m = maxaazin[i];
+				var things = kinds[i], ixraaj = 0;
+				if (m.keyvalue) { // limit to { key: value, ... }
+					ixraaj = {};
+					for (var j in things) {
+						var uid = things[j].uid;
+						delete things[j].uid;
+						delete things[j].created;
+						delete things[j].updated;
+						ixraaj[ uid ] = things[j].value;
+					}
+				}
+				/*else if (things.havaf) {
+					things = {
+						uid: things.uid,
+						havaf: 1,
+					};
+				}*/
+				Network.sync(m.name, m.need, ixraaj || things);
+			}
+		});
 	};
-	
+	var ijtama3 = function (callback) {
+		$.taxeer('offline-ajraa', function () {
+			ajraa();
+		}, 3000);
+	};
+	var createstores = function () {
+		if (debug_offline) $.log.w('Offline createstores', maxaazin);
+		
+		var request = indexedDB.open(database, BUILDNUMBER);
+		request.onerror = function(event) {
+//			$.log.s( 'Offline.init.onerror', event );
+			if (event.target.error.name === 'VersionError') {
+				/* delete the old database even if the version number is bigger
+				 * recreate() calls init() which calls create() which calls
+				 * createstores()
+				 * */
+				Offline.recreate();
+			} else {
+//				$.log.e( event.target.error );
+			}
+		};
+		request.onupgradeneeded = function(event) {
+//			$.log.s( 'Offline.init.onupgradeneeded' );
+			
+			db = event.target.result;
+			
+			Offline.allstores().forEach(function (name) {
+//				$.log.s( 'del', name );
+				db.deleteObjectStore(name);
+			});
+			
+			Object.values(maxaazin).forEach(function (store) {
+				store.time = 0; // reset get time
+				var name = store.name+store.need;
+//				$.log.s( 'del', name );
+				if ( db.objectStoreNames.contains(name) )
+					db.deleteObjectStore(name);
+
+				Offline._createstore(name, store.mfateeh);
+			});
+		};
+		request.onsuccess = function(event) {
+//			$.log( 'Offline.init.onsuccess' );
+
+			db = event.target.result;
+			db.onversionchange = Offline.warning;
+			
+			Offline.ready = 1;
+			
+			if (gcallback) {
+				gcallback();
+				gcallback = 0;
+			} else {
+				Hooks.run('offline-ready', 1);
+			}
+		};
+	};
+	var fillmissingkeys = function (store, object) {
+		store = maxaazin[store];
+		store.mfateeh.forEach(function (m) {
+			object[m] = object[m] === undefined ? 0 : object[m];
+		});
+	};
+
 	/*
-	 * offline storage and adapter in one
+	 * Offline storage and adapter in one
 	 * auto manages database versioning
 	 * */
-	offline = {
-		states: false,
-		_stores: [],
+	Offline = offline = {
+		ruid: function () {
+			var ruid = parseInt( preferences.get(3) || -1 );
+			preferences.set(3, ruid - 1);
+			return (ruid - 1);
+		},
+		mundarij: {
+			add: {},
+			havaf: {},
+			get: {},
+		},
+		ready: false,
+		response: {
+			add: function (name, need, cb) {
+				if (typeof need == 'function') cb = need, need = 0;
+				need = need || 'default';
+				Offline.mundarij.add[ name ] = Offline.mundarij.add[ name ] || {};
+				Offline.mundarij.add[ name ][ need ] = cb;
+			},
+			havaf: function (name, need, cb) {
+				if (typeof need == 'function') cb = need, need = 0;
+				need = need || 'default';
+				Offline.mundarij.havaf[ name ] = Offline.mundarij.havaf[ name ] || {};
+				Offline.mundarij.havaf[ name ][ need ] = cb;
+			},
+			get: function (name, need, cb) {
+				/* WHY use cases
+				 * when you want to get something from the server using Offline
+				 * Offline handles everything, eg the .get response from server
+				 * it adds a listener to Network.get as well for your module
+				 * so your module.server can respond using both get & sync
+				 * */
+
+				if (typeof need == 'function') cb = need, need = 0;
+				need = need || 'default';
+				Offline.mundarij.get[ name ] = Offline.mundarij.get[ name ] || {};
+				Offline.mundarij.get[ name ][ need ] = cb;
+
+				Network.response.get(name, need, function (response) {
+					cb( shallowcopy(response) );
+
+					var store = maxaazin[name+need];
+					if (store) store.time = Time.now();
+					Offline.save(name, need, response);
+				});
+			},
+		},
+		add: function (name, need, value) { // adaaf
+			if (debug_offline) $.log.w('Offline.add', name, need);
+
+			if (arguments.length === 2) value = need, need = 0;
+			need = need || 'default';
+			if (!(value instanceof Array)) value = [value];
+			if (value instanceof Array) {
+				Offline.set(name+need, value, function (needssync) {
+					var m = maxaazin[ name+need ];
+					if (m.keyvalue) {
+						var kind = Offline.mundarij.get;
+						if (kind[name] && typeof kind[name][need] == 'function')
+							kind[name][need]( shallowcopy(value) );
+					}
+					if (needssync) ijtama3();
+				});
+			}
+		},
+		havaf: function (name, need, value) { // [ { uid }, { uid } ]
+			if (arguments.length === 2) value = need, need = 0;
+			need = need || 'default';
+			if (!(value instanceof Array)) value = [value];
+			if (value instanceof Array) {
+				value.forEach(function (item) {
+					item.pending = 1;
+					item.havaf = 1;
+				});
+				Offline.set(name+need, value, function (needssync) {
+					var m = maxaazin[ name+need ];
+					if (m.keyvalue) {
+						var kind = Offline.mundarij.get;
+						if (kind[name] && typeof kind[name][need] == 'function')
+							kind[name][need]( shallowcopy(value) );
+					}
+					if (needssync) ijtama3();
+				});
+			}
+		},
+		create: function (name, need, o) { // ixtalaq/create store
+			if (debug_offline) $.log.w('Offline.create', name, need);
+
+			o = o || {};
+			o.delay = o.delay || undefined;
+			o.nazzaf = o.nazzaf || undefined;
+			o.mfateeh = o.mfateeh || [];
+			need = need || 'default';
+			/* BUGFIX
+			 * i think there's a bug in indexdb implementation that forced me
+			 * to redefine this or maybe i'm mistaken in my understanding
+			 * but it was triggering errors without this index saying it doesn't
+			 * exist, i thought keyPath auto gens the uid index as well
+			 * maybe i misunderstood this concept
+			 * */
+			// indexes to search by date, all objects have these props
+			['uid', 'created', 'updated', 'pending'].forEach(function (v) {
+				if (!o.mfateeh.includes(v)) o.mfateeh.push(v);
+			});
+			maxaazin[ name+need ] = {
+				name:		name,
+				need:		need,
+				mfateeh:	o.mfateeh,
+				nazzaf:		o.nazzaf,
+				delay:		o.delay,
+				tashkeel:	o.tashkeel,
+				keyvalue: o.keyvalue,
+			};
+			$.taxeer('offline-init', function () {
+				createstores();
+			}, 250);
+		},
+		get: function (name, need, value, time) {
+			if (debug_offline) $.log.w('Offline.get', name, need);
+
+			need = need || 'default';
+			/*
+			 * it gets all first from Offline store, if nothing is found
+			 * then it tries online
+			 * if time is provided, then it saves when online was fetched last
+			 * */
+			
+			var expired = 0;
+			if (time !== undefined) {
+				var store = maxaazin[name+need];
+				if (store) {
+					var delay = store.delay || delaydefault;
+					if (delay !== -1) {
+						store.time = store.time || Time.now() - (delay*2);
+						if (time - store.time > delay) expired = 1;
+					}
+				}
+			}
+			
+			if (expired) {
+				Network.get(name, need, value);
+			} else {
+				Offline.getall(name+need, value, function (response) {
+					var kind = Offline.mundarij.get;
+					if (kind[name] && isfun(kind[name][need])) {
+						kind[name][need](response.toNative());
+					}
+				});
+			}
+		},
+		getforun: function (name, need, value, cb) {
+			need = need || 'default';
+			// simply gets from offline storage and return native array
+			if (isfun(cb))
+			Offline.getall(name+need, value, function (response) {
+				cb(response.toNative());
+			});
+		},
+		save: function (name, need, value) { // hifz/save from Network.sync[name][need] value
+			for (var uid in value) {
+				var val = value[uid], kind = Offline.mundarij.add;
+				
+				val.uid = val.uid || uid;
+
+				val.pending = 0;
+				if (val.havaf === -1) { // truly purged on both ends
+					kind = Offline.mundarij['havaf'];
+					Offline.pop(name+need, val.uid);
+					val = val.uid;
+				} else {
+					Offline.set(name+need, [val]);
+				}
+
+				if (kind[name] && typeof kind[name][need] == 'function') {
+					kind[name][need]( shallowcopy(val) );
+				}
+			}
+		},
+		
 		/* 
 		 * propname		==
 		 * propname$sw	startsWith
@@ -42,7 +305,7 @@ var config, offline, Offline;
 		 * 
 		 * $max			number is limit of list
 		 * */
-		filter: function (filter, rawitems, debug) {
+		filter: function (filter, rawitems) {
 			if (typeof filter === 'object' && Object.keys(filter).length) {
 				/*
 				 * by default it assumes that every single filter needs to eval
@@ -54,7 +317,7 @@ var config, offline, Offline;
 				
 				var filtered = $.array(), keys = Object.keys(filter);
 				rawitems.each(function (rawitem) {
-//					$.log.s( '------------', rawitem.XPO.uid );
+//					$.log.s( '------------', rawitem.uid );
 
 					var matchedprops = 0,
 						totalprops = keys.length;
@@ -133,46 +396,35 @@ var config, offline, Offline;
 //					$.log.s( matchedprops, totalprops );
 
 					if (matchedprops === totalprops)
-						filtered.set( rawitem.XPO.uid, rawitem );
+						filtered.set( rawitem.uid, rawitem );
 				});
 				
 				return filtered;
 			} else return rawitems;
 		},
-		addstore: function (store, keys) {
-			offline._stores.push({
-				name: store,
-				keys: keys
-			});
-		},
 		_createstore: function (name, keys) {
-//			$.log.s( 'offline._createstore', name );
+//			$.log.s( 'Offline._createstore', name );
 
-			var objectstore = db.createObjectStore(name, { keyPath: 'XPO.uid' });
+			var objectstore = db.createObjectStore(name, { keyPath: 'uid' });
 
-			/* BUGFIX
-			 * i think there's a bug in indexdb implementation that forced me
-			 * to redefine this or maybe i'm mistaken in my understanding
-			 * but it was triggering errors without this index saying it doesn't
-			 * exist, i thought keyPath auto gens the uid index as well
-			 * maybe i misunderstood this concept
-			 * */
-			objectstore.createIndex('XPO.uid', 'XPO.uid');
-			
-			// indexes to search by date, all objects have these props
-			objectstore.createIndex('XPO.created', 'XPO.created');
-			objectstore.createIndex('XPO.updated', 'XPO.updated');
-			objectstore.createIndex('XPO.pending', 'XPO.pending');
 			for (var i in keys) {
 				objectstore.createIndex(keys[i], keys[i]);
 			}
-
 		},
-		get: function (store, uid, callback) {
-			db.transaction(store).objectStore(store).get(uid)
-				.onsuccess = function(event) {
-					typeof callback === 'function' && callback(event.target.result);
-				};
+		_get: function (store, uid, callback) {
+			if (db) {
+				try {
+					db.transaction(store).objectStore(store).get(uid)
+						.onsuccess = function(event) {
+							typeof callback === 'function' && callback(event.target.result);
+						};
+				} catch (error) {
+					$.log('Offline.get', store, uid);
+					$.log.e(error);
+				}
+			} else {
+				// TODO should there be a warning?
+			}
 		},
 		count: function (store, callback) {
 			var i = 0;
@@ -209,40 +461,36 @@ var config, offline, Offline;
 			
 			if (value instanceof Array) {
 				for (var i in value) {
-					value[i] = offline.parsevalue(value[i] );
+					value[i] = Offline.parsevalue(value[i] );
 				}
 			}
 			
 			return value;
 		},
 		/*
-		 * if obj has a pop property and uid is +ve then drops all other props
-		 * and just keeps the pop and uid props
-		 * 
-		 * always remove the XPO.photo property, no need to send all that data
-		 * to the server, that's not how uploads work lol
+		 * this func is called on each obj before it is sent to Network uploads
+		 * intro a Offline.store.<name>.tashkeel func to override this
 		 * */
 		format: function (obj, store) {
 			obj = obj || {};
 			var newobj = {};
 			
-			delete obj.XPO.photo;
+//			delete obj.photo;
 			
-			if (obj.XPO.pop && obj.XPO.uid > 0) {
-				newobj = {
-					XPO.uid: obj.XPO.uid,
-					XPO.pop: obj.XPO.pop,
-					XPO.alias: obj.XPO.alias,
-				};
+//			if (obj.havaf && obj.uid > 0) {
+//				newobj = {
+//					uid: obj.uid,
+//					havaf: obj.havaf,
+//				};
+//			} else {
+				delete obj._store;
+				delete obj.pending;
 
-				if (store == 'XPO.commentitem')
-					newobj.XPO.type = obj.XPO.type;
-			} else {
-				delete obj.XPO._store;
-				delete obj.XPO.pending;
-
-				newobj = obj;
-			}
+				newobj = shallowcopy(obj);
+//			}
+			
+			var m = maxaazin[store];
+			if (m && isfun(m.tashkeel)) newobj = m.tashkeel(newobj);
 			
 			return newobj;
 		},
@@ -250,22 +498,22 @@ var config, offline, Offline;
 		 * returns a $.array
 		 * */ 
 		_getall: function (store, options, callback) {
-//			$.log.e( 'offline._getall', store );
+//			$.log.e( 'Offline._getall', store );
 			var objectStore		= db.transaction(store).objectStore(store),
-				unsavedStore	= db.transaction('XPO.unsaved').objectStore('XPO.unsaved'),
+				unsavedStore	= db.transaction(unsavedname).objectStore(unsavedname),
 				i				= 0,
 				filteredcount	= 0, // total objects filtered out
 				objects			= $.array(),
-				filters			= options.XPO.filter || {},
+				filters			= options.filter || {},
 				bound			= null,
 				direction		= 'prev',
 				extra			= {
 						pages: false,
 						count: false,
-						limit: options.XPO.limit,
+						limit: options.limit,
 					};
 			
-			// this will fuckup offline lists' page counts, test this
+			// this will fuckup Offline lists' page counts, test this
 			if (extra.limit === undefined || extra.limit === true) {
 				extra.limit = true;
 			}
@@ -273,8 +521,8 @@ var config, offline, Offline;
 			options.key = [];
 			options.only = [];
 			
-			if (filters.XPO.cache)
-				filters.XPO.cache = undefined;
+			if (filters.cache)
+				filters.cache = undefined;
 			
 			// this only allow filtering by a single key
 			// is there a better way to handle this?
@@ -303,7 +551,7 @@ var config, offline, Offline;
 			
 			if (options.key) {
 				objectStore = objectStore.index( options.key );
-				options.only = offline.parsevalue( options.only );
+				options.only = Offline.parsevalue( options.only );
 				bound = IDBKeyRange.only( options.only );
 //				bound = IDBKeyRange.bound(options.only, options.only, false, false);
 			}
@@ -311,7 +559,7 @@ var config, offline, Offline;
 			if (extra.limit !== true) {
 				extra.limit = extra.limit || 20;
 
-				var page = options.XPO.page || 0;
+				var page = options.page || 0;
 				if (page) page = page - 1;
 				var startat = page * extra.limit;
 			}
@@ -319,20 +567,20 @@ var config, offline, Offline;
 			objectStore.openCursor(bound, direction).onsuccess = function (event) {
 				var cursor = event.target.result;
 				if (cursor) {
-					var key = cursor.value.XPO.uid;
+					var key = cursor.value.uid;
 					
 					if (extra.limit === true || options.perm) {
 						var item = cursor.value;
-						if (options.XPO.format)
-							item = offline.format( cursor.value, store );
+						if (options.format)
+							item = Offline.format( cursor.value, store );
 
 						objects.set(key, item);
 					} else {
-//						$.log.s( 'offline.getall', startat, i, key );
+//						$.log.s( 'Offline.getall', startat, i, key );
 						if ( i >= startat && objects.length < extra.limit ) {
 							var item = cursor.value;
-							if (options.XPO.format)
-								item = offline.format( cursor.value, store );
+							if (options.format)
+								item = Offline.format( cursor.value, store );
 
 							objects.set(key, item);
 						} else {
@@ -343,10 +591,10 @@ var config, offline, Offline;
 					++i;
 					cursor.continue();
 				} else {
-					offline._getallpending(store, function (unsaved) {
+					Offline._getallpending(store, function (unsaved) {
 						unsaved.each(function (item) {
-							if (options.XPO.format)
-								item = offline.format( item, store );
+							if (options.format)
+								item = Offline.format( item, store );
 							
 							return item;
 						});
@@ -356,9 +604,9 @@ var config, offline, Offline;
 							 * pre-sorting for perm lists && pre-filtering
 							 * */
 							if (options.perm) {
-								objects.sort(options.reversed || 0, (options.orderby || 'XPO.uid'), 'XPO.uid');
-								if (typeof options.XPO.multifilter === 'object' && Object.keys(options.XPO.multifilter).length)
-									objects = offline.filter(options.XPO.multifilter, objects);
+								objects.sort(options.reversed || 0, (options.orderby || 'uid'), 'uid');
+								if (typeof options.multifilter === 'object' && Object.keys(options.multifilter).length)
+									objects = Offline.filter(options.multifilter, objects);
 							}
 
 							if (extra.limit === true) {
@@ -366,7 +614,7 @@ var config, offline, Offline;
 								extra.pages = false;
 								typeof callback === 'function' && callback(objects, extra, unsaved);
 							} else {
-								offline.count(store, function (count) {
+								Offline.count(store, function (count) {
 									if (bound) {
 										extra.count = objects.length+filteredcount;
 									} else {
@@ -380,8 +628,8 @@ var config, offline, Offline;
 									if (options.perm) {
 										extra.count = objects.length;
 										extra.pages = Math.ceil(extra.count / extra.limit);
-										extra.XPO.filteredcount = objects.length;
-										objects = objects.slice(startat, startat+options.XPO.limit-1);
+										extra.filteredcount = objects.length;
+										objects = objects.slice(startat, startat+options.limit-1);
 									}
 
 									typeof callback === 'function' && callback(objects, extra, unsaved);
@@ -403,11 +651,11 @@ var config, offline, Offline;
 			};
 		},
 		_getallpending: function (store, callback) {
-			var unsavedStore	= db.transaction('XPO.unsaved').objectStore('XPO.unsaved'),
+			var unsavedStore	= db.transaction(unsavedname).objectStore(unsavedname),
 				bound			= IDBKeyRange.only( store ),
 				objects			= $.array();
 
-			unsavedStore.index( 'XPO._store' ).openCursor(bound).onsuccess = function (event) {
+			unsavedStore.index( '_store' ).openCursor(bound).onsuccess = function (event) {
 				var cursor = event.target.result;
 				if (cursor) {
 					/*
@@ -419,9 +667,9 @@ var config, offline, Offline;
 					 * uids
 					 * so we negate them here
 					 * */
-					cursor.value.XPO.uid = cursor.value.XPO.uid * -1;
+					cursor.value.uid = cursor.value.uid * -1;
 					
-					objects.set(cursor.value.XPO.uid, cursor.value);
+					objects.set(cursor.value.uid, cursor.value);
 					cursor.continue();
 				} else {
 					typeof callback === 'function' && callback(objects);
@@ -433,17 +681,17 @@ var config, offline, Offline;
 		 * doesn't need a store cuz these -ve uids are unique across stores ;)
 		 * */
 		getpendingitem: function (uid, callback) {
-			var unsavedStore	= db.transaction('XPO.unsaved').objectStore('XPO.unsaved'),
+			var unsavedStore	= db.transaction(unsavedname).objectStore(unsavedname),
 				// this function takes in a -ve uid but turns it +ve
 				bound			= IDBKeyRange.only( uid * -1 ),
 				objects			= $.array();
 
-			unsavedStore.index( 'XPO.uid' ).openCursor(bound).onsuccess = function (event) {
+			unsavedStore.index( 'uid' ).openCursor(bound).onsuccess = function (event) {
 				var cursor = event.target.result;
 				if (cursor) {
-					cursor.value.XPO.uid = cursor.value.XPO.uid * -1;
+					cursor.value.uid = cursor.value.uid * -1;
 					
-					objects.set(cursor.value.XPO.uid, cursor.value);
+					objects.set(cursor.value.uid, cursor.value);
 					cursor.continue();
 				} else {
 					typeof callback === 'function' && callback(objects);
@@ -451,7 +699,7 @@ var config, offline, Offline;
 			};
 		},
 		getallpending: function (store, callback) {
-//			$.log.s( 'offline.getall', store.join(' ') );
+//			$.log.s( 'Offline.getall', store.join(' ') );
 			
 			/*
 			 * when store is an array, ...use the same options for each store...
@@ -470,7 +718,7 @@ var config, offline, Offline;
 				
 				store.forEach(function () {
 					q.set(function (done, queue) {
-						offline._getallpending(store[i], function (objects) {
+						Offline._getallpending(store[i], function (objects) {
 							if (objects.length) {
 								types[ store[i] ] = objects.toNative();
 								++total;
@@ -488,11 +736,11 @@ var config, offline, Offline;
 				});
 				
 			} else {
-				offline._getallpending(store, callback);
+				Offline._getallpending(store, callback);
 			}
 		},
 		getall: function (store, options, callback) {
-//			$.log.s( 'offline.getall', store.join(' ') );
+//			$.log.s( 'Offline.getall', store.join(' ') );
 			
 			options = options || {};
 			
@@ -513,12 +761,12 @@ var config, offline, Offline;
 				
 				store.forEach(function () {
 					q.set(function (done, queue) {
-						offline._getall(store[i], options, function (objects, ignore, unsaved) {
+						Offline._getall(store[i], options, function (objects, ignore, unsaved) {
 							if (objects.length || unsaved.length) {
-								if (options.XPO.filter
-								&&	options.XPO.filter.XPO.pending
-								&&	store[i].endsWith('_XPO.archive')) {
-									store[i] = store[i].slice(0, -'_XPO.archive'.length);
+								if (options.filter
+								&&	options.filter.pending
+								&&	store[i].endsWith('_archive')) {
+									store[i] = store[i].slice(0, -'_archive'.length);
 								}
 
 								if (types[ store[i] ]) {
@@ -542,41 +790,54 @@ var config, offline, Offline;
 				});
 				
 			} else {
-				offline._getall(store, options, callback);
+				Offline._getall(store, options, callback);
 			}
 		},
 		/*
 		 * objects is a $.array
 		 * */ 
-		set: function (store, objects, callback) {
+		set: function (store, arr, callback) {
+			if (debug_offline) $.log.w('Offline.set', store);
+			if (!db) {
+				if (debug_offline) $.log.e('Offline db not created yet', db);
+				return;
+			}
+			
 			/*
 			 * this is need because if there are no objects present, the transaction
 			 * is not even initiated, so there's no oncomplete event lol
 			 * best to just return alongside callback
 			 * */
-			if (objects.length === 0) {
+			if (arr.length === 0) {
 				typeof callback === 'function' && callback();
 				return;
 			}
 			
-			var stores		= [store, 'XPO.unsaved'];
-			var transaction = db.transaction(stores, 'readwrite');
+			var needssync	= 0;
+			var stores		= [store, unsavedname];
+			try {
+				var transaction = db.transaction(stores, 'readwrite');
+			} catch (e) {
+				$.log.e(e);
+				return;
+			}
 			
-			// Do something when all the data is added to the database.
+			// do something when all the data is added to the database.
 			transaction.oncomplete = function(event) {
-//				$.log.s("offline.set.oncomplete");
-				typeof callback === 'function' && callback(event.target.result);
+//				$.log.s("Offline.set.oncomplete");
+				typeof callback === 'function' && callback(needssync);
 			};
 
 			var objectStore		= transaction.objectStore(store);
-			var unsavedStore	= transaction.objectStore('XPO.unsaved');
-			objects.each(function(obj) {
+			var unsavedStore	= transaction.objectStore(unsavedname);
+			arr.forEach(function(obj) {
 				/*
 				 * idb spec f'd up again by not allowing boolean indexes
 				 * so true is 1 and false is 0 *facepalm*
 				 * */
-				if (obj.XPO.pending === true) obj.XPO.pending = 1;
-				if (obj.XPO.pending === false) obj.XPO.pending = 0;
+				if (obj.pending === true) obj.pending = 1;
+				if (obj.pending === false) obj.pending = 0;
+				if (obj.uid < 0 || obj.pending) needssync = 1;
 
 				/*
 				 * btw idb doesn't allow changing primary key of an object
@@ -592,7 +853,7 @@ var config, offline, Offline;
 				 * case: only saving it offline, never saved on the server
 				 * has a -ve uid
 				 * idea: use the -ve uid as +ve uid
-				 * 		assing _store = real store
+				 * 		passing _store = real store
 				 * 		check if there's a record with the same uid present
 				 * 		override the old obj with new obj props
 				 * 		store to the unsaved store
@@ -603,43 +864,47 @@ var config, offline, Offline;
 				 * */
 				
 				// just saved on the server
-				if (obj.XPO.uid > 0 && obj.XPO.ruid < 0) {
-					unsavedStore.delete( obj.XPO.ruid * -1 ).onsuccess = function () {
-						delete obj.XPO.ruid;
-						delete obj.XPO._store;
+				if (obj.uid > 0 && obj.ruid < 0) {
+					unsavedStore.delete( obj.ruid * -1 ).onsuccess = function () {
+						delete obj.ruid;
+						delete obj._store;
+						
+						fillmissingkeys(store, obj);
 						objectStore.put(obj);
 					};
 				}
 				// only saving if offline
-				else if (obj.XPO.uid < 0 && obj.XPO.ruid === undefined) {
+				else if (obj.uid < 0 && obj.ruid === undefined) {
 					// since idb doesn't allow looping over neg uids
-					obj.XPO.uid = obj.XPO.uid * -1;
-					obj.XPO._store = store;
+					obj.uid = obj.uid * -1;
+					obj._store = store;
 					
-					unsavedStore.get(obj.XPO.uid || 0).onsuccess = function(event) {
+					unsavedStore.get(obj.uid || 0).onsuccess = function(event) {
 						var oldobj = event.target.result;
 						if (oldobj) {
 							oldobj = Object.assign(oldobj, obj);
 							obj = oldobj;
 						}
 						
+						fillmissingkeys(unsavedname, obj);
 						unsavedStore.put(obj);
 					};
 				// real saved item
 				} else {
-					objectStore.get(obj.XPO.uid || 0).onsuccess = function(event) {
+					objectStore.get(obj.uid || 0).onsuccess = function(event) {
 						var oldobj = event.target.result;
 
 						if (oldobj) {
 							oldobj = Object.assign(oldobj, obj);
 							obj = oldobj;
 						} else {
-							if (obj.XPO.pending === false
-							||	obj.XPO.pending === undefined
-							||	obj.XPO.pending === null)
-								obj.XPO.pending = 0;
+							if (obj.pending === false
+							||	obj.pending === undefined
+							||	obj.pending === null)
+								obj.pending = 0;
 						}
 
+						fillmissingkeys(store, obj);
 						objectStore.put(obj);
 					};
 				}
@@ -648,7 +913,7 @@ var config, offline, Offline;
 		},
 		pop: function (store, uid, callback) {
 			if (uid < 0) {
-				store = 'XPO.unsaved';
+				store = unsavedname;
 				uid = uid * -1;
 			}
 			
@@ -657,28 +922,26 @@ var config, offline, Offline;
 					typeof callback === 'function' && callback(event.target.result);
 				};
 		},
-		/*
-		 * objects is a $.array
-		 * */
-		popall: function (store, objects, callback) {
-			var transaction = db.transaction(store, 'readwrite');
+		popall: function (store, arr, callback) {
+			var stores			= [store, unsavedname];
+			var transaction 	= db.transaction(stores, 'readwrite');
+			var objectStore		= transaction.objectStore(store);
+			var unsavedStore	= transaction.objectStore(unsavedname);
 			
 			// Do something when all the data is added to the database.
 			transaction.oncomplete = function(event) {
 //				$.log.s("all popped!");
-				typeof callback === 'function' && callback(event.target.result);
+				typeof callback === 'function' && callback();
 			};
 
 			var objectStore = transaction.objectStore(store);
-			objects.each(function(obj) {
-				var request = objectStore.delete(obj.XPO.uid);
-				request.onsuccess = function(event) {
-//					$.log.s( event.target.result );
-				};
+			arr.forEach(function(obj) {
+				if (obj.uid < 0) unsavedStore.delete(obj.uid * -1);
+				else objectStore.delete(obj.uid);
 			});
 		},
 		allstores: function () {
-//			$.log.s( 'offline.allstores' );
+//			$.log.s( 'Offline.allstores' );
 			var oldstores = [];
 			
 			/*
@@ -703,7 +966,7 @@ var config, offline, Offline;
 			db && db.close && db.close();
 			var request = indexedDB.deleteDatabase(database);
 			request.onsuccess = function () {
-				offline.init(callback);
+				Offline.init(callback);
 			};
 			/*request.onblocked = function () {
 				$.log.s( 'blocked' );
@@ -726,7 +989,7 @@ var config, offline, Offline;
 		 * completely
 		 * */
 		warning: function (event) {
-			/*
+			/* OMG THIS IS SO STUPID
 			 * if the old isn't closed, the new one can't be opened lol
 			 * when two tabs are open and one gets a new version loaded up
 			 * the effect is
@@ -737,60 +1000,37 @@ var config, offline, Offline;
 			 * */
 			db.close();
 			// replace this with our custom loader screen + this message and a reload button
-			dom.setloading( 'XPO.appneedsreload' );
+			dom.setloading( 'appneedsreload' );
 		},
-		init: function (callback, options) {
-			Hooks.run('XPO.offlineinit', null);
-
-			options = options || {};
+		init: function (callback) {
+			if (debug_offline) $.log.w('Offline.init');
 			
-			offline.addstore('XPO.unsaved', ['XPO._store', 'XPO.alias']);
-			
-			var request = indexedDB.open(database, options.version || BUILDNUMBER);
-			request.onerror = function(event) {
-//				$.log.s( 'offline.init.onerror', event );
-				if (event.target.error.name === 'VersionError') {
-					location.reload();
-					// should we notify the user before hand and timeout?
-				}
-			};
-			request.onupgradeneeded = function(event) {
-//				$.log.s( 'offline.init.onupgradeneeded' );
-				
-				db = event.target.result;
-				
-				offline.allstores().forEach(function (name) {
-//					$.log.s( 'del', name );
-					db.deleteObjectStore(name);
-				});
-				
-				offline._stores.forEach(function (store) {
-					var name = store.name;
-//					$.log.s( 'del', name );
-					if ( db.objectStoreNames.contains(name) )
-						db.deleteObjectStore(name);
-
-					offline._createstore(name, store.keys);
-				});
-			};
-			request.onsuccess = function(event) {
-//				$.log.s( 'offline.init.onsuccess' );
-
-				db = event.target.result;
-				if (!options.nowarn) {
-					db.onversionchange = offline.warning;
-				}
-				
-				offline.states = true;
-
-				Hooks.run('XPO.offlineready', null);
-				typeof callback === 'function' && callback(db);
-			};
-
-			return request;
+			gcallback = callback;
+			Offline.create('unsaved', 'default', {
+				mfateeh: ['_store']
+			});
 		}
 	};
 	
-	Offline = offline;
-	
+	Hooks.set('response-sync', function (payload) {
+		for (var name in payload) {
+			for (var need in payload[name]) {
+				var value = payload[name][need];
+				Offline.save(name, need, value);
+				
+				var m = maxaazin[ name+need ];
+				if (m.keyvalue) {
+					var kind = Offline.mundarij.get;
+					if (kind[name] && typeof kind[name][need] == 'function')
+						kind[name][need]( shallowcopy(value) );
+				}
+			}
+		}
+	});
+	Hooks.set('network-connection', function (yes) {
+		if (yes)
+		$.taxeer('offline-sync', function () {
+			ijtama3();
+		}, 250);
+	});
 })();

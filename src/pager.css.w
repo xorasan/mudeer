@@ -1,6 +1,6 @@
 #pagerui
 	border-bottom		1px solid @tertiaryd
-	box-shadow			0 -20px 20px 5px @secondary
+//	box-shadow			0 -20px 20px 5px @secondary
 	z-index				80
 #pagermowjoodah
 	overflow-x			auto

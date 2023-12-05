@@ -3,7 +3,7 @@
 	width			20px
 	height			20px
 	border-radius	100%
-.naqd .vahab, .naqd .fiddah
+.money .vahab, .money .fiddah
 	width			28px
 	height			28px
 .vahab
@@ -12,7 +12,7 @@
 .fiddah
 	background		linear-gradient(45deg, silver, white)
 	border			1px solid silver
-.sheet .naqd
+.sheet .money
 	border-radius		15px
 	border				1px solid @secondary
 	margin				2px 4px

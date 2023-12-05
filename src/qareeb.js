@@ -247,7 +247,7 @@ var qareeb;
 		},
 	};
 
-	maxzan.ixtalaq('XPO.qareeb', 0, {
+	Offline.create('XPO.qareeb', 0, {
 		taxeer: 5*60*1000,
 	});
 //	listener('resize', function () {
