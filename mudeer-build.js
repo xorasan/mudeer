@@ -38,7 +38,8 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 		background_color: conf.bg || undefined,
 		type: conf.type,
 		role: conf.role,
-		launch_path: root+"/index.html",
+		start_url: root+"/",
+		launch_path: root+"/",
 		developer: {
 			name: "Hasan Xorasani",
 			url: "mailto:hxorasani@gmail.com",
@@ -55,11 +56,8 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 	};
 
 	manifest.icons = [{
-		src: root+"/0.png",
-		sizes: "56x56"
-	}, {
-		src: root+"/1.png",
-		sizes: "112x112"
+		src: root+"/e.png",
+		sizes: "512x512"
 	}];
 	
 	Files.set.file( xpath+'manifest.json', JSON.stringify( manifest, null, '\t' ) );
@@ -611,16 +609,6 @@ var do_build = function (args, xpo) {
 
 	if (conf.kind == 'server') {
 		var str2save = ( parsedoutput.rawjs || '' );
-		if (conf.database)
-		str2save = str2save .replace(/WUQU3AATUSERNAME/g, '"'+conf.database.username+'"')
-							.replace(/WUQU3AATPASSWORD/g, '"'+conf.database.password+'"')
-							.replace(/WUQU3AATNAME/g, '"'+conf.database.name+'"')
-							.replace(/WUQU3AAT/g, !!conf.database);
-		else
-		str2save = str2save .replace(/WUQU3AATUSERNAME/g, '""')
-							.replace(/WUQU3AATPASSWORD/g, '""')
-							.replace(/WUQU3AATNAME/g, '""')
-							.replace(/WUQU3AAT/g, 0);
 
 		Files.set.file( xpath+'index.js', str2save );
 		printsize(prespace+'index.js', str2save.length );

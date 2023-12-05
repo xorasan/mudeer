@@ -1,6 +1,6 @@
 /* 
  * polling.worker is queued at the very end
- * if no module returns (extra.munfaq = true) (handled)
+ * if no module returns (extra.consumed = true) (handled)
  * only then the worker should index this request
  * 
  * modules know if this is a live request, so when they actually
@@ -19,9 +19,9 @@ var Polling;
 	 * should start polling
 	 * 
 	 * connections is account uids as index
-	 * and objects of requests indexed using waqtstamps
+	 * and objects of requests indexed using timestamps
 	 * whenever the server wants to send an 'obj' to an account
-	 * it will call .intahaa(accountuid, obj)
+	 * it will call .finish(accountuid, obj)
 	 * this will send that obj to all pending requests under that account
 	 * and then that account will get popped from connections
 	 * */
@@ -33,30 +33,31 @@ var Polling;
 				queue2		= $.queue();
 	
 			queue2.set(function (done2, queue2) { // listen
-				if ( extra.munfaq ) { // handled consumed
+				if ( extra.consumed ) { // handled consumed munfaq
 					/*
 					 * this means there already was new data that some module
 					 * has included in the extra.obj
 					 * 
 					 * EXPERIMENTAL override
-					 * since this is the waqt the request is being sent out
-					 * this waqt should be added to extra.obj
+					 * since this is the time the request is being sent out
+					 * this time should be added to extra.obj
 					 * -50ms compensates for any lag caused by the chained 
 					 * module queue
 					 * 
 					 * THIS is now being handled in shabakah using diff logic
 					 * */
-//					extra.obj.XPO.waqt = new Date().getTime()-50;
+//					extra.obj.time = new Date().getTime()-50;
 					done2(queue2, extra);
 				} else
-				if ( extra.hisaab && payload.XPO.nashar && extra.hisaab.XPO.sid ) {
-//					$.log.s( 'nashar', extra.hisaab.ism );
+				if ( extra.account && payload.broadcast && extra.account.sid ) {
+//					$.log.s( 'broadcast', extra.account.name );
 					
-					connections[ extra.hisaab.XPO.sid ] = {
-						uid: extra.hisaab.uid,
-						sid: extra.hisaab.sid,
+					connections[ extra.account.sid ] = {
+						uid: extra.account.uid,
+						sid: extra.account.sid,
+						name: extra.account.name,
 						res: extra.res,
-						waqt: new Date().getTime(),
+						time: new Date().getTime(),
 					};
 					
 //					$.log.s( 'connections:', Object.keys(connections).length );
@@ -70,21 +71,21 @@ var Polling;
 		 * use this function somwhere
 		 * and the next step is to make this pass through all the Main mods
 		 * each main mod should have a poll or recap like function that takes
-		 * from and to waqtstamps 
+		 * from and to timestamps 
 		 * when this function is called
 		 * it goes through all the mods' poll or recap function
 		 * piles up an object, and then sends it out
 		 * and do pragmatically think big, this in the near future should be
 		 * used for collab in the pages+articles editor so build it solid
 		 * */
-		intahaa: function (obj) {
+		finish: function (obj) {
 			for (var i in connections) {
 				try {
 					connections[i].res.json(obj || 1);
-//					$.log( 'polling.intahaa', i, connections[i].uid );
+//					$.log( 'polling.finish', i, connections[i].uid );
 					delete connections[i];
 				} catch (e) {
-					$.log.s('Polling.intahaa err', e);
+					$.log.s('Polling.finish err', e);
 				}
 			}
 		},
@@ -92,7 +93,7 @@ var Polling;
 		 * accounts is an array, only requests for these account uids should end
 		 * if accounts is undefined, then just end all
 		 * */
-		intahaakul: function (accounts) {
+		finish_all: function (accounts) {
 			for (var i in connections) {
 				var yes;
 				if (accounts && accounts.includes(connections[i].uid)) yes = 1;
@@ -101,11 +102,11 @@ var Polling;
 
 				if (yes) {
 					try {
-//						$.log.s('Polling.intahaakul', i);
+//						$.log.s('Polling.finish_all', i);
 						connections[i].res.end('1');
 						delete connections[i];
 					} catch (e) {
-						$.log('Polling.intahaakul err', e);
+						$.log('Polling.finish_all err', e);
 					}
 				}
 			}
@@ -113,10 +114,10 @@ var Polling;
 	};
 	
 	var poptimer = setInterval(function () {
-		var currentwaqt = new Date().getTime();
+		var current_time = new Date().getTime();
 		
 		for (var i in connections) {
-			if ( currentwaqt - connections[i].waqt >= 30 * 1000 ) {
+			if ( current_time - connections[i].time >= 30 * 1000 ) {
 				delete connections[i];
 			}
 		}
@@ -125,6 +126,13 @@ var Polling;
 
 	module.exports = Polling;
 
-	Web.adaaf(Polling.worker);
+	Network.get('polling', 'connections', function (response) {
+		var names = [];
+		for (var i in connections) { names.push(connections[i].name); }
+		response.get('names', names)
+				.finish();
+	});
+
+	Web.add(Polling.worker);
 
 })();

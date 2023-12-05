@@ -1,6 +1,6 @@
 /*
- * used by glatteis-repl
- * converts database.slang to sql
+ * used by mudeer-db
+ * converts database.w to sql
  * manages mysql(...) server
  * creates, upgrades databases
  * 
@@ -12,7 +12,7 @@ var wuqu3aat = wuqu3aat || {};
 		Repl	= false,
 		Files	= false,
 		Data	= false,
-		Slang	= false;
+		Weld	= false;
 	
 	var _mod = {
 		_cache: {},
@@ -20,9 +20,9 @@ var wuqu3aat = wuqu3aat || {};
 			
 			_mod.init();
 			
-			var configslang = '', conf = false;
+			var configw = '', conf = false;
 			try {
-				configslang = Files.get.file('config.slang');
+				configw = Files.get.file('config.w');
 			} catch (e) {
 				conf = {
 					import: {
@@ -38,27 +38,27 @@ var wuqu3aat = wuqu3aat || {};
 				};
 			}
 			if (conf === false) {
-				conf = Slang.parse(configslang.toString());
-				conf = Slang.config.parse(conf);
+				conf = Weld.parse(configw.toString());
+				conf = Weld.config.parse(conf);
 			}
 
-			var dbslang = '', dbjson = false;
+			var dbw = '', dbjson = false;
 			try {
-				dbslang = ( Files.get.file('database.slang') || '' ).toString();
+				dbw = ( Files.get.file('database.w') || '' ).toString();
 			} catch (e) {
-				Cli.echo('database.slang missing, try configure');
+				Cli.echo('database.w missing, try configure');
 				return;
 			}
 			
-			dbslang = Slang.parse(dbslang);
-			dbjson = Slang.sql.parse(dbslang);
+			dbw = Weld.parse(dbw);
+			dbjson = Weld.sql.parse(dbw);
 
 			/*
-			 * check if database.slang exists, if not ask to conf first
-			 * is database.slang empty? show usage help
+			 * check if database.w exists, if not ask to conf first
+			 * is database.w empty? show usage help
 			 * ask for a database name, this is where the schema will initialize
 			 * ask if upgrade is required, should it prompt or overwrite silent
-			 * convert slang to json
+			 * convert weld to json
 			 * replace database name
 			 * execute queries
 			 * show results
@@ -104,7 +104,7 @@ var wuqu3aat = wuqu3aat || {};
 						var sql = '';
 						
 						if (args.keys.install === true) {
-							sql += Slang.sql.tosql(args.keys.name, dbjson, result)
+							sql += Weld.sql.tosql(args.keys.name, dbjson, result)
 								+'\nGRANT ALL PRIVILEGES ON `'+args.keys.name+'` TO'
 								+' `'+conf.database.username+'`@`localhost` IDENTIFIED BY `'+conf.database.password+'`;\n'+sql;
 						}
@@ -133,7 +133,7 @@ var wuqu3aat = wuqu3aat || {};
 					if (args.keys.drop === true) {
 						gensql(false);
 					} else {
-						Slang.sql.init(Data).gettables([args.keys.name], gensql);
+						Weld.sql.init(Data).gettables([args.keys.name], gensql);
 					}
 				} else
 				{
@@ -142,11 +142,11 @@ var wuqu3aat = wuqu3aat || {};
 				
 			}
 		},
-		init: function (repl, cli, files, slang, data) {
+		init: function (repl, cli, files, weld, data) {
 			Cli		= Cli	|| cli,
 			Repl	= Repl	|| repl,
 			Files	= Files	|| files;
-			Slang	= Slang	|| slang;
+			Weld	= Weld	|| weld;
 			Data	= Data	|| data;
 			
 			return _mod;

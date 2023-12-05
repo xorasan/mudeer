@@ -354,6 +354,12 @@ var Cli = Cli || {};
 				_._onresize = true;
 				process.stdout.on('resize', function () {
 					_.sizes();
+					// new and approved
+					Hooks.run('cli-resize', {
+						rows: _.height,
+						cols: _.width
+					});
+					// deprecated
 					Hooks.run(_.events.resize, {
 						rows: _.height,
 						cols: _.width

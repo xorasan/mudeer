@@ -9,8 +9,7 @@ var helpers;
 var tbl_pops = 'pops0';
 ;(function(){
 	'use strict';
-	var Data		= wuqu3aat,
-		hashalgo	= new require('./xudoo3/easy-pbkdf2').EasyPbkdf2();
+	var Data		= wuqu3aat;
 	
 	var Helpers = {
 		tree: function (root, folders, cb) {
@@ -43,84 +42,6 @@ var tbl_pops = 'pops0';
 			} else {
 				cb(result);
 			}
-		},
-		usernameisvalid: function (username) {
-			var result = {
-				code: false
-			};
-
-			result.username = username = Data.alias(username);
-			
-			if (result.username.length >= 3) {
-				if (result.username.length <= 24) {
-					result.code = false;
-				} else {
-					result.code = 'XPO.usernameover';
-				}
-			} else {
-				result.code = 'XPO.usernameunder';
-			}
-			return result;
-		},
-		usernameexists: function (username, cb) {
-			if (typeof cb !== 'function') return;
-			
-			var sql = ['SELECT * FROM accounts WHERE `name` = ?',
-						[username]];
-						
-			$('data').query(sql, function (rows) {
-				cb((rows && rows.length === 1));
-			}, function (err) {
-				console.log(err);
-			});
-		},
-		passwordisvalid: function (password) {
-			var result = {
-				code: false
-			};
-			
-			// 8 to ... chars
-			if (password.length >= 8) {
-				if (password.length <= 64) {
-					result.code = false;
-				} else {
-					result.code = 'XPO.passwordover';
-				}
-			} else {
-				result.code = 'XPO.passwordunder';
-			}
-			return result;
-		},
-		hashpassword: function (password, callback) {
-			if (typeof callback === 'function') {
-				hashalgo.hash(password, function (err, hash, salt) {
-					if (err) throw err;
-					
-					callback({
-						err: err,
-						salt: salt,
-						hash: hash
-					});
-				});
-			}
-		},
-		verifypassword: function (salt, hash, password, cb) {
-			if (typeof cb !== 'function') return;
-			
-			hashalgo.verify(salt, hash, password, function (err, matched) {
-				if (err) throw err;
-				
-				cb(matched);
-			});
-		},
-		weakhash: function (value) {
-			return hashalgo.weakHash(
-				value
-				||
-				(
-					$.random(0, 99999) +""+ new Date().getTime()
-				)
-			);
 		},
 		monthnames: 'january february march april may june july august september october november december'.split(' '),
 		toymd: function (intdate) {
@@ -523,6 +444,15 @@ var tbl_pops = 'pops0';
 		},
 		/*
 		 * TODO explain how this works here
+		 * 
+		 * i believe this keeps the name prop in a collection unique
+		 * which comes in handy for blog posts being accessible using friendly uris
+		 * or profiles exposed to search engines @username
+		 * 
+		 * i propose this should be rewritten as its own function using await/async
+		 * all this extra logic makes it too complicated for beginners and simple use cases
+		 * 
+		 * 
 		 * */
 		set: function (database, table, values, callback, options) {
 			options = options || {};

@@ -141,7 +141,7 @@ shabakah.tawassat('XPO.mukaalamaat', function (jawaab) {
 			}
 		}
 		arr = Object.values(objs);
-		wuqu3aat.query('select * from `'+WUQU3AATNAME+'`.`'+tbl_mklmt+'` '+
+		wuqu3aat.query('select * from `'+Config.database.name+'`.`'+tbl_mklmt+'` '+
 					'where a3daa0 like ? '+
 					'and updated0 > ? '+
 					'order by updated0 asc limit 0,'+limit,
@@ -181,7 +181,7 @@ shabakah.waaqat('XPO.mukaalamaat', function (jawaab) {
 		qadr.forEach(function (item) {
 			if (isnum(item.uid)) arr.push({ uid0: item.uid });
 		});
-		helpers.getallbyuid(WUQU3AATNAME, tbl_mklmt, arr, function (rows) {
+		helpers.getallbyuid(Config.database.name, tbl_mklmt, arr, function (rows) {
 			var suid = jawaab.hisaab.uid, ct = new Date().getTime(),
 				riddah = [], mklmt = [], lihifz = [];
 			qadr.forEach(function (item) {
@@ -265,7 +265,7 @@ shabakah.waaqat('XPO.mukaalamaat', function (jawaab) {
 					} else riddah.push(o);
 				} else riddah.push({ uid: m, havaf: -1 });
 			});
-			helpers.set(WUQU3AATNAME, tbl_mklmt, lihifz, function (outcome) {
+			helpers.set(Config.database.name, tbl_mklmt, lihifz, function (outcome) {
 				jawaab.waaqat(mklmt.concat(riddah)).intahaa();
 			}, { checkism: false });
 		});
@@ -279,9 +279,9 @@ shabakah.axav('XPO.mukaalamaat', 'XPO.da3wah', function (jawaab) {
 		jawaab.intahaa(); return;
 	} // received nothing
 
-	helpers.get(WUQU3AATNAME, tbl_hsbt, { uid0: prof1 }, function (hsb) {
+	helpers.get(Config.database.name, tbl_hsbt, { uid0: prof1 }, function (hsb) {
 	if (hsb)
-	wuqu3aat.query('select * from `'+WUQU3AATNAME+'`.`'+tbl_mklmt+'` '+
+	wuqu3aat.query('select * from `'+Config.database.name+'`.`'+tbl_mklmt+'` '+
 				'where (a3daa0 like ? or a3daa0 like ?) '+
 				'order by updated0 asc limit 0,'+1,
 	[ '% '+prof1+':% '+prof0+':%', ' '+prof0+':% '+prof1+':%' ]).then(function (outcome) {
@@ -316,7 +316,7 @@ shabakah.axav('XPO.mukaalamaat', 'XPO.da3wah', function (jawaab) {
 
 		if (haalah === 0) { // only request if 7d passed or never requested b4
 			var created = new Date().getTime();
-			helpers.set(WUQU3AATNAME, tbl_mklmt, [{
+			helpers.set(Config.database.name, tbl_mklmt, [{
 				uid0:			uid,
 				a3daa0:			a3daastr,
 				_created0:		created,
@@ -337,7 +337,7 @@ shabakah.axav('XPO.mukaalamaat', 'XPO.da3wah', function (jawaab) {
 	});
 });
 shabakah.duf3ah('XPO.mukaalamaat', function () {
-	wuqu3aat.query('select * from `'+WUQU3AATNAME+'`.`'+tbl_mklmt+'` '+
+	wuqu3aat.query('select * from `'+Config.database.name+'`.`'+tbl_mklmt+'` '+
 				'where a3daa0 like ? '+
 				'order by updated0 asc limit 0,'+100,
 	[ '%:-2%' ]).then(function (outcome) {
@@ -348,7 +348,7 @@ shabakah.duf3ah('XPO.mukaalamaat', function () {
 				ad3aa0: o.a3daa0.replace(':-2', ':0'),
 				havaf0: ct,
 			});
-			helpers.set(WUQU3AATNAME, tbl_mklmt, tarmeem, function (outcome) {
+			helpers.set(Config.database.name, tbl_mklmt, tarmeem, function (outcome) {
 			}, { checkism: false });
 		});
 	});

@@ -1,5 +1,32 @@
-// put global functions here available to both xaadim and zaboon
+// put global functions here available to both server and client
 var
+generate_alias = function (o, l) { // this replaces helpers.alias database.alias wuqu3aat.alias
+	// this generates url friendly links for titles of say blog posts ...
+	o = o || '';
+	if (o.length === 0) return '';
+	
+	l = l || 255;
+	
+	o = o.substr(0, l)
+		.replace(/\%/g,						' pct'			)
+		.replace(/\@/g,						' at '			)
+		.replace(/\&/g,						' and '			)
+		.replace(/[$-\-/:-?\{\}-~!"^_`\[\]@#]/g,	'-'				) // symbols
+		.replace(/[^.\d\wa-zA-Z0-9ا-ےÄäÜüÖößЀ-ҁҊ-ӿÇçĞğŞşIıÜüﻙ]+/g,	'-'	) // most alphanums
+		.replace(/\s[\s]+/g,					'-'				)
+		.replace(/[\s]+/g,						'-'				)
+		.replace(/^[\-]+/g,					''				)
+		.replace(/[\-]+$/g,					''				)
+		.replace(/\-\-/g,						'-'				)
+		.replace(/\.\-/g,						'.'				)
+		.replace(/\-\./g,						'.'				)
+		.replace(/^\./g,						''				)
+		.replace(/\.$/g,						''				)
+		.trim()
+		.toLowerCase();
+	
+	return o;
+},
 stringify = function (o) {
 	return JSON.stringify(o);
 },

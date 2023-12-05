@@ -16,7 +16,7 @@ shabakah.tawassat('XPO.qareeb', 'XPO.xutoot', function (jawaab) {
 	
 	if (jawaab.hisaab && isarr(qadr) && isnum(qadr[0]) && isnum(qadr[1])) {
 		// update .updated to keep session alive
-		helpers.set(WUQU3AATNAME, tbl_hsbt, [{
+		helpers.set(Config.database.name, tbl_hsbt, [{
 			uid0: 			jawaab.hisaab.uid,
 			xattil3ard0:	parsefloat(qadr[0] || 0),
 			xattiltool0:	parsefloat(qadr[1] || 0),
@@ -47,7 +47,7 @@ shabakah.axav('XPO.qareeb', function (jawaab) {
 		wuqu3aat.query('select *, ( 6371 * acos ( cos ( radians(?) ) * '+
 					'cos( radians( xattil3ard0 ) ) * cos( radians( xattiltool0 ) - radians(?) ) '+
 					'+ sin ( radians(?) ) * sin( radians( xattil3ard0 ) ) ) ) as distance from `'
-					+WUQU3AATNAME+'`.`'+tbl_hsbt+'` having distance < ? or distance is null '+
+					+Config.database.name+'`.`'+tbl_hsbt+'` having distance < ? or distance is null '+
 					'order by distance asc limit 0,'+limit,
 		[
 			latitude, longitude, latitude, maxrange

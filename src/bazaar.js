@@ -1,22 +1,22 @@
-//+ qeemah_raw uid_raw mushtaran madad_raw axav iftahnaqd taptobuy
+//+ qeemah_raw uid_raw mushtaran madad_raw get open_money taptobuy
 var bazaar, ISMMUBEENMAX = 48;
 ;(function(){
 	'use strict';
 	
-	var naqdstr = 'XPO.naqd', itemtopurchase, tanseeb;
+	var moneystr = 'money', itemtopurchase, tanseeb;
 	
 	bazaar = {
 		nasab: function (o) {
 			var k = o.mfateeh;
 			o.idprefix = o.idprefix || '';
-			o.listitem = o.listitem || 'XPO.bazaaritem';
-			o.muyassar = list( k.muyassar ).idprefix(o.idprefix+'XPO.muyassar')
-						.listitem(o.listitem).mowdoo3('XPO.ishtaraa', 1);
+			o.listitem = o.listitem || 'bazaaritem';
+			o.muyassar = list( k.muyassar ).idprefix(o.idprefix+'muyassar')
+						.listitem(o.listitem).mowdoo3('ishtaraa', 1);
 			if (!o.mustaqeem) {
-				o.majjaani = list( k.majjaani ).idprefix(o.idprefix+'XPO.majjaani')
-							.listitem(o.listitem).mowdoo3('XPO.majjaani', 1);
-				o.mshtryaat = list( k.mshtryaat ).idprefix(o.idprefix+'XPO.mshtryaat')
-							.listitem(o.listitem).mowdoo3('XPO.mushtaran', 1);
+				o.majjaani = list( k.majjaani ).idprefix(o.idprefix+'majjaani')
+							.listitem(o.listitem).mowdoo3('majjaani', 1);
+				o.mshtryaat = list( k.mshtryaat ).idprefix(o.idprefix+'mshtryaat')
+							.listitem(o.listitem).mowdoo3('mushtaran', 1);
 				o.majjaani.beforepress = function () {
 					o.mshtryaat.rakkaz();
 					o.muyassar.rakkaz();
@@ -42,7 +42,7 @@ var bazaar, ISMMUBEENMAX = 48;
 			
 			// if higher priced items purchased, lower become free
 //			o.mustaqeem
-			/* you can send this hint in once you've selected the muddah for a
+			/* you can send this hint in once you've selected the duration for a
 			 * mklmh & saved the it, the next time it is edited, this hint makes
 			 * it so that lower muddaat won't be available, this hint needs a
 			 * bazaar value to calc what values are lower than it
@@ -76,8 +76,8 @@ var bazaar, ISMMUBEENMAX = 48;
 				};
 			}
 			else if (!o.mustaqeem) {
-				o.muntaxab = list( k.muntaxab ).idprefix(o.idprefix+'XPO.muntaxab')
-							.listitem(o.listitem).mowdoo3('XPO.muntaxab', 1)
+				o.muntaxab = list( k.muntaxab ).idprefix(o.idprefix+'muntaxab')
+							.listitem(o.listitem).mowdoo3('muntaxab', 1)
 							.muntahaa(o.muntahaa || 15);
 
 				o.muntaxab.beforepress = function () {
@@ -129,9 +129,9 @@ var bazaar, ISMMUBEENMAX = 48;
 				o.majjaani.onpress =
 				o.mshtryaat.onpress = function (item) {
 					var item = Object.assign({}, item);
-					item.madad = xlate('XPO.taptoremove');
-					item.premium = item.qeemah_raw === 0 ? 'XPO.ixtaf' : 'XPO.izhar';
-					item.qeemah = 'XPO.ixtaf';
+					item.madad = xlate('taptoremove');
+					item.premium = item.qeemah_raw === 0 ? 'ixtaf' : 'izhar';
+					item.qeemah = 'ixtaf';
 					if (o.muntaxab.set(item)) {
 						if (o.fimakaan) { // dont remove just highlight
 							this.baidaa();
@@ -151,7 +151,7 @@ var bazaar, ISMMUBEENMAX = 48;
 			bazaar.bahac(o, 0);
 			
 			if (k.bahac)
-			$.taxeer('XPO.shaklrakkaz', function () {
+			$.taxeer('shaklrakkaz', function () {
 				k.bahac.focus();
 			}, 100);
 			else {
@@ -184,8 +184,8 @@ var bazaar, ISMMUBEENMAX = 48;
 			return o;
 		},
 		fahras: function (o) {
-			var b = hisaab.maxba()[o.sinf],
-				m = hisaab.maxba().muntaxab[o.sinf];
+			var b = profile.maxba()[o.sinf],
+				m = profile.maxba().muntaxab[o.sinf];
 			if (b) {
 				if (isarr(m) && m.length) {
 					m.forEach(function (i) {
@@ -194,10 +194,10 @@ var bazaar, ISMMUBEENMAX = 48;
 								uid: parseint(i),
 								mowdoo3: b[ i ][1],
 								zumrah: b[ i ][2],
-								madad: xlate('XPO.taptoremove'),
+								madad: xlate('taptoremove'),
 								qeemah_raw: b[ i ][0] === 0 ? 0 : -1,
-								qeemah: 'XPO.ixtaf',
-								premium: b[ i ][0] === 0 ? 'XPO.ixtaf' : 'XPO.izhar',
+								qeemah: 'ixtaf',
+								premium: b[ i ][0] === 0 ? 'ixtaf' : 'izhar',
 							});
 						}
 					});
@@ -206,23 +206,23 @@ var bazaar, ISMMUBEENMAX = 48;
 		},
 		taptobuy: function (sinf, o, tnsb) {
 			if (o && o.qeemah_raw && tnsb.muyassar && tnsb.sinf) {
-				if (o.madad == xlate('XPO.taptobuy')) {
-					o.madad = xlate('XPO.tapagainbuy');
+				if (o.madad == xlate('taptobuy')) {
+					o.madad = xlate('tapagainbuy');
 					tnsb.muyassar.set(o);
 					clearTimeout(o.taxeer);
 					o.taxeer = setTimeout(function () {
-						o.madad = xlate('XPO.taptobuy');
+						o.madad = xlate('taptobuy');
 						tnsb.muyassar && tnsb.muyassar.set(o);
 					}, 1000);
-				} else if (o.madad == xlate('XPO.tapagainbuy')) {
+				} else if (o.madad == xlate('tapagainbuy')) {
 					itemtopurchase = o;
 					tanseeb = tnsb;
-					shabakah.axav('XPO.bazaar', 'XPO.ishtaraa', [tnsb.sinf, parseint(o.uid)]);
-					o.madad = xlate('XPO.buyprocess');
+					Network.get('bazaar', 'ishtaraa', [tnsb.sinf, parseint(o.uid)]);
+					o.madad = xlate('buyprocess');
 					tnsb.muyassar.set(o);
 					clearTimeout(o.taxeer);
 					o.taxeer = setTimeout(function () {
-						o.madad = xlate('XPO.taptobuy');
+						o.madad = xlate('taptobuy');
 						tnsb.muyassar && tnsb.muyassar.set(o);
 					}, 15000);
 				}
@@ -230,15 +230,15 @@ var bazaar, ISMMUBEENMAX = 48;
 		},
 		adaaf: function (o, uid, mowdoo3, qeemah, tafseel) {
 			var shouldbefree = 0, discount = 0;
-			var b = hisaab.maxba()[o.sinf];
+			var b = profile.maxba()[o.sinf];
 			// qeemah -1=mshtryaat, 0=majjaani, 1=muyassar
 			var LV = o.muyassar, // available
 				item = {
 					uid: parseint(uid),
 					mowdoo3: mowdoo3,
 					zumrah: b[ uid ][2],
-					madad: o.fimakaan ? xlate('XPO.taptoselect') : xlate('XPO.taptoadd'),
-					qeemah: 'XPO.ixtaf',
+					madad: o.fimakaan ? xlate('taptoselect') : xlate('taptoadd'),
+					qeemah: 'ixtaf',
 					qeemah_raw: qeemah,
 					tafseel: tafseel,
 				};
@@ -262,18 +262,18 @@ var bazaar, ISMMUBEENMAX = 48;
 					if (isnum(discount)) qeemah = qeemah - discount;
 					if (qeemah > 0) {
 						qeemah			= bazaar.qeemah(qeemah);
-						item.qeemah		= 'XPO.izhar';
-						item.vahabp		= qeemah[0] == 0 ? 'XPO.ixtaf' : 'XPO.izhar';
+						item.qeemah		= 'izhar';
+						item.vahabp		= qeemah[0] == 0 ? 'ixtaf' : 'izhar';
 						item.vahab		= qeemah[0];
-						item.fiddahp	= qeemah[0] && !qeemah[1] ? 'XPO.ixtaf' : 'XPO.izhar',
+						item.fiddahp	= qeemah[0] && !qeemah[1] ? 'ixtaf' : 'izhar',
 						item.fiddah		= qeemah[1];
-						item.madad		= xlate('XPO.taptobuy');
+						item.madad		= xlate('taptobuy');
 					}
 				}
 				item._listitem	= o.listitem;
 			}
 			if (o.mustaqeem) {
-				item.madad = xlate('XPO.taptoselect');
+				item.madad = xlate('taptoselect');
 				LV = o.muyassar;
 			}
 			
@@ -299,19 +299,19 @@ var bazaar, ISMMUBEENMAX = 48;
 		bahac: function (o, str) {
 //			if (!str) return;
 
-			var m, b = hisaab.maxba()[o.sinf];
+			var m, b = profile.maxba()[o.sinf];
 			if (b && o.muyassar) {
 				if (!o.mustaqeem) {
 					o.mshtryaat.popall();
 					o.majjaani.popall();
 				}
 				o.muyassar.popall();
-				// if you're saving mshtryaat not in hisaab but elsewhere
+				// if you're saving mshtryaat not in profile but elsewhere
 				if (o.mshtryaatsaabiq) m = o.mshtryaatsaabiq;
-				else if (o.sinf == 'XPO.xsoosyat') m = hisaab.maxba().xsoosyat_m;
-				else if (o.sinf == 'XPO.milk'	 ) m = hisaab.maxba().milk_m	;
-				else if (o.sinf == 'XPO.wazaaif' ) m = hisaab.maxba().wazaaif_m	;
-				else if (o.sinf == 'XPO.shakl'	 ) m = hisaab.maxba().shakl_m	;
+				else if (o.sinf == 'xsoosyat') m = profile.maxba().xsoosyat_m;
+				else if (o.sinf == 'milk'	 ) m = profile.maxba().milk_m	;
+				else if (o.sinf == 'wazaaif' ) m = profile.maxba().wazaaif_m	;
+				else if (o.sinf == 'shakl'	 ) m = profile.maxba().shakl_m	;
 				if (isarr(m)) {
 					if (m.length) // purchased
 					m.forEach(function (i) {
@@ -332,7 +332,7 @@ var bazaar, ISMMUBEENMAX = 48;
 						}
 					});
 					for (var i in b) {
-						if ( !['XPO.waqt', 'XPO.zumar'].includes(i)
+						if ( !['waqt', 'zumar'].includes(i)
 						&& !m.includes( parseint(i) ) ) {
 							if (!str || b[ i ][1].includes(str)) {
 								var yes = 1;
@@ -352,86 +352,86 @@ var bazaar, ISMMUBEENMAX = 48;
 				}
 			}
 		},
-		iftahnaqd: function () { Hooks.run('XPO.sheet', {
+		open_money: function () { Hooks.run('sheet', {
 			i: function (k) {
 				var selected;
-				var naqdlist = list(k.list).idprefix('XPO.naqd')
-									.listitem('XPO.bazaarishtaraa')
+				var moneylist = list(k.list).idprefix('money')
+									.listitem('bazaarishtaraa')
 									.grid(2);
-				naqdlist.uponrakkaz = function (v) {
+				moneylist.uponrakkaz = function (v) {
 					if (v) attribute(k.ishtaraa, 'disabled', '1');
 				};
-				naqdlist.onpress = function (item, key, uid) {
+				moneylist.onpress = function (item, key, uid) {
 					selected = item;
 					this.baidaa();
-					$.taxeer('XPO.focusdelay', function () {
+					$.taxeer('focusdelay', function () {
 						attribute(k.ishtaraa, 'disabled', '');
-						naqdlist.rakkaz();
+						moneylist.rakkaz();
 						k.ishtaraa.focus();
 					}, 100);
 					return 1;
 				};
-				softkeys.list.basic(naqdlist);
+				softkeys.list.basic(moneylist);
 				var sutoor = ['Personal', 'Pro', 'Power', 'Business', 'Expansion', 'Dominance'];
 				[1, 5, 10, 50, 100, 250].forEach(function (item, i) {
-					var naqd = bazaar.qeemah(item);
-					naqdlist.set({
+					var money = bazaar.qeemah(item);
+					moneylist.set({
 						uid: i,
 						qeemah_raw: item,
-						vahabp: naqd[0] ? 'XPO.izhar' : 'XPO.ixtaf',
-						vahab: naqd[0] || 'XPO.ixtaf',
-						fiddahp: naqd[1] ? 'XPO.izhar' : 'XPO.ixtaf',
-						fiddah: naqd[1] || 'XPO.ixtaf',
+						vahabp: money[0] ? 'izhar' : 'ixtaf',
+						vahab: money[0] || 'ixtaf',
+						fiddahp: money[1] ? 'izhar' : 'ixtaf',
+						fiddah: money[1] || 'ixtaf',
 						mowdoo3: '$'+(item * 2),
 						tafseel: sutoor[i],
 					});
 				});
-				naqdlist.select();
+				moneylist.select();
 				k.ishtaraa.onclick = function () {
-					shabakah.axav('XPO.bazaar', 'XPO.naqd', selected.qeemah_raw);
+					Network.get('bazaar', 'money', selected.qeemah_raw);
 					attribute(k.ishtaraa, 'disabled', 1);
 					innertext(k.ishtaraa, 'processing...');
 				};
 			},
-			n: 'XPO.naqdgetmore',
-			t: xlate('XPO.naqd'),
+			n: 'moneygetmore',
+			t: xlate('money'),
 		}); },
 		qeemah: function (q) {
 			return [ q - (q % 1), Math.round( (q % 1) * 100 ) ];
 		},
 	};
 	
-	maxzan.ixtalaq('XPO.bazaar', 0, {
-		taxeer: -1, // never axav from xaadim, xaadim uses nashar for that
+	Offline.create('bazaar', 0, {
+		taxeer: -1, // never get from xaadim, xaadim uses nashar for that
 		kaleedqadr: 1,
 	});
 	
-	Hooks.set('XPO.ready', function () {
-		shabakah.tawassat('XPO.bazaar', function (intahaa) {
+	Hooks.set('ready', function () {
+		Network.intercept('bazaar', function (intahaa) {
 			// receive bazaar updates when signed in
 			intahaa( sessions.signedin() ? 1 : undefined );
 		});
-		shabakah.jawaab.axav('XPO.bazaar', 'XPO.naqd', function (jawaab) {
-			if (sheet && sheet.zaahir('XPO.naqdgetmore')) {
+		Network.response.get('bazaar', 'money', function (response) {
+			if (sheet && sheet.zaahir('moneygetmore')) {
 				webapp.itlaa3('transaction successful');
 				backstack.back();
 			}
 		});
-		shabakah.jawaab.axav('XPO.bazaar', 'XPO.ishtaraa', function (jawaab) {
-			if (itemtopurchase && isarr(jawaab)) {
+		Network.response.get('bazaar', 'ishtaraa', function (response) {
+			if (itemtopurchase && isarr(response)) {
 				if (tanseeb.muyassar && tanseeb.muyassar) {
-					var xataastr = jawaab[2];
-					var o = tanseeb.muyassar.adapter.get(jawaab[1]);
+					var xataastr = response[2];
+					var o = tanseeb.muyassar.adapter.get(response[1]);
 					if (o) {
 						clearTimeout(o.taxeer);
-						if (xataastr === 'XPO.ishtaraafalaah') {
+						if (xataastr === 'ishtaraafalaah') {
 							// even if it fails, nashar handles it
-							o.madad = xlate('XPO.taptoremove');
+							o.madad = xlate('taptoremove');
 							o.qeemah_raw = -1;
-							o.premium = 'XPO.izhar';
+							o.premium = 'izhar';
 							if (tanseeb.muntaxab) o._listitem = tanseeb.muntaxab._listitem;
 							// temporarily show total money box on top most layer
-							hisaab.naqdtafawwaq();
+							profile.moneytafawwaq();
 							var yes;
 							if (tanseeb.muntaxab && !tanseeb.muntaxab.set(o)) { // if list is full
 								// try adding it to purchased
@@ -440,18 +440,18 @@ var bazaar, ISMMUBEENMAX = 48;
 								yes = 1;
 							}
 							if (yes) {
-								o.premium = 'XPO.ixtaf';
-								o.madad = xlate('XPO.taptoadd');
+								o.premium = 'ixtaf';
+								o.madad = xlate('taptoadd');
 								o._listitem = tanseeb.muyassar._listitem;
 								tanseeb.muyassar && tanseeb.muyassar.set(o);
 							}
 							tanseeb.muyassar.pop(o.uid);
 						}
 						else {
-							if (xataastr === 'XPO.naqdlayakfaa') hisaab.naqdtafawwaq();
+							if (xataastr === 'moneylayakfaa') profile.moneytafawwaq();
 							o.madad = xlate(xataastr);
 							o.taxeer = setTimeout(function () {
-								 o.madad = xlate('XPO.taptobuy');
+								 o.madad = xlate('taptobuy');
 								 tanseeb.muyassar && tanseeb.muyassar.set(o);
 							}, 2000);
 							tanseeb.muyassar.set(o);
@@ -461,8 +461,8 @@ var bazaar, ISMMUBEENMAX = 48;
 			}
 		});
 		
-		// this is to build the cache first so hisaab tags will show up
-		maxzan.axav('XPO.bazaar', 0, 0, helpers.now());
+		// this is to build the cache first so profile tags will show up
+		Offline.get('bazaar', 0, 0, Time.now());
 	});
 	
 })();

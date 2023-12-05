@@ -88,9 +88,9 @@ function parse_weld( text ) {
 };
 var _mod = {
 	/*
-		* returns all kids as strings in an array
-		* or returns '' if there are no kids
-		* */
+	 * returns all kids as strings in an array
+	 * or returns '' if there are no kids
+	 * */
 	childrentoarray: function (children) {
 		var array = [];
 		for (var i in children) {
@@ -227,6 +227,36 @@ var _mod = {
 Weld = {
 	parse_config: function ( text ) {
 		return _mod.parse( parse_weld( text ) );
+	},
+	/* converts json back to weld, each child level is represented by a \t
+	 * takes a json object, return string weld
+	 * */
+	encode_config: function (obj, tabs) {
+		var weld	= '',
+			tabs	= tabs || 0,
+			filler	= Cli.getfiller(obj);
+
+		for (var i in obj) {
+			var sub = obj[i];
+
+			if (typeof sub === 'object') {
+				if (!(isarr(sub) && sub.length === 0)) { // ignore empty arrays
+					weld += '\t'.repeat(tabs) + i + '\n';
+					weld += ( Weld.encode_config( sub, tabs+1 ) );
+				}
+			} else {
+				if (isarr(obj)) {
+					weld += '\t'.repeat(tabs) + sub + '\n';
+				} else if (obj instanceof Object) {
+					weld += '\t'.repeat(tabs) + filler(i) + ' ' + sub + '\n';
+				} else {
+					weld += '\t'.repeat(tabs) + filler(i) + ' ' + sub + '\n';
+				}
+			}
+			
+		}
+		
+		return weld;
 	},
 };
 })();

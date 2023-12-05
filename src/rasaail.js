@@ -446,7 +446,7 @@ var rasaail;
 		},
 	};
 
-	maxzan.ixtalaq('XPO.rasaail', '', {
+	Offline.create('XPO.rasaail', '', {
 		mfateeh: ['XPO.mukaalamah'],
 	});
 

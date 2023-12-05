@@ -16,8 +16,8 @@ if min-width = 320px
 		align-items		center
 	#softkeysui .row2 button:hover .tooltip, #softkeysui[data-shown] .row2 button .tooltip
 		display			flex
-	#softkeysui[data-shown] .row2 button .tooltip label
-		display			none
+//	#softkeysui[data-shown] .row2 button .tooltip label
+//		display			none
 	#softkeysui .row2 button:hover .tooltip label
 		display			flex
 	#softkeysui .row2 button .tooltip

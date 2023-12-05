@@ -2,14 +2,14 @@
 //+ monthname fuzzytime _minutes _seconds _ampm _hours12 _hours _dayname _shortyear
 //+ _monthname _month _day _year realdatereplace traversebydays
 //+ year month day hour minute second milli now zero
-var time;
+var Time, time;
 ;(function(){
 	var val = {}, timeout, started,
 		monthnames	= ('january february march april may june july '
 					+ 'august september october november december').split(' '),
 		weekdays = 'sunday monday tuesday wednesday thursday friday saturday'.split(' ');
 	
-	time = function (parent) {
+	Time = time = function (parent) {
 		var items	= (parent||document).querySelectorAll('[data-XPO.time]'),
 			is24	= preferences.get(24, 1);
 

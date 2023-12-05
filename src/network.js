@@ -1,5 +1,5 @@
 /*
- * it has 3 qanawaat for comm with server
+ * it has 3 channels for communication with server
  * get		get something from the server immediately
  * 			
  * sync		sync changes, client -> server
@@ -10,16 +10,13 @@
  * 			returns on triggers like sync from you or others
  * 			always returns .time on success
  * */
-//+ broadcast get sync response channels intercession upload
 var Network, network, sessions = sessions || 0;
 ;(function(){
 	'use strict';
 	var address = 'http://localhost:'+Config.port+'/', buildexpired = false, offlinetime,
-		networkkeys;
+		networkkeys, debug_network = 1;
 	
-	var error_log = function (v) {
-//		$.log( v );
-	};
+	var error_log = function (v) { $.log( v ); };
 	var has_disconnected = function (res) {
 		// only mark online when really getting an ok result from server
 		if (!res.err)
@@ -34,9 +31,9 @@ var Network, network, sessions = sessions || 0;
 			if (offlinetime !== false) {
 				offlinetime = false;
 				preferences.pop('@0');
-				Hooks.run('XPO.connection', true); // connection
+				Hooks.run('connection', true); // connection
 				// cancel reconnection attempts
-				$.taxeercancel('XPO.networkconnection');
+				$.taxeercancel('networkconnection');
 			}
 			setnotifybar();
 		} else {
@@ -44,37 +41,33 @@ var Network, network, sessions = sessions || 0;
 			if (offlinetime === false) {
 				offlinetime = new Date().getTime();
 				preferences.set('@0', offlinetime);
-				Hooks.run('XPO.connection', offlinetime); // connection
+				Hooks.run('connection', offlinetime); // connection
 				// handles reconnection attempts
-				$.taxeer('XPO.networkconnection', function () {
-					if (sessions)
-					network.get({
-						i: 'XPO.network',
-						h: 'XPO.connection',
-					});
+				$.taxeer('networkconnection', function () {
+					if (sessions) Network.get('network', 'connection');
 				}, 15*1000);
 			}
 			
 			// notify anyway
-			setnotifybar( 'XPO.offlinesince' , offlinetime || '');
+			setnotifybar( 'offlinesince' , offlinetime || '');
 		}
 
 	};
 	var setnotifybar = function (v, t) {
 		if (v) {
-			$.taxeer('XPO.setnotifybar', function () {
-				setdata(networkkeys.topic, 'XPO.i18n', v);
-				setdata(networkkeys.time, 'XPO.time', t);
-				time(XPO.networkui);
-				xlate.update(XPO.networkui);
+			$.taxeer('setnotifybar', function () {
+				setdata(networkkeys.topic, 'i18n', v);
+				setdata(networkkeys.time, 'time', t);
+				time(networkui);
+				xlate.update(networkui);
 			}, t);
-			XPO.networkui.hidden = 0;
+			networkui.hidden = 0;
 		} else {
-			XPO.networkui.hidden = 1;
+			networkui.hidden = 1;
 		}
 	};
 	var sizeunits = function (num) {
-		if (typeof num === 'number') {
+		if (isnum( num )) {
 			if (num >= (1024 * 1024 * 1024 * 1024))
 				return (num / (1024 * 1024 * 1024 * 1024)).toFixed(1) + 'TB'; 
 
@@ -105,11 +98,11 @@ var Network, network, sessions = sessions || 0;
 //			$.log.s( 'e$' );
 			buildexpired = 1;
 			window.caches.delete('def').then(function(del) {
-				webapp.dimmer(LAYERTOPMOST, xlate('XPO.appneedsreload'));
+				webapp.dimmer(LAYERTOPMOST, xlate('appneedsreload'));
 			});
 			broadcast_finish();
-			$.fetchcancel( 'XPO.get' );
-			$.fetchcancel( 'XPO.sync' );
+			$.fetchcancel( 'get' );
+			$.fetchcancel( 'sync' );
 		}
 	};
 	var handle_response = function (response) {
@@ -118,7 +111,7 @@ var Network, network, sessions = sessions || 0;
 			if (network.channels.upload[name]) {
 				var needs = response.upload[name];
 				for (var need in needs) {
-					if (typeof network.channels.upload[name][need] == 'function') {
+					if (isfun( network.channels.upload[name][need] )) {
 						network.channels.upload[name][need](
 							needs[need]
 						);
@@ -132,7 +125,7 @@ var Network, network, sessions = sessions || 0;
 			if (network.channels.intercession[name]) {
 				var needs = response.intercession[name];
 				for (var need in needs) {
-					if (typeof network.channels.intercession[name][need] == 'function') {
+					if (isfun( network.channels.intercession[name][need] )) {
 						network.channels.intercession[name][need](
 							needs[need]
 						);
@@ -154,7 +147,7 @@ var Network, network, sessions = sessions || 0;
 					}
 				}
 			}
-			Hooks.run('XPO.responseget', response.sync);
+			Hooks.run('responseget', response.sync);
 		}
 
 		if (response.sync) {
@@ -170,7 +163,7 @@ var Network, network, sessions = sessions || 0;
 					}
 				}
 			}
-			Hooks.run('XPO.responsesync', response.sync);
+			Hooks.run('responsesync', response.sync);
 		}
 	};
 
@@ -178,20 +171,20 @@ var Network, network, sessions = sessions || 0;
 	var broadcast_process = function (payload, intercession) {
 		if (!cachedkey || !broadcast_state) return;
 		
-		if ($.fetchchannels.XPO.broadcast
-		&&	$.fetchchannels.XPO.broadcast.active) return;
+		if ($.fetchchannels.broadcast
+		&&	$.fetchchannels.broadcast.active) return;
 
 		payload = payload || {};
 
 		payload = Object.assign(payload, {
-			XPO.broadcast	:	1				, // synced before
-			e$			:	BUILDNUMBER		, // build number
+			broadcast	:	1				, // synced before
+			e$				:	BUILDNUMBER	, // build number
 		});
 
 		if (intercession) payload = Object.assign(payload, intercession);
 
 		error_log(payload);
-		$.fetch( address, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.broadcast', progressfn, 3*60*1000 )
+		$.fetch( address, 'json='+enc( JSON.stringify(payload) ), 'broadcast', progressfn, 3*60*1000 )
 		.then(function (res) {
 			if (res.err) {
 				// don't mark offline, this channel is designed to timeout! :)
@@ -213,29 +206,29 @@ var Network, network, sessions = sessions || 0;
 				handle_response(response);
 			}
 			
-			$.taxeer('XPO.networkbroadcast', function () {
+			$.taxeer('networkbroadcast', function () {
 				intercession_process(function (objects) {
 					broadcast_process({}, objects);
-				}, 'XPO.broadcast');
+				}, 'broadcast');
 			}, broadcast_delay);
 		});
 	};
 	var broadcast_start = function () {
-		$.taxeer('XPO.broadcast_start', function () {
+		$.taxeer('broadcast_start', function () {
 			broadcast_state = 1;
 			intercession_process(function (objects) {
 				broadcast_process({}, objects);
-			}, 'XPO.broadcast');
+			}, 'broadcast');
 		}, 1000);
 	};
 	var broadcast_finish = function () {
 		broadcast_state = 0;
-		$.fetchcancel('XPO.broadcast');
+		$.fetchcancel('broadcast');
 	};
 
-	var pending = {}; // pending requests
-	var fulfill = function (payload, intercession) { // flush pending get requests
-		if (Object.keys(pending).length === 0) return;
+	var pending_gets = {}; // pending requests
+	var fulfill_gets = function (payload, intercession) { // flush pending get requests
+		if (Object.keys(pending_gets).length === 0) return;
 	
 		payload = payload || {};
 
@@ -245,20 +238,20 @@ var Network, network, sessions = sessions || 0;
 
 		if (intercession) payload = Object.assign(payload, intercession);
 
-		payload.XPO.get = payload.XPO.get || {};
+		payload.get = payload.get || {};
 
-		for (var i in pending) {
-			var m		= pending[i]	,
+		for (var i in pending_gets) {
+			var m		= pending_gets[i]	,
 				name	= m[0]			,
 				need	= m[1]			,
 				value	= m[2]			;
 
-			payload.XPO.get[name] = payload.XPO.get[name] || {};
-			payload.XPO.get[name][need] = value;
+			payload.get[name] = payload.get[name] || {};
+			payload.get[name][need] = value;
 		}
 		
 		error_log(payload);
-		$.fetch( address, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.get', progressfn, 30*1000 )
+		$.fetch( address, 'json='+enc( JSON.stringify(payload) ), 'get', progressfn, 30*1000 )
 		.then(function (res) {
 			has_disconnected(res);
 			
@@ -275,7 +268,7 @@ var Network, network, sessions = sessions || 0;
 			handle_response(response);
 		});
 
-		pending = {};
+		pending_gets = {};
 	};
 
 	var intercession = {}; // intercession
@@ -286,14 +279,14 @@ var Network, network, sessions = sessions || 0;
 			return;
 		}
 		
-		var q = $.queue(), objects = { XPO.intercession: {} };
+		var q = $.queue(), objects = { intercession: {} };
 		for (var i in intercession) {
 			q.set(function (done) {
 				var o = intercession[ arr[j] ];
 				o[2](function (object) {
 					if (object !== undefined) {
-						objects.XPO.intercession[ o[0] ] = objects.XPO.intercession[ o[0] ] || {};
-						objects.XPO.intercession[ o[0] ][ o[1] ] = object;
+						objects.intercession[ o[0] ] = objects.intercession[ o[0] ] || {};
+						objects.intercession[ o[0] ][ o[1] ] = object;
 					}
 					j++;
 					done(q);
@@ -317,7 +310,7 @@ var Network, network, sessions = sessions || 0;
 
 		if (intercession) payload = Object.assign(payload, intercession);
 
-		payload.XPO.sync = payload.XPO.sync || {};
+		payload.sync = payload.sync || {};
 
 		for (var i in synced) {
 			var m		= synced[i]		,
@@ -325,12 +318,12 @@ var Network, network, sessions = sessions || 0;
 				need	= m[1]			,
 				value	= m[2]			;
 
-			payload.XPO.sync[name] = payload.XPO.sync[name] || {};
-			payload.XPO.sync[name][need] = value;
+			payload.sync[name] = payload.sync[name] || {};
+			payload.sync[name][need] = value;
 		}
 
 		error_log(payload);
-		$.fetch( address, 'XPO.json='+enc( JSON.stringify(payload) ), 'XPO.sync', progressfn, 30*1000 )
+		$.fetch( address, 'json='+enc( JSON.stringify(payload) ), 'sync', progressfn, 30*1000 )
 		.then(function (res) {
 			has_disconnected(res);
 			
@@ -363,8 +356,8 @@ var Network, network, sessions = sessions || 0;
 		payload.upload[name][need] = value;
 		
 		var fd = new FormData();
-		fd.append('XPO.json', JSON.stringify(payload) );
-		fd.append('XPO.upload', payload_raw);
+		fd.append('json', JSON.stringify(payload) );
+		fd.append('upload', payload_raw);
 		fetch(address, { method: 'post', body: fd }).then(function (res) {
 			has_disconnected(res);
 			
@@ -388,12 +381,12 @@ var Network, network, sessions = sessions || 0;
 			if (!name) return;
 			if (!payload) return;
 			
-			need	= need	||	'XPO.default'	; // default
+			need	= need	||	'default'	; // default
 			value	= value		||	0			;
 			
 			intercession_process(function (objects) {
 				upload(name, need, value, payload, objects);
-			}, 'XPO.upload');
+			}, 'upload');
 		},
 		broadcast: function () {
 			if (cachedkey) {
@@ -403,63 +396,65 @@ var Network, network, sessions = sessions || 0;
 			}
 		},
 		sync: function (name, need, value) {
-			if (!name) return;
+			if (debug_network) $.log.w('Network.sync', name, need, value);
 			
-			need	= need	||	'XPO.default'	; // default
+			// TODO test and explain this further, why track syncs?
+			name	= name		||	'sync'		;
+			need	= need		||	'default'	; // default
 			value	= value		||	0			;
 			
 			synced[ name+'.'+need ] = [name, need, value];
 			
-			$.taxeer('XPO.networksync', function () {
+			$.taxeer('networksync', function () {
 				intercession_process(function (objects) {
 					sync_process({}, objects);
-				}, 'XPO.sync');
+				}, 'sync');
 			}, 100);
 		},
 		get: function (name, need, value) { // { name, need, value }
 			if (!name) return;
 			if (arguments.length === 2) value = need, need = 0;
 			
-			need	= need	||	'XPO.default'	; // default
+			need	= need		||	'default'	; // default
 			value	= value		||	0			;
 			
-			pending[ name+'.'+need ] = [name, need, value];
+			pending_gets[ name+'.'+need ] = [name, need, value];
 			
-			$.taxeer('XPO.networkfulfill', function () {
+			$.taxeer('networkfulfill', function () {
 				intercession_process(function (objects) {
-					fulfill({}, objects);
-				}, 'XPO.get');
+					fulfill_gets({}, objects);
+				}, 'get');
 			}, 100);
 		},
 		response: {
 			get: function (name, need, cb) {
 				if (typeof need == 'function') cb = need, need = 0;
-				need = need || 'XPO.default';
+				need = need || 'default';
 				network.channels.get[ name ] = network.channels.get[ name ] || {};
 				network.channels.get[ name ][ need ] = cb;
 			},
 			sync: function (name, need, cb) {
 				if (typeof need == 'function') cb = need, need = 0;
-				need = need || 'XPO.default';
+				need = need || 'default';
 				network.channels.sync[ name ] = network.channels.sync[ name ] || {};
 				network.channels.sync[ name ][ need ] = cb;
 			},
 			intercept: function (name, need, cb) {
 				if (typeof need == 'function') cb = need, need = 0;
-				need = need || 'XPO.default';
+				need = need || 'default';
 				network.channels.intercession[ name ] = network.channels.intercession[ name ] || {};
 				network.channels.intercession[ name ][ need ] = cb;
 			},
 			upload: function (name, need, cb) {
 				if (typeof need == 'function') cb = need, need = 0;
-				need = need || 'XPO.default';
+				need = need || 'default';
 				network.channels.upload[ name ] = network.channels.upload[ name ] || {};
 				network.channels.upload[ name ][ need ] = cb;
 			},
 		},
 		intercept: function (name, need, cb) { // intercept
 			if (typeof need == 'function') cb = need, need = 0;
-			need	= need	||	'XPO.default'	; // default
+			need	= need	||	'default'	; // default
 			intercession[ name+'.'+need ] = [name, need, cb];
 		},
 	};
@@ -474,24 +469,24 @@ var Network, network, sessions = sessions || 0;
 	 * 
 	 * have network.server
 	 * */
-	Hooks.set('XPO.sessionchange', function (key) {
+	Hooks.set('sessionchange', function (key) {
 		cachedkey = key || 0;
 		if (cachedkey) {
 			network.broadcast();
-			network.sync();
+			network.sync('network');
 		}
 	});
-	Hooks.set('XPO.ready', function () {
-		networkkeys = templates.keys(XPO.networkui);
+	Hooks.set('ready', function () {
+		networkkeys = templates.keys(networkui);
 		
-		network.intercept('XPO.network', 'XPO.time', function (intahaa, channel) {
-			intahaa( preferences.get('@') );
+		network.intercept('network', 'time', function (finish, channel) {
+			finish( preferences.get('@') );
 		});
-		network.response.intercept('XPO.network', 'XPO.time', function (response) {
+		network.response.intercept('network', 'time', function (response) {
 			if (response && cachedkey) preferences.set('@', response);
 		});
 		
-		offlinetime = preferences.get('@0', 1) || false;
+		offlinetime = preferences.get('@0', 1) || false; // offline since
 		listener('online', function (e) {
 			setnetwork(1);
 		});
@@ -503,7 +498,7 @@ var Network, network, sessions = sessions || 0;
 			cachedkey = sessions.signedin() || 0;
 			if (cachedkey) {
 				network.broadcast();
-				network.sync();
+				network.sync('network');
 			}
 		}
 	});

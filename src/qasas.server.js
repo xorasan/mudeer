@@ -133,7 +133,7 @@ shabakah.tawassat('XPO.qasas', function (jawaab) {
 			}
 		}
 		arr = Object.values(objs);
-		wuqu3aat.query('select * from `'+WUQU3AATNAME+'`.`'+tbl_qasas+'` '+
+		wuqu3aat.query('select * from `'+Config.database.name+'`.`'+tbl_qasas+'` '+
 					'where a3daa0 like ? '+
 					'and updated0 > ? '+
 					'order by updated0 asc limit 0,'+limit,
@@ -174,7 +174,7 @@ shabakah.waaqat('XPO.qasas', function (jawaab) {
 		qadr.forEach(function (item) {
 			if (item.havaf && isnum(item.uid)) arr.push( item.uid );
 		});
-		helpers.pop(WUQU3AATNAME, tbl_qasas, arr, function (outcome) {
+		helpers.pop(Config.database.name, tbl_qasas, arr, function (outcome) {
 			var outarr = [];
 			outcome.forEach(function (uid) {
 				if (uid) outarr.push({ uid: uid, havaf: 1 });
@@ -192,7 +192,7 @@ shabakah.axav('XPO.qasas', 'XPO.ishtaraa', function (jawaab) {
 	if (!jawaab.hisaab) { jawaab.intahaa(); return; } // not signed in
 	if (!qadr) { jawaab.intahaa(); return; } // received nothing
 
-	helpers.get(WUQU3AATNAME, tbl_qasas, {
+	helpers.get(Config.database.name, tbl_qasas, {
 		// .get returns false in callback on uids <0 without a database trip!
 		uid0: parseint(qadr.uid),
 	}, function (row) {
@@ -225,8 +225,8 @@ shabakah.axav('XPO.qasas', 'XPO.ishtaraa', function (jawaab) {
 					a3daa += (' '+a+':'+b);
 				}
 			});
-			helpers.set(WUQU3AATNAME, tbl_hsbt, [ashyaa], function (j) {
-				helpers.set(WUQU3AATNAME, tbl_qasas, [{
+			helpers.set(Config.database.name, tbl_hsbt, [ashyaa], function (j) {
+				helpers.set(Config.database.name, tbl_qasas, [{
 					uid0:			parseint(qadr.uid),
 					sinf0:			parseint(qadr.sinf) || 1,
 					mowdoo30:		parsestring(qadr.mowdoo3, 64),

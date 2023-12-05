@@ -19,7 +19,7 @@
 		[id=tafseel] .small .dim
 	[id=premium] .premium .absolute @hidden
 		div
-[template=bazaarnaqd] .bazaaritem .listitem .flex .naqd .sticky
+[template=bazaarmoney] .bazaaritem .listitem .flex .money .sticky
 	.grow .pad .vcenter
 		[id=mowdoo3]		.big .inline .bold .upper
 		[id=tafseel]		.small .inline .tag .gap .pad .padv 
@@ -30,7 +30,7 @@
 		[id=fiddahp] .flex .center
 			.fiddah
 			[id=fiddah]			.bold .pad
-[template=bazaarishtaraa] .bazaaritem .listitem .flex .naqd .sticky
+[template=bazaarishtaraa] .bazaaritem .listitem .flex .money .sticky
 	.grow .pad .gap .flex .vertical .bold .upper
 		[id=mowdoo3]		.big .inline
 		[id=tafseel]		.small .inline .padb
@@ -41,7 +41,7 @@
 		[id=fiddahp] .flex .center
 			.fiddah
 			[id=fiddah]			.bold .pad
-[sheet=naqdgetmore]
+[sheet=moneygetmore]
 	.flex .pad .padv
 		.center
 			.vahab .gap

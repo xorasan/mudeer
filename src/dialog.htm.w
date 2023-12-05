@@ -1,3 +1,3 @@
 .dialog #dialogui [view=dialog]
-	.body		[id=message]
+	.body		[id=message]	.centertext
 	input		[id=input]		@hidden

@@ -2,7 +2,7 @@
 //+ isdimmed status_bar_padding sahhar nawwam
 var webapp, appname = 'APPNAME' || '',
 	// to avoid missing module errors
-	maxzan = maxzan || 0,
+	Offline = Offline || 0,
 	pager = pager || 0,
 	checkbox = checkbox || 0,
 	preferences = preferences || 0,
@@ -42,7 +42,7 @@ var webapp, appname = 'APPNAME' || '',
 			element = thisone ? element : element.previousElementSibling;
 			if (isixtaf(element)) {
 				// ignore all hidden elements
-			} else if ( element.dataset.XPO.focus == 'XPO.list' ) {
+			} else if ( element.dataset.focus == 'list' ) {
 				LV = element.listobject;
 				if (LV.length()) {
 					webapp.blur();
@@ -52,7 +52,7 @@ var webapp, appname = 'APPNAME' || '',
 					out = element;
 					break;
 				}
-			} else if ( element.dataset.XPO.focus && element.lastElementChild ) {
+			} else if ( element.dataset.focus && element.lastElementChild ) {
 				out = focusprev(element.lastElementChild, 1, ++num);
 				break;
 			}
@@ -65,10 +65,10 @@ var webapp, appname = 'APPNAME' || '',
 			if (thisone) thisone = 0; // after first run, go to the next element
 		}
 		if ( out ) {}
-		else if ( element.dataset.XPO.focus == 1 ) {
+		else if ( element.dataset.focus == 1 ) {
 			return focusprev( element.parentElement, 0, ++num );
 		}
-		else if ( element.parentElement.dataset.XPO.focus ) {
+		else if ( element.parentElement.dataset.focus ) {
 			return focusprev( element.parentElement, 0, ++num );
 		} else {
 			/* BUG
@@ -101,7 +101,7 @@ var webapp, appname = 'APPNAME' || '',
 			element = thisone ? element : element.nextElementSibling;
 			if (isixtaf(element)) {
 				// ignore all hidden elements
-			} else if ( element.dataset.XPO.focus == 'XPO.list' ) {
+			} else if ( element.dataset.focus == 'list' ) {
 				LV = element.listobject;
 				if (LV.length()) {
 					webapp.blur();
@@ -111,7 +111,7 @@ var webapp, appname = 'APPNAME' || '',
 					out = element;
 					break;
 				}
-			} else if ( element.dataset.XPO.focus && element.firstElementChild ) {
+			} else if ( element.dataset.focus && element.firstElementChild ) {
 				out = focusnext(element.firstElementChild, 1, ++num);
 				break;
 			}
@@ -124,10 +124,10 @@ var webapp, appname = 'APPNAME' || '',
 			if (thisone) thisone = 0; // after first run, go to the next element
 		}
 		if ( out ) {}
-		else if ( element.dataset.XPO.focus == 1 ) {
+		else if ( element.dataset.focus == 1 ) {
 			return focusnext( element.parentElement, 0, ++num );
 		}
-		else if ( element.parentElement.dataset.XPO.focus ) {
+		else if ( element.parentElement.dataset.focus ) {
 			return focusnext( element.parentElement, 0, ++num );
 		}
 		/* BUG CASE
@@ -152,14 +152,14 @@ var webapp, appname = 'APPNAME' || '',
 			if (!(element instanceof HTMLElement)) return;
 
 			var payload = {};
-			var otherviews = element.querySelectorAll('[data-XPO.id]');
+			var otherviews = element.querySelectorAll('[data-id]');
 			for (var i in otherviews) {
 				if ( otherviews.hasOwnProperty(i) ) {
 					
 					if (otherviews[i].getvalue)
-						payload[ otherviews[i].dataset.XPO.id ] = otherviews[i].getvalue();
+						payload[ otherviews[i].dataset.id ] = otherviews[i].getvalue();
 					else
-						payload[ otherviews[i].dataset.XPO.id ] = otherviews[i].value;
+						payload[ otherviews[i].dataset.id ] = otherviews[i].value;
 					// this code tries to reset the form somewhat
 /*
 					if (otherviews[i] instanceof HTMLSelectElement) {
@@ -180,11 +180,11 @@ var webapp, appname = 'APPNAME' || '',
 			if (!(element instanceof HTMLElement)) return;
 			
 			var keys = {};
-			var otherviews = element.querySelectorAll('[data-XPO.id]');
+			var otherviews = element.querySelectorAll('[data-id]');
 			for (var i in otherviews) {
 				if ( otherviews.hasOwnProperty(i) ) {
 
-					keys[ otherviews[i].dataset.XPO.id ] = otherviews[i];
+					keys[ otherviews[i].dataset.id ] = otherviews[i];
 
 				}
 			}
@@ -204,10 +204,10 @@ var webapp, appname = 'APPNAME' || '',
 				keys = getformkeys(element);
 			} else {
 				element = {
-					id: button.dataset.XPO.form,
+					id: button.dataset.form,
 				};
 			}
-			Hooks.run('XPO.domformdata', {
+			Hooks.run('domformdata', {
 				form: element,
 				button: button,
 				payload: payload,
@@ -215,15 +215,15 @@ var webapp, appname = 'APPNAME' || '',
 			});
 		},
 		setupforms = function () {
-			var sendbuttons	= document.querySelectorAll('.XPO.form .XPO.send');
+			var sendbuttons	= doc.querySelectorAll('.form .send');
 			for (var i in sendbuttons) {
 				if ( sendbuttons.hasOwnProperty(i) ) {
 					sendbuttons[i].onclick = function () {
-						sendform( document.querySelector( '#'+this.dataset.XPO.form ), this );
+						sendform( doc.querySelector( '#'+this.dataset.form ), this );
 					};
 				}
 			}
-			var counts	= document.querySelectorAll('.XPO.form label.XPO.count');
+			var counts	= doc.querySelectorAll('.form label.count');
 			for (var i in counts) {
 				var countlabel = counts[i];
 				if ( counts.hasOwnProperty(i) ) {
@@ -263,7 +263,7 @@ var webapp, appname = 'APPNAME' || '',
 				}
 			}
 			if (err) {
-				webapp.header( translate && translate('XPO.unsupported') );
+				webapp.header( translate && translate('unsupported') );
 				return 0;
 			} else {
 				webapp.header();
@@ -287,10 +287,10 @@ var webapp, appname = 'APPNAME' || '',
 			}
 			
 			var keys = original_keys || header_keys;
-			var title = keys.XPO.title;
-			var subtitle = keys.XPO.subtitle;
-			var header = keys.XPO.header;
-			var icon = keys.XPO.icon;
+			var title = keys.title;
+			var subtitle = keys.subtitle;
+			var header = keys.header;
+			var icon = keys.icon;
 			
 			if (align == 1) header.dataset.align = '1';
 			else if (align == 2) header.dataset.align = '2';
@@ -304,20 +304,20 @@ var webapp, appname = 'APPNAME' || '',
 //						return;
 //					}
 					if (header_title instanceof Array && header_title[0]) {
-						title.dataset.XPO.i18n = header_title[0];
+						title.dataset.i18n = header_title[0];
 					} else {
-						delete title.dataset.XPO.i18n,
+						delete title.dataset.i18n,
 						innertext(title, header_title || '');
 					}
 					if (header_title instanceof Array && header_subtitle[0]) {
-						subtitle.dataset.XPO.i18n = header_subtitle[0];
+						subtitle.dataset.i18n = header_subtitle[0];
 					} else {
-						delete subtitle.dataset.XPO.i18n,
+						delete subtitle.dataset.i18n,
 						innertext(subtitle, header_subtitle || '');
 					}
 					header.hidden = 0;
 				} else {
-					delete title.dataset.XPO.i18n;
+					delete title.dataset.i18n;
 					title.innerText = '';
 					header.hidden = 1;
 				}
@@ -326,7 +326,7 @@ var webapp, appname = 'APPNAME' || '',
 					if (header_icon.startsWith('/')) {
 						innerhtml(icon, '<img src="'+header_icon+'" />');
 					} else {
-						var e = XPO.icons.querySelector('#'+header_icon);
+						var e = icons.querySelector('#'+header_icon);
 						if (e) {
 							innerhtml(icon, '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>');
 						}
@@ -363,29 +363,29 @@ var webapp, appname = 'APPNAME' || '',
 			se.scrollLeft += v;
 		},
 		dimmer: function (zindex, text) {
-			zindex && (XPO.dimmer.style.zIndex = zindex);
+			zindex && (dimmer.style.zIndex = zindex);
 
-			XPO.dimmer.hidden = zindex ? 0 : 1;
+			dimmer.hidden = zindex ? 0 : 1;
 			webapp.isdimmed = zindex ? 1 : 0;
 
 			if (text)
-				XPO.dimmertext.hidden = 0,
-				XPO.dimmertext.dataset.XPO.i18n = text;
+				dimmertext.hidden = 0,
+				dimmertext.dataset.i18n = text;
 			else
-				XPO.dimmertext.hidden = 1,
-				delete XPO.dimmertext.dataset.XPO.i18n,
-				innerhtml(XPO.dimmertext, '');
+				dimmertext.hidden = 1,
+				delete dimmertext.dataset.i18n,
+				innerhtml(dimmertext, '');
 			
-			document.scrollingElement.style.overflow = zindex ? 'hidden' : '';
-			translate.update(XPO.dimmer);
+			doc.scrollingElement.style.overflow = zindex ? 'hidden' : '';
+			translate.update(dimmer);
 		},
 		statusbarpadding: function (yes) { // TODO deprecate
 			if (yes) {
-				XPO.statusbarpadding.hidden	= 0;
-				XPO.statusbarshadow.hidden	= 0;
+				statusbarpadding.hidden	= 0;
+				statusbarshadow.hidden	= 0;
 			} else {
-				XPO.statusbarpadding.hidden	= 1;
-				XPO.statusbarshadow.hidden	= 1;
+				statusbarpadding.hidden	= 1;
+				statusbarshadow.hidden	= 1;
 			}
 		},
 		status_bar_padding: function (yes) {
@@ -394,17 +394,17 @@ var webapp, appname = 'APPNAME' || '',
 		transparency: function (yes) {
 			yes = yes === undefined ? preferences && preferences.get(23, 1) : yes;
 			if (yes/* || Navigator.largeTextEnabled*/) {
-				document.body.dataset.XPO.transparency = 1;
+				doc.body.dataset.transparency = 1;
 			} else {
-				delete document.body.dataset.XPO.transparency;
+				delete doc.body.dataset.transparency;
 			}
 		},
 		textsize: function (yes) {
 			yes = yes === undefined ? preferences && preferences.get(9, 1) : yes;
 			if (yes/* || Navigator.largeTextEnabled*/) {
-				document.body.dataset.XPO.largetext = 1;
+				doc.body.dataset.largetext = 1;
 			} else {
-				delete document.body.dataset.XPO.largetext;
+				delete doc.body.dataset.largetext;
 			}
 		},
 		bixraaj: function (isal) { // on exit, ask or no
@@ -413,91 +413,91 @@ var webapp, appname = 'APPNAME' || '',
 		},
 		exit: function () {
 			if (isalbixraaj) {
-				if ( confirm(xlate('XPO.sure')) ) close();
+				if ( confirm(xlate('sure')) ) close();
 			} else close();
 		},
 		icons: function () {
-			var elements = document.body.querySelectorAll('[data-XPO.icon]');
+			var elements = doc.body.querySelectorAll('[data-icon]');
 			for (var i in elements) {
-				if ( elements.hasOwnProperty(i) && elements[i].dataset.XPO.icon ) {
-					var e = XPO.icons.querySelector('#'+elements[i].dataset.XPO.icon);
+				if ( elements.hasOwnProperty(i) && elements[i].dataset.icon ) {
+					var e = icons.querySelector('#'+elements[i].dataset.icon);
 					if (e)
 						elements[i].innerHTML	= '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
 //					elements[i].innerHTML	= '<svg><use xlink:href=\'#'
-//											+ elements[i].dataset.XPO.icon
+//											+ elements[i].dataset.icon
 //											+ '\'></use></svg>';
 				}
 			}
 		},
 		uponresize: function () {
-			$.taxeer('XPO.webappresize', function () {
+			$.taxeer('webappresize', function () {
 				if (innerwidth() <= 320) {
-					setdata(bod, 'XPO.aqil', 1);
+					setdata(bod, 'aqil', 1);
 				} else {
-					popdata(bod, 'XPO.aqil');
+					popdata(bod, 'aqil');
 				}
 				if (innerwidth() > 320 && innerwidth() <= 640) {
-					setdata(bod, 'XPO.qaleel', 1);
+					setdata(bod, 'qaleel', 1);
 				} else {
-					popdata(bod, 'XPO.qaleel');
+					popdata(bod, 'qaleel');
 				}
 				if (innerwidth() > 320) {
-					setdata(bod, 'XPO.qaleelah', 1);
+					setdata(bod, 'qaleelah', 1);
 				} else {
-					popdata(bod, 'XPO.qaleelah');
+					popdata(bod, 'qaleelah');
 				}
 				if (innerwidth() > 640 && innerwidth() <= 800) {
-					setdata(bod, 'XPO.wast', 1);
+					setdata(bod, 'wast', 1);
 				} else {
-					popdata(bod, 'XPO.wast');
+					popdata(bod, 'wast');
 				}
 				if (innerwidth() > 640) {
-					setdata(bod, 'XPO.wastah', 1);
+					setdata(bod, 'wastah', 1);
 				} else {
-					popdata(bod, 'XPO.wastah');
+					popdata(bod, 'wastah');
 				}
 			}, 100);
 
-			if (innerheight() <= 480) document.body.dataset.XPO.keyboardopen = 1;
-			else delete document.body.dataset.XPO.keyboardopen;
+			if (innerheight() <= 480) doc.body.dataset.keyboardopen = 1;
+			else delete doc.body.dataset.keyboardopen;
 		},
 	};
 
 	function on_scroll() {
-		var height = XPO.tallscreenpadding.offsetHeight * .75;
-		var percent = document.scrollingElement.scrollTop / height;
+		var height = tallscreenpadding.offsetHeight * .75;
+		var percent = doc.scrollingElement.scrollTop / height;
 		if (percent > 1) {
 			percent = 1;
-			ixtaf(XPO.tallheaderui);
+			ixtaf(tallheaderui);
 		} else {
-			izhar(XPO.tallheaderui);
+			izhar(tallheaderui);
 		}
-		XPO.headerui.style.opacity = percent;
-		XPO.tallheaderui.style.opacity = 1 - percent;
-		XPO.tallheaderui.style.paddingTop = (12 * (1-percent))+'vh';
+		headerui.style.opacity = percent;
+		tallheaderui.style.opacity = 1 - percent;
+		tallheaderui.style.paddingTop = (12 * (1-percent))+'vh';
 	}
 
 	webapp.ask_on_exit = webapp.bixraaj;
 
 	webapp.itlaa3 = function (text, time) {
-		var element = XPO.itlaa3.firstElementChild;
+		var element = itlaa3.firstElementChild;
 		if (text) {
 			if (text instanceof Array) {
-				element.dataset.XPO.i18n = text[0];
-				translate.update(XPO.itlaa3);
+				element.dataset.i18n = text[0];
+				translate.update(itlaa3);
 			} else {
-				delete element.dataset.XPO.i18n,
+				delete element.dataset.i18n,
 				element.innerText = text;
 			}
-			XPO.itlaa3.hidden = 0;
+			itlaa3.hidden = 0;
 
-			$.taxeer('XPO.itlaa3', function () {
+			$.taxeer('itlaa3', function () {
 				webapp.itlaa3();
 			}, time||3000);
 		} else {
-			delete element.dataset.XPO.i18n,
+			delete element.dataset.i18n,
 			element.innerText = '',
-			XPO.itlaa3.hidden = 1;
+			itlaa3.hidden = 1;
 		}
 	};
 	webapp.status = webapp.itlaa3;
@@ -506,29 +506,29 @@ var webapp, appname = 'APPNAME' || '',
 	// prevent default behavior from changing page on dropped file
 	listener('dragover', function (e) {
 		//$.log('dragover');
-		setdata(bod, 'XPO.tahweem', 1);
+		setdata(bod, 'tahweem', 1);
 		preventdefault(e);
 		return false;
 	});
 	listener('dragleave', function (e) {
 		//$.log('dragleave');
-//		popdata(bod, 'XPO.tahweem');
-		$.taxeer('XPO.dragleave', function () {
-			popdata(bod, 'XPO.tahweem');
+//		popdata(bod, 'tahweem');
+		$.taxeer('dragleave', function () {
+			popdata(bod, 'tahweem');
 		}, 3000);
 		preventdefault(e);
 		return false;
 	});
 	// NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!
 	listener('drop', function (e) {
-		popdata(bod, 'XPO.tahweem');
+		popdata(bod, 'tahweem');
 		preventdefault(e);
 		
 		var f = e.dataTransfer.files;
 		if (f && f.length) {
-			Hooks.run('XPO.huboot', f);
+			Hooks.run('huboot', f);
 		}
-		Hooks.run('XPO.dropped', e.dataTransfer);
+		Hooks.run('dropped', e.dataTransfer);
 
 		return false;
 	});
@@ -537,36 +537,36 @@ var webapp, appname = 'APPNAME' || '',
 		webapp.uponresize();
 	});
 	listener('contextmenu', function (e) {
-		var yes = Hooks.rununtilconsumed('XPO.contextmenu', e);
+		var yes = Hooks.rununtilconsumed('contextmenu', e);
 		if (yes && e) preventdefault(e);
 	});
 	listener('scroll', function (e) {
-		Hooks.run('XPO.scroll', document.scrollingElement.scrollTop);
+		Hooks.run('scroll', doc.scrollingElement.scrollTop);
 		on_scroll();
 	});
 	listener('scrollend', function (e) {
-		Hooks.run('XPO.scrollend', document.scrollingElement.scrollTop);
-		var offset_height = XPO.tallscreenpadding.offsetHeight;
+		Hooks.run('scrollend', doc.scrollingElement.scrollTop);
+		var offset_height = tallscreenpadding.offsetHeight;
 		var height = offset_height * .75;
-		var percent = document.scrollingElement.scrollTop / height;
+		var percent = doc.scrollingElement.scrollTop / height;
 		if (percent >= 0.4 && percent < 1.6) {
-			document.scrollingElement.scrollTop = 1 * offset_height;
+			doc.scrollingElement.scrollTop = 1 * offset_height;
 		} else if (percent > 0.1 && percent < 0.4) {
-			document.scrollingElement.scrollTop = 0;
+			doc.scrollingElement.scrollTop = 0;
 		}
 	});
 	listener('keyup', function (e) {
-		Hooks.rununtilconsumed('XPO.keyup', e);
+		Hooks.rununtilconsumed('keyup', e);
 	});
 	listener('keydown', function (e) {
-		Hooks.rununtilconsumed('XPO.keydown', e);
+		Hooks.rununtilconsumed('keydown', e);
 	});
 	listener('load', function (e) {
-		header_keys = templates.keys(XPO.headerui);
-		tall_header_keys = templates.keys(XPO.tallheaderui);
+		header_keys = templates.keys(headerui);
+		tall_header_keys = templates.keys(tallheaderui);
 
 		webapp.header( xlate(appname) );
-//		webapp.itlaa3( xlate('XPO.loading') );
+//		webapp.itlaa3( xlate('loading') );
 
 		xlate.update();
 		time && time.start();
@@ -575,38 +575,40 @@ var webapp, appname = 'APPNAME' || '',
 		webapp.uponresize();
 		view.fahras();
 		setupforms();
+		
+		doc.title = 'APPNAME';
 
-		// if maxzan is loaded, defer 'ready' to it
-		if (maxzan && maxzan.badaa) {
-			maxzan.badaa(function () {
-				Hooks.run('XPO.ready', 1);
+		// if Offline is loaded, defer 'ready' to it
+		if (Offline && Offline.init) {
+			Offline.init(function () {
+				Hooks.run('ready', 1);
 				backstack.main();
-				XPO.loadingbox.hidden = 1;
+				loadingbox.hidden = 1;
 			});
 		}
 		else {
-			Hooks.run('XPO.ready', 1);
-			$.taxeer('XPO.loadingbox', function () {
-				XPO.loadingbox.hidden = 1;
+			Hooks.run('ready', 1);
+			$.taxeer('loadingbox', function () {
+				loadingbox.hidden = 1;
 			});
 			backstack.main();
 		}
 
-		$.taxeer('XPO.on_scroll', function () {
+		$.taxeer('on_scroll', function () {
 			on_scroll();
 		}, 10);
 
-		document.addEventListener('visibilitychange', function () {
-			if (document.visibilityState === 'visible') {
+		doc.addEventListener('visibilitychange', function () {
+			if (doc.visibilityState === 'visible') {
 				webapp.visible = 1;
-				Hooks.run('XPO.visible');
+				Hooks.run('visible');
 			} else {
 				webapp.visible = 0;
-				Hooks.run('XPO.hidden');
+				Hooks.run('hidden');
 			}
 		});
 		
-		Hooks.run('XPO.visible');
+		Hooks.run('visible');
 	});
 	
 })();

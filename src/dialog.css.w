@@ -7,7 +7,8 @@
 	overflow-x	auto
 	background	@primary
 	z-index		700
-	padding		6px 6px 48px 6px
+	padding		6px 6px 90px 6px
+	border-radius	15px 15px 0 0
 if min-width = 640px
 	#dialogui
 		max-width	640px

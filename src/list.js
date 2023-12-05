@@ -26,6 +26,7 @@ var List, list;
 		 * but im not sure, prolly also used to remap prop names
 		 * */
 		beforeset: 0,
+		before_set: 0,
 		beforepop: 0,
 		uponpastend: function () {
 			var yes = focusnext(this.element);
@@ -112,7 +113,7 @@ var List, list;
 			this.selected = select === undefined ? -1 : select;
 			var item = this.get(++this.selected);
 			while (item) {
-				if (item.dataset.XPO.listitem) {
+				if (item.dataset.listitem) {
 					item = 0;
 				} else {
 					item = this.get(++this.selected)
@@ -126,7 +127,7 @@ var List, list;
 			this.selected = this.length();
 			var item = this.get(--this.selected);
 			while (item) {
-				if (item.dataset.XPO.listitem) {
+				if (item.dataset.listitem) {
 					item = 0;
 				} else {
 					item = this.get(--this.selected)
@@ -137,14 +138,14 @@ var List, list;
 		},
 		message: function (msg) {
 			if (msg) {
-				this.keys.XPO.message.dataset.XPO.i18n = msg;
-				this.keys.XPO.message.parentElement.hidden = 0;
-				this.keys.XPO.items.hidden = 1;
+				this.keys.message.dataset.i18n = msg;
+				this.keys.message.parentElement.hidden = 0;
+				this.keys.items.hidden = 1;
 			} else {
-				delete this.keys.XPO.message.dataset.XPO.i18n;
-				this.keys.XPO.message.innerText = '';
-				this.keys.XPO.message.parentElement.hidden = 1;
-				this.keys.XPO.items.hidden = 0;
+				delete this.keys.message.dataset.i18n;
+				this.keys.message.innerText = '';
+				this.keys.message.parentElement.hidden = 1;
+				this.keys.items.hidden = 0;
 			}
 			translate.update();
 		},
@@ -155,7 +156,7 @@ var List, list;
 			this.selected -= delta;
 			var item = this.get(this.selected);
 			while (item) {
-				if (item.dataset.XPO.listitem) {
+				if (item.dataset.listitem) {
 					item = 0;
 				} else {
 					item = this.get(++this.selected);
@@ -174,7 +175,7 @@ var List, list;
 			this.selected -= delta;
 			var item = this.get(this.selected);
 			while (item) {
-				if (item.dataset.XPO.listitem) {
+				if (item.dataset.listitem) {
 					item = 0;
 				} else {
 					item = this.get(--this.selected)
@@ -198,7 +199,7 @@ var List, list;
 		length: function () {
 			if (isfun(this.uponlength)) // custom length algo
 				return this.uponlength();
-			return this.keys.XPO.items.children.length;
+			return this.keys.items.children.length;
 		},
 		down: function (e) {
 			this.selectedold = this.selected;
@@ -206,7 +207,7 @@ var List, list;
 			this.selected += delta;
 			var item = this.get(this.selected);
 			while (item) {
-				if (item.dataset.XPO.listitem) {
+				if (item.dataset.listitem) {
 					item = 0;
 				} else {
 					item = this.get(++this.selected)
@@ -235,7 +236,7 @@ var List, list;
 			this.selected += delta;
 			var item = this.get(this.selected);
 			while (item) {
-				if (item.dataset.XPO.listitem) {
+				if (item.dataset.listitem) {
 					item = 0;
 				} else {
 					item = this.get(++this.selected);
@@ -250,7 +251,7 @@ var List, list;
 		},
 		baidaa: function (id, multiple) { // with multiple it also toggles
 			id = id === undefined ? this.selected : id;
-			var items = this.keys.XPO.items.children, item;
+			var items = this.keys.items.children, item;
 			for (var i in items) {
 				if (items.hasOwnProperty(i)) {
 					item = items[i];
@@ -285,7 +286,7 @@ var List, list;
 			if (this.uponselect && !silent) {
 				selected = this.get(this.selected);
 				if (selected) {
-					selected = this.adapter.get( selected.dataset.XPO.uid );
+					selected = this.adapter.get( selected.dataset.uid );
 					if (selected) this.uponselect(selected);
 				}
 			}
@@ -309,19 +310,19 @@ var List, list;
 //			$.log.e( 'intaxabsaamitan', this.idprefix_raw, id );
 
 			id = id === undefined ? this.selected : id;
-			var items = this.keys.XPO.items.children, item, selected;
+			var items = this.keys.items.children, item, selected;
 			for (var i in items) {
 				if (items.hasOwnProperty(i)) {
 					item = items[i];
 					if (i == id)
-						item.dataset.XPO.selected = 1, selected = item;
+						item.dataset.selected = 1, selected = item;
 					else
-						delete item.dataset.XPO.selected;
+						delete item.dataset.selected;
 				}
 			}
 
 			if (isfun(this.on_selection) && selected) {
-				var a = this.adapter.get( selected.dataset.XPO.uid );
+				var a = this.adapter.get( selected.dataset.uid );
 				if (a) this.on_selection(a);
 			}
 
@@ -361,7 +362,7 @@ var List, list;
 			o = o || {};
 
 			var clone, LV = this, listitem = o._listitem || LV._listitem,
-				parent = LV.keys.XPO.items,
+				parent = LV.keys.items,
 				available_height = innerheight() - LV.element.offsetTop,
 				actual_height = parent.offsetHeight;
 
@@ -389,11 +390,12 @@ var List, list;
 				clone = elementbyid( LV.idprefix_raw + o.ruid );
 				if (clone) {
 					clone.id = o.id_dom;
-					setdata(clone, 'XPO.uid', o.uid)
+					setdata(clone, 'uid', o.uid)
 				}
 			}
 			
-			if (LV.beforeset) o = LV.beforeset(o, o.uid);
+			if (LV.beforeset) o = LV.beforeset(o, o.uid); // TODO deprecate
+			if (LV.before_set) o = LV.before_set(o, o.uid); // new & approved
 			
 			if (o.ruid) {
 				LV.adapter.pop(o.ruid);
@@ -406,7 +408,7 @@ var List, list;
 //			$.log(actual_height, available_height);
 //			if (actual_height > available_height) {
 //				// setup prepad and postpad
-////				LV.keys.XPO.postpad.style.height = LV.length() * 32;
+////				LV.keys.postpad.style.height = LV.length() * 32;
 //				return false;
 //			}
 
@@ -425,24 +427,24 @@ var List, list;
 				clone = templates.get(listitem, parent, o.before || o.awwal, o.id_dom || o.uid)(o2);
 				delete o.before;
 				delete o.awwal;
-				clone.dataset.XPO.listitem = 1;
+				clone.dataset.listitem = 1;
 				
 				// 1 = topmost heading, 2 = subheading, hints for .sticky
-				if (o.mufarraq) clone.dataset.XPO.mufarraq = o.mufarraq;
+				if (o.mufarraq) clone.dataset.mufarraq = o.mufarraq;
 			}
 			else {
-				var selected = clone.dataset.XPO.selected;
+				var selected = clone.dataset.selected;
 				var baidaa = clone.dataset.baidaa;
 				
 				templates.set( clone, o, listitem );
 				
-				if (selected) clone.dataset.XPO.selected = 1;
-				if (baidaa) clone.dataset.XPO.baidaa = 1;
+				if (selected) clone.dataset.selected = 1;
+				if (baidaa) clone.dataset.baidaa = 1;
 			}
 
 			if (clone) {
-				if (o.mu3allaq) setdata(clone, 'XPO.mu3allaq', 1);
-				else popdata(clone, 'XPO.mu3allaq');
+				if (o.mu3allaq) setdata(clone, 'mu3allaq', 1);
+				else popdata(clone, 'mu3allaq');
 				
 				clone.onclick = function (e) {
 					var item = LV.adapter.get( o.uid );
@@ -468,7 +470,7 @@ var List, list;
 			return clone;
 		},
 		namoovaj: function (eansarism) { // deprecated
-			this._listitem = eansarism || 'XPO.listitem';
+			this._listitem = eansarism || 'listitem';
 			return this;
 		},
 		listitem: function (elementname) { // namoovaj alternative
@@ -497,7 +499,7 @@ var List, list;
 			return this.axad();
 		},
 		axad: function () { // get baidaa item's adapter object
-			var items = this.keys.XPO.items.children, item, baidaa;
+			var items = this.keys.items.children, item, baidaa;
 			for (var i in items) {
 				if (items.hasOwnProperty(i)) {
 					item = items[i];
@@ -517,7 +519,7 @@ var List, list;
 			return this.get( isundef(uid) ? this.selected : uid );
 		},
 		get: function (id) {
-			return this.keys.XPO.items.children[id];
+			return this.keys.items.children[id];
 		},
 		pop: function (id) {
 			var element, LV = this, uid;
@@ -529,7 +531,7 @@ var List, list;
 				element = elementbyid(id);
 			}
 			if (element) {
-				uid = element.XPO.dataset.XPO.uid;
+				uid = element.dataset.uid;
 				LV.adapter.pop( uid );
 
 				element.remove();
@@ -549,14 +551,14 @@ var List, list;
 		},
 		popall: function () {
 			this.adapter = $.array();
-			innertext(this.keys.XPO.items, '');
+			innertext(this.keys.items, '');
 			innertext(this._muntahaabox, '');
 			this._katabmowdoo3();
 		},
 		press: function (key, force) {
 			var element = this.get(this.selected);
 			if (element) {
-				var item = this.adapter.get( element.dataset.XPO.uid );
+				var item = this.adapter.get( element.dataset.uid );
 				if (item) {
 					(this.element.dataset.rakkaz || force) &&
 					this.onpress && this.onpress( item, key, this.selected );
@@ -571,22 +573,22 @@ var List, list;
 			return false;
 		},
 		id2num: function (uid) { // return id of item that has this uid
-			var cn = this.keys.XPO.items.children;
+			var cn = this.keys.items.children;
 			for (var i in cn) {
 				if (cn.hasOwnProperty(i)) {
-					if (cn[i].dataset.XPO.uid == uid) return i;
+					if (cn[i].dataset.uid == uid) return i;
 				}
 			}
 			return false;
 		},
 		grid: function (num) {
 			this.gridnum = num;
-			if (num) this.element.dataset.XPO.grid = num;
-			else delete this.element.dataset.XPO.grid;
+			if (num) this.element.dataset.grid = num;
+			else delete this.element.dataset.grid;
 			return this;
 		},
 		zumrah: function (zumraat) {
-			this.element.className = 'XPO.list '+zumraat;
+			this.element.className = 'list '+zumraat;
 			return this;
 		},
 		freeflow: function (v) {
@@ -595,8 +597,8 @@ var List, list;
 			return this;
 		},
 		hidetext: function (num) {
-			if (num) this.element.dataset.XPO.hidetext = num;
-			else delete this.element.dataset.XPO.hidetext;
+			if (num) this.element.dataset.hidetext = num;
+			else delete this.element.dataset.hidetext;
 			return this;
 		},
 		muntahaa: function (max, muntahaabox) { // maximum
@@ -616,7 +618,7 @@ var List, list;
 		mowdoo3: function (m, i18n) { // deprecated -> title
 			this._mowdoo3 = m || 0;
 			if (i18n)
-				attribute(this.keys.mowdoo3list, 'data-XPO.i18n', m),
+				attribute(this.keys.mowdoo3list, 'data-i18n', m),
 				xlate.update(this.element);
 			else if (m)
 				innertext(this.keys.mowdoo3list, m);
@@ -625,15 +627,6 @@ var List, list;
 		},
 		title: function (m, i18n) { // only visible when length > 0
 			return this.mowdoo3(m, i18n);
-		},
-		recycle: function (yes) {
-			this._recycle = yes;
-			if (yes) { // add to scroll listener
-				
-			} else {
-				
-			}
-			return this;
 		},
 		set_scrolling_element: function () {
 			
@@ -659,7 +652,7 @@ var List, list;
 					return 1;
 				};
 				bahacbox.oninput = function () {
-					$.taxeer('XPO.listbahac', function () {
+					$.taxeer('listbahac', function () {
 						LV.uponbahac && LV.uponbahac( bahacbox.value.trim() )
 					}, 250);
 				};
@@ -672,10 +665,10 @@ var List, list;
 	};
 	List = list = function (element) { // TODO deprecate list
 		var LV = Object.create(proto);
-		element.dataset.XPO.focus = 'XPO.list';
-		element.XPO.listobject = LV;
+		element.dataset.focus = 'list';
+		element.listobject = LV;
 		LV.filmakaan = element.dataset.filmakaan;
-		LV.element = templates.get( 'XPO.list', element )();
+		LV.element = templates.get( 'list', element )();
 		LV.listitem();
 		LV.adapter = $.array();
 		LV.keys = templates.keys( LV.element );

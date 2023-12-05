@@ -3,137 +3,125 @@ var sessions,
 	USERNAMEMIN = 3,
 	USERNAMEMAX = 24,
 	PASSWORDMIN = 8,
-	PASSWORDMAX = 64;
+	PASSWORDMAX = 2048;
 ;(function(){
 	'use strict';
 	var cache = {}, lastsearch, mfateeh, usnmavlble = {};
 	
-	var nazzaf = function (string, length) {
-		string = string || '';
-		if (string.length === 0) return '';
-		length = length || 255;
-		var alias = string;
-		alias = alias.substr(0, length)
-					.replace(/\%/g,			' pct'	)
-					.replace(/\@/g,			' at '	)
-					.replace(/\&/g,			' and '	)
-					.replace(/[$-\-/:-?\{\}-~!"^_`\[\]@#]/g,'-') // symbols
-					.replace(/[^.\d\wa-zA-Z0-9ا-ےÄäÜüÖößЀ-ҁҊ-ӿÇçĞğŞşIıÜüﻙ]+/g, '-') // most alphanums
-					.replace(/\s[\s]+/g,	'-'	)
-					.replace(/[\s]+/g,		'-'	)
-					.replace(/^[\-]+/g,		''	)
-					.replace(/[\-]+$/g,		''	)
-					.replace(/\-\-/g,		'-'	)
-					.replace(/\.\-/g,		'.'	)
-					.replace(/\-\./g,		'.'	)
-					.replace(/^\./g,		''	)
-					.replace(/\.$/g,		''	)
-					.trim()
-					.toLowerCase();
-		return alias;
-	};
 	var jaddadkeys = function (parent) {
-		var current = parseint(parent.dataset.XPO.currentqadam || 0);
+		var current = parseint(parent.dataset.currentqadam || 0);
 		if (current === 0) {
 			softkeys.set(K.sr, function () {
-				Hooks.run('XPO.back');
-			}, 0, 'XPO.iconarrowback');
+				Hooks.run('back');
+			}, 0, 'iconarrowback');
 		} else {
 			softkeys.set(K.sr, function () {
 				sessions.shimaal(parent);
 				return 1;
-			}, 0, 'XPO.iconarrowback');
+			}, 0, 'iconarrowback');
 		}
 		softkeys.set(K.sl, function () {
 			sessions.yameen(parent);
 			return 1;
-		}, 0, 'XPO.icondone');
+		}, 0, 'icondone');
 	};
 	var setcaptcha = function () {
 		if (cache && mfateeh) {
-			setvalue(mfateeh.XPO.hash, cache.XPO.hash);
-			innerhtml(mfateeh.XPO.captcha, cache.XPO.captcha);
+			setvalue(mfateeh.hash, cache.hash);
+			innerhtml(mfateeh.captcha, cache.captcha);
 		}
 	};
 	var smartfocus = function (parent) {
-		var current = parseint(parent.dataset.XPO.currentqadam || 0);
+		var current = parseint(parent.dataset.currentqadam || 0);
 		if (mfateeh) {
-			if (backstack.states.view === 'XPO.signup') {
+			if (backstack.states.view === 'signup') {
 				if (current === 0) {
-					mfateeh.XPO.username.focus();
+					mfateeh.username.focus();
 				}
 				if (current === 1) {
-					mfateeh.XPO.password.focus();
+					mfateeh.password.focus();
 				}
 				if (current === 2) {
-					mfateeh.XPO.answer.focus();
+					mfateeh.answer.focus();
 				}
 			}
-			if (backstack.states.view === 'XPO.signin') {
+			if (backstack.states.view === 'signin') {
 				if (current === 0) {
-					mfateeh.XPO.username.focus();
+					mfateeh.username.focus();
 				}
 				if (current === 1) {
-					mfateeh.XPO.answer.focus();
+					mfateeh.answer.focus();
 				}
 			}
 		}
 	};
 	var usernamevalid = function (user) {
 		if (user.length >= USERNAMEMIN && user.length <= USERNAMEMAX) {
-			innertext(mfateeh.XPO.aliasstatus, '');
+			innertext(mfateeh.aliasstatus, '');
 			return 1;
 		} else {
-			if (user.length === 0) innertext(mfateeh.XPO.aliasstatus, '');
-			else innertext(mfateeh.XPO.aliasstatus, xlate(
-				user.length < USERNAMEMIN ? 'XPO.usernameunder' : 'XPO.usernameover'
+			if (user.length === 0) innertext(mfateeh.aliasstatus, '');
+			else innertext(mfateeh.aliasstatus, xlate(
+				user.length < USERNAMEMIN ? 'usernameunder' : 'usernameover'
 			));
 			return 0;
 		}
 	};
 	var usernamexataa = function (xataa, username, proceed) {
-		if (backstack.states.view === 'XPO.signup') {
-			var m = view.mfateeh('XPO.signup');
+		if (backstack.states.view === 'signup') {
+			var m = view.mfateeh('signup');
 			if (username) {
-				innertext(m.XPO.usernamerefined, username);
+				innertext(m.usernamerefined, username);
 			}
-			innertext(m.XPO.aliasstatus, xlate(xataa));
+			innertext(m.aliasstatus, xlate(xataa));
 			if (proceed) {
-				m.XPO.aqdaam.dataset.XPO.currentqadam =
-								xataa === 'XPO.usernameavailable' ? 1 : 0;
-				sessions.jaddad(m.XPO.aqdaam);
+				m.aqdaam.dataset.currentqadam =
+								xataa === 'usernameavailable' ? 1 : 0;
+				sessions.jaddad(m.aqdaam);
 			}
-			smartfocus(m.XPO.aqdaam);
+			smartfocus(m.aqdaam);
 		}
 	};
 	var passwordxataa = function (xataa) {
-		if (backstack.states.view === 'XPO.signin') {
-			var m = view.mfateeh('XPO.signin');
-			m.XPO.aqdaam.dataset.XPO.currentqadam = 0;
-			sessions.jaddad( m.XPO.aqdaam );
-			m.XPO.password.focus();
-			innertext(m.XPO.passstatus, xlate(xataa))
+		if (backstack.states.view === 'signin') {
+			var m = view.mfateeh('signin');
+			m.aqdaam.dataset.currentqadam = 0;
+			sessions.jaddad( m.aqdaam );
+			m.password.focus();
+			innertext(m.passstatus, xlate(xataa))
 		}
 	};
 	var answerxataa = function (xataa) {
-		if (['XPO.signin', 'XPO.signup'].includes(backstack.states.view)) {
+		if (['signin', 'signup'].includes(backstack.states.view)) {
 			var m = view.mfateeh(backstack.states.view);
-			sessions.jaddad( m.XPO.aqdaam );
+			sessions.jaddad( m.aqdaam );
 			sessions.getcaptcha();
-			m.XPO.answer.focus();
-			innertext(m.XPO.answerstatus, xlate(xataa));
-			if (backstack.states.view == 'XPO.signin') {
-				m.XPO.aqdaam.dataset.XPO.currentqadam = 1;
+			m.answer.focus();
+			innertext(m.answerstatus, xlate(xataa));
+			if (backstack.states.view == 'signin') {
+				m.aqdaam.dataset.currentqadam = 1;
 			} else {
-				m.XPO.aqdaam.dataset.XPO.currentqadam = 2;
+				m.aqdaam.dataset.currentqadam = 2;
 			}
 		}
 	};
+	function password_visibility(yes) {
+		softkeys.add({ n: yes ? 'Hide Password' : 'Show Password',
+			shift: 1,
+			alt: 1,
+			k: 's',
+			i: yes ? 'iconvisibilityoff' : 'iconvisibility',
+			c: function () {
+				attribute(mfateeh.password, 'type', yes ? 'password' : 'text');
+				password_visibility(!yes);
+			}
+		});
+	}
 	
 	sessions = {
 		jaddad: function (parent) {
 			jaddadkeys(parent);
-			var current = parseint(parent.dataset.XPO.currentqadam || 0);
+			var current = parseint(parent.dataset.currentqadam || 0);
 			var cn = parent.children, element = false;
 			for (var i = 0; i < cn.length; ++i) {
 				var e = cn[i];
@@ -147,13 +135,13 @@ var sessions,
 			return element;
 		},
 		yameen: function (parent) {
-			var current = parseint(parent.dataset.XPO.currentqadam || 0), yes;
+			var current = parseint(parent.dataset.currentqadam || 0), yes;
 			if (mfateeh) {
-				var user = nazzaf(mfateeh.XPO.username.value);
-				var pass = mfateeh.XPO.password.value.trim();
-				var answer = mfateeh.XPO.answer.value;
-				var hash = mfateeh.XPO.hash.value;
-				if (backstack.states.view === 'XPO.signup') {
+				var user = generate_alias(mfateeh.username.value);
+				var pass = mfateeh.password.value.trim();
+				var answer = mfateeh.answer.value;
+				var hash = mfateeh.hash.value;
+				if (backstack.states.view === 'signup') {
 					yes = 1;
 					if (current == 0) {
 						if (usernamevalid(user)) sessions.usernameexists(user);
@@ -161,18 +149,18 @@ var sessions,
 					}
 					if (current == 1) {
 						if (pass.length >= PASSWORDMIN && pass.length <= PASSWORDMAX)
-							innertext(mfateeh.XPO.passstatus, '');
+							innertext(mfateeh.passstatus, '');
 						else
-							innertext(mfateeh.XPO.passstatus, xlate(
-								pass.length < PASSWORDMIN ? 'XPO.passwordunder' : 'XPO.passwordover'
+							innertext(mfateeh.passstatus, xlate(
+								pass.length < PASSWORDMIN ? 'passwordunder' : 'passwordover'
 							)),
 							yes = 0;
 					}
 					if (current == 2) {
 						if (answer.length)
-							innertext(mfateeh.XPO.answerstatus, '');
+							innertext(mfateeh.answerstatus, '');
 						else
-							innertext(mfateeh.XPO.answerstatus, xlate('XPO.answerblank')),
+							innertext(mfateeh.answerstatus, xlate('answerblank')),
 							yes = 0;
 
 						if (yes) {
@@ -180,30 +168,30 @@ var sessions,
 						}
 					}
 				}
-				if (backstack.states.view === 'XPO.signin') {
+				if (backstack.states.view === 'signin') {
 					yes = 1;
 					if (current == 0) {
 						if (user.length >= USERNAMEMIN && user.length <= USERNAMEMAX)
-							innertext(mfateeh.XPO.aliasstatus, '');
+							innertext(mfateeh.aliasstatus, '');
 						else
-							innertext(mfateeh.XPO.aliasstatus, xlate(
-								user.length < USERNAMEMIN ? 'XPO.usernameunder' : 'XPO.usernameover'
+							innertext(mfateeh.aliasstatus, xlate(
+								user.length < USERNAMEMIN ? 'usernameunder' : 'usernameover'
 							)),
 							yes = 0;
 
 						if (pass.length >= PASSWORDMIN && pass.length <= PASSWORDMAX)
-							innertext(mfateeh.XPO.passstatus, '');
+							innertext(mfateeh.passstatus, '');
 						else
-							innertext(mfateeh.XPO.passstatus, xlate(
-								pass.length < PASSWORDMIN ? 'XPO.passwordunder' : 'XPO.passwordover'
+							innertext(mfateeh.passstatus, xlate(
+								pass.length < PASSWORDMIN ? 'passwordunder' : 'passwordover'
 							)),
 							yes = 0;
 					}
 					if (current == 1) {
 						if (answer.length)
-							innertext(mfateeh.XPO.answerstatus, '');
+							innertext(mfateeh.answerstatus, '');
 						else
-							innertext(mfateeh.XPO.answerstatus, xlate('XPO.answerblank')),
+							innertext(mfateeh.answerstatus, xlate('answerblank')),
 							yes = 0;
 
 						if (yes) {
@@ -213,21 +201,21 @@ var sessions,
 				}
 			}
 			if (yes && current < parent.childElementCount-1) {
-				parent.dataset.XPO.currentqadam = ++current;
+				parent.dataset.currentqadam = ++current;
 				sessions.jaddad(parent);
 				smartfocus(parent);
 			}
 		},
 		shimaal: function (parent) {
-			var current = parseint(parent.dataset.XPO.currentqadam || 0);
+			var current = parseint(parent.dataset.currentqadam || 0);
 			if (current > 0) {
-				parent.dataset.XPO.currentqadam = --current;
+				parent.dataset.currentqadam = --current;
 				sessions.jaddad(parent);
 				smartfocus(parent);
 			}
 		},
 		getqadam: function (v) {
-			return templates.keys( mfateeh.XPO.aqdaam.childNodes[v] );
+			return templates.keys( mfateeh.aqdaam.childNodes[v] );
 		},
 		setqadam: function (v) {
 			currentqadam = v;
@@ -297,12 +285,12 @@ var sessions,
 			}
 
 			if (appui.signedin) {
-				XPO.sessionformaway.hidden = false;
-				XPO.sessionform.hidden = true;
+				sessionformaway.hidden = false;
+				sessionform.hidden = true;
 				document.body.className = permissions;
 			} else {
-				XPO.sessionformaway.hidden = true;
-				XPO.sessionform.hidden = false;
+				sessionformaway.hidden = true;
+				sessionform.hidden = false;
 				document.body.className = '';
 				networki.stoplistening();
 			}
@@ -311,89 +299,89 @@ var sessions,
 				dom.applysession( appui.signedin );
 				menu.setupdynamicparts();
 				appui.resetloginform();
-				Hooks.run('XPO.appuisessionchange', appui.signedin);
+				Hooks.run('appuisessionchange', appui.signedin);
 			}
 		},
 		getcaptcha: function () {
 			var key = preferences.get(1);
 			if (!key) {
 				// get new captcha if there isn't already one loaded
-				if (!cache.XPO.hash) {
-					webapp.dimmer(LAYERTOPMOST, xlate('XPO.fetchingcaptcha'));
-					Network.get('XPO.sessions', 'XPO.captcha', 1);
+				if (!cache.hash) {
+					webapp.dimmer(LAYERTOPMOST, xlate('fetchingcaptcha'));
+					Network.get('sessions', 'captcha', 1);
 				} else {
 					setcaptcha();
 				}
 			}
 		},
 		resetloginform: function () {
-			var keys = dom.getformkeys( XPO.sessionform );
+			var keys = dom.getformkeys( sessionform );
 
-			keys.XPO.alias.value = '';
-			delete keys.XPO.alias.dataset.XPO.error;
+			keys.alias.value = '';
+			delete keys.alias.dataset.error;
 
-			keys.XPO.pass.value = '';
-			delete keys.XPO.pass.dataset.XPO.error;
+			keys.pass.value = '';
+			delete keys.pass.dataset.error;
 
-			keys.XPO.answer.value = '';
-			delete keys.XPO.answer.dataset.XPO.error;
+			keys.answer.value = '';
+			delete keys.answer.dataset.error;
 
-			keys.XPO.hash.value = '';
+			keys.hash.value = '';
 
-			delete document.body.dataset.XPO.listitem;
+			delete document.body.dataset.listitem;
 		},
 		setloginform: function (data) {
 			data = data || {};
-			var keys = dom.getformkeys( XPO.sessionform );
-			var captcha = keys.XPO.captcha;
-			var hash = keys.XPO.hash;
+			var keys = dom.getformkeys( sessionform );
+			var captcha = keys.captcha;
+			var hash = keys.hash;
 			
-			if (data.XPO.key) {
-				preferences.set( 1				, data.XPO.key						); // miftaah
-				preferences.set( 81				, data.XPO.latitude					); // xattil3ard
-				preferences.set( 82				, data.XPO.longitude				); // xattiltool
-				preferences.set( 2				, data.XPO.uid						);
-				preferences.set( 20				, data.XPO.username					); // ism
-				preferences.set( 21				, data.XPO.displayname				); // ismmubeen
-				preferences.set( 22				, data.XPO.type						);
+			if (data.key) {
+				preferences.set( 1				, data.key						); // miftaah
+				preferences.set( 81				, data.latitude					); // xattil3ard
+				preferences.set( 82				, data.longitude				); // xattiltool
+				preferences.set( 2				, data.uid						);
+				preferences.set( 20				, data.username					); // ism
+				preferences.set( 21				, data.displayname				); // ismmubeen
+				preferences.set( 22				, data.type						);
 				
 			} else {
-				if (data.XPO.username === 'XPO.taken') {
-					keys.XPO.aliasstatus.innerText = translate('XPO.aliasunique');
-					keys.XPO.alias.dataset.XPO.error = 1;
+				if (data.username === 'taken') {
+					keys.aliasstatus.innerText = translate('aliasunique');
+					keys.alias.dataset.error = 1;
 				} else {
-					keys.XPO.aliasstatus.innerText = '';
-					delete keys.XPO.alias.dataset.XPO.error;
+					keys.aliasstatus.innerText = '';
+					delete keys.alias.dataset.error;
 				}
 
-				if (data.XPO.password === 'XPO.wrong') {
-					keys.XPO.passstatus.innerText = translate('XPO.passwrong');
-					keys.XPO.pass.dataset.XPO.error = 1;
+				if (data.password === 'wrong') {
+					keys.passstatus.innerText = translate('passwrong');
+					keys.pass.dataset.error = 1;
 				} else {
-					keys.XPO.passstatus.innerText = '';
-					delete keys.XPO.pass.dataset.XPO.error;
+					keys.passstatus.innerText = '';
+					delete keys.pass.dataset.error;
 				}
 				
-				if (data.XPO.answer === 'XPO.wrong') {
-					keys.XPO.answerstatus.innerText = translate('XPO.answerwrong');
-					keys.XPO.answer.dataset.XPO.error = 1;
+				if (data.answer === 'wrong') {
+					keys.answerstatus.innerText = translate('answerwrong');
+					keys.answer.dataset.error = 1;
 				} else {
-					keys.XPO.answerstatus.innerText = '';
-					delete keys.XPO.answer.dataset.XPO.error;
+					keys.answerstatus.innerText = '';
+					delete keys.answer.dataset.error;
 				}
 				
-				if (data.XPO.captcha) {
+				if (data.captcha) {
 					captcha.hidden		= false;
-					captcha.innerHTML	= data.XPO.captcha;
-					hash.value			= data.XPO.hash;
+					captcha.innerHTML	= data.captcha;
+					hash.value			= data.hash;
 				} else {
 					captcha.hidden = true;
 				}
 			}
 		},
 		signout: function () {
-			webapp.itlaa3( xlate('XPO.loggingout') );
-			maxzan.recreate(function () {
+			webapp.itlaa3( xlate('loggingout') );
+			Offline.recreate(function () {
 				preferences.pop( '@'); // waqt
 				preferences.pop( 1	);
 				preferences.pop( 2	);
@@ -405,10 +393,10 @@ var sessions,
 
 				cache = {};
 				
-				webapp.itlaa3( xlate('XPO.loggedout') );
+				webapp.itlaa3( xlate('loggedout') );
 				
-				Hooks.run('XPO.sessionchange', 0);
-				pager.intaxab('XPO.main', 1);
+				Hooks.run('sessionchange', 0);
+				pager.intaxab('main', 1);
 			});
 		},
 		usernameexists: function (user, temp) {
@@ -418,106 +406,125 @@ var sessions,
 					usernamexataa(cached, user);
 				} else {
 					var payload = {
-						XPO.username	:	user	,
-						XPO.join		:	1		,
-						XPO.exists		:	1		,
-						XPO.proceed		:	!temp	,
+						username	:	user	,
+						join		:	1		,
+						exists		:	1		,
+						proceed		:	!temp	,
 					};
 
 					if (!temp)
-						webapp.dimmer(LAYERTOPMOST, xlate('XPO.checkingusername'));
+						webapp.dimmer(LAYERTOPMOST, xlate('checkingusername'));
 
-					Network.get('XPO.sessions', 'XPO.mowjood', payload);
+					Network.get('sessions', 'username_exists', payload);
 				}
 			}
 		},
 		login: function (user, pass, hash, answer, join) {
 			if (user.length > 2 && user.length < 25 && pass.length > 7 && answer.length) {
 				var payload2 = {
-					XPO.username	:	user	,
-					XPO.password	:	pass	,
-					XPO.hash		:	hash	,
-					XPO.answer		:	answer	,
+					username	:	user	,
+					password	:	pass	,
+					hash		:	hash	,
+					answer		:	answer	,
 				};
 
-				if (join) payload2.XPO.join = 1;
+				if (join) payload2.join = 1;
 				
-				webapp.dimmer( true, translate('XPO.loggingin') );
-				Network.get('XPO.sessions', 'XPO.duxool', payload2);
+				webapp.dimmer( true, translate('loggingin') );
+				Network.get('sessions', 'sign_in', payload2);
 			}
 		},
 	};
-	Hooks.set('XPO.ready', function (args) {
-		Network.tawassat('XPO.sessions', 'XPO.miftaah', function (intahaa) {
-			intahaa(sessions.signedin() || undefined);
+	Hooks.set('ready', function (args) {
+		Network.intercept('sessions', 'key', function (finish) {
+			finish(sessions.signedin() || undefined);
 		});
-		Network.response.tawassat('XPO.sessions', 'XPO.miftaah', function (response) {
+		Network.response.intercept('sessions', 'key', function (response) {
 			if (response === false) {
 				sessions.signout();
 			}
 		});
-		Network.response.get('XPO.sessions', 'XPO.mowjood', function (response) {
-			if (response.XPO.join) {
-				usnmavlble['_'+response.XPO.username] = response.XPO.exists;
-				usernamexataa(response.XPO.exists, response.XPO.username, response.XPO.proceed);
+		Network.response.get('sessions', 'username_exists', function (response) {
+			if (response.join) {
+				usnmavlble['_'+response.username] = response.exists;
+				usernamexataa(response.exists, response.username, response.proceed);
 				webapp.dimmer();
 			}
 		});
-		Network.response.get('XPO.sessions', 'XPO.captcha', function (response) {
-//			$.log( 'XPO.captcha', response );
+		Network.response.get('sessions', 'captcha', function (response) {
+//			$.log( 'captcha', response );
 			webapp.dimmer();
 			if (mfateeh) {
-				cache.XPO.hash = response.XPO.hash;
-				cache.XPO.captcha = response.XPO.captcha;
+				cache.hash = response.hash;
+				cache.captcha = response.captcha;
 				setcaptcha();
 			}
 		});
-		Network.response.get('XPO.sessions', 'XPO.miftaah', function (response) {
-//			$.log( 'XPO.miftaah', response );
+		Network.response.get('sessions', 'key', function (response) {
+//			$.log( 'key', response );
 		});
-		Network.response.get('XPO.sessions', 'XPO.duxool', function (response) {
+		Network.response.get('sessions', 'sign_in', function (response) {
 			webapp.dimmer();
-			if (response.XPO.password) {
-				passwordxataa(response.XPO.password);
+			if (response.password) {
+				passwordxataa(response.password);
 			}
-			if (response.XPO.answer) {
-				answerxataa(response.XPO.answer);
+			if (response.answer) {
+				answerxataa(response.answer);
 			}
-			if (response.XPO.miftaah) {
+			if (response.key) {
 				var signedin = sessions.signedin();
-				preferences.set(  1 , response.XPO.miftaah		);
-				preferences.set( 81 , response.XPO.latitude	);
-				preferences.set( 82 , response.XPO.longitude	);
-				preferences.set(  2 , response.XPO.uid			);
-				preferences.set( 20 , response.XPO.username	);
-				preferences.set( 21 , response.XPO.displayname	);
-				preferences.set( 22 , response.XPO.type		);
+				preferences.set(  1 , response.key		);
+				preferences.set( 81 , response.latitude	);
+				preferences.set( 82 , response.longitude	);
+				preferences.set(  2 , response.uid			);
+				preferences.set( 20 , response.username	);
+				preferences.set( 21 , response.displayname	);
+				preferences.set( 22 , response.type		);
 				if (!signedin) { // only do this if wasn't prev logged in
-					Hooks.run('XPO.sessionchange', response.XPO.miftaah);
-					webapp.itlaa3( xlate('XPO.loggedin') );
-					pager.intaxab('XPO.main', 1);
+					Hooks.run('sessionchange', response.key);
+					webapp.itlaa3( xlate('loggedin') );
+					pager.intaxab('main', 1);
 				}
+			}
+		});
+
+		var active_sessions_list;
+		Settings.adaaf('Sessions', 0, function () {
+			open_list_sheet('Sessions', function (l) {
+				active_sessions_list = l;
+				Network.get('sessions', 'active', 1);
+			});
+		}, 'iconsettings');
+		
+		Network.response.get('sessions', 'active', function (response) {
+			if (active_sessions_list && response && response.names) {
+				active_sessions_list.title(response.names.length+' active sessions');
+				response.names.forEach(function (o) {
+					active_sessions_list.set({
+						title: o
+					});
+				});
 			}
 		});
 		
 		// TODO handle session changes (you're not logged in...)
-		settings.adaaf('XPO.signout', 0, function () {
-			Hooks.run('XPO.dialog', {
-				m: 'XPO.signoutconfirm',
+		settings.adaaf('signout', 0, function () {
+			Hooks.run('dialog', {
+				m: 'signoutconfirm',
 				c: function () {
 					sessions.signout();
 				},
 			});
 		});
-		var m = view.mfateeh('XPO.signup');
-		var usnmfld = m.XPO.username;
+		var m = view.mfateeh('signup');
+		var usnmfld = m.username;
 		usnmfld.onkeyup = function () {
-			var user = nazzaf(usnmfld.XPO.value);
+			var user = generate_alias(usnmfld.value);
 			if (usernamevalid(user)) {
 				var cached = usnmavlble['_'+user];
 				if (cached === undefined)
-				$.taxeer('XPO.usernametempcheck', function () {
-					if (m.XPO.aqdaam.dataset.XPO.currentqadam == '0') {
+				$.taxeer('usernametempcheck', function () {
+					if (m.aqdaam.dataset.currentqadam == '0') {
 						sessions.usernameexists( user, 1 );
 					}
 				}, 1000);
@@ -525,26 +532,28 @@ var sessions,
 			}
 		};
 	});
-	Hooks.set('XPO.viewready', function (args) {
-		if (args.XPO.name == 'XPO.sessions') {
+	Hooks.set('viewready', function (args) {
+		if (args.name == 'sessions') {
 		}
-		if (args.XPO.name == 'XPO.signin') {
-			webapp.header(xlate('XPO.signin'));
-			mfateeh = view.mfateeh('XPO.signin');
-			if (mfateeh.XPO.aqdaam.dataset.XPO.currentqadam === undefined)
-				mfateeh.XPO.aqdaam.dataset.XPO.currentqadam = 0;
-			sessions.jaddad( mfateeh.XPO.aqdaam );
+		if (args.name == 'signin') {
+			webapp.header(xlate('signin'));
+			mfateeh = view.mfateeh('signin');
+			if (mfateeh.aqdaam.dataset.currentqadam === undefined)
+				mfateeh.aqdaam.dataset.currentqadam = 0;
+			sessions.jaddad( mfateeh.aqdaam );
 			sessions.getcaptcha();
-			smartfocus( mfateeh.XPO.aqdaam );
+			smartfocus( mfateeh.aqdaam );
+			password_visibility( getattribute(mfateeh.password, 'type') == 'text' );
 		}
-		if (args.XPO.name == 'XPO.signup') {
-			webapp.header(xlate('XPO.signup'));
-			mfateeh = view.mfateeh('XPO.signup');
-			if (mfateeh.XPO.aqdaam.dataset.XPO.currentqadam === undefined)
-				mfateeh.XPO.aqdaam.dataset.XPO.currentqadam = 0;
-			sessions.jaddad( mfateeh.XPO.aqdaam );
+		if (args.name == 'signup') {
+			webapp.header(xlate('signup'));
+			mfateeh = view.mfateeh('signup');
+			if (mfateeh.aqdaam.dataset.currentqadam === undefined)
+				mfateeh.aqdaam.dataset.currentqadam = 0;
+			sessions.jaddad( mfateeh.aqdaam );
 			sessions.getcaptcha();
-			smartfocus( mfateeh.XPO.aqdaam );
+			smartfocus( mfateeh.aqdaam );
+			password_visibility( getattribute(mfateeh.password, 'type') == 'text' );
 		}
 	});
 })();

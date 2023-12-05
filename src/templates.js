@@ -159,7 +159,10 @@ var templates, namaavij;
 		 * */
 		get: function (element, parent, before, id) {
 			if (isstr(element)) element = index[element];
-			if (!(element instanceof HTMLElement)) return false;
+			if (!(element instanceof HTMLElement)) {
+				$.log.e( 'templates.get element not found', arguments );
+				return false;
+			}
 			
 			var clone, template;
 			if (id) {

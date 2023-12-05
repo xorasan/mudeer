@@ -217,7 +217,7 @@ var qasas;
 		},
 	};
 
-	maxzan.ixtalaq('XPO.qasas', 0, {
+	Offline.create('XPO.qasas', 0, {
 		taxeer: -1, // never axav from xaadim, xaadim uses nashar for that
 		mfateeh: ['XPO.sinf'],
 	});

@@ -128,9 +128,9 @@ var do_config = function (args) {
 	{
 		if (args.keys.kind === 'client') {
 			cache.src.push(
-				'reset', 'menu', 'profiles', 'webapp', 'softkeys', 'themes', 'sheet',
+				'reset', 'menu', 'webapp', 'softkeys', 'themes', 'sheet',
 				'preferences', 'translate', 'time', 'dialog', 'backstack', 'list',
-				'templates', 'headings', 'helpers', 'offline', 'network', 'head',
+				'templates', 'headings', 'helpers', 'network', 'head',
 				'settings', 'activity', 'view'
 			);
 			cache.include.push(

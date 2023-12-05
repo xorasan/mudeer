@@ -279,7 +279,7 @@ var anbaa;
 		},
 	};
 
-	maxzan.ixtalaq('XPO.anbaa', '', {
+	Offline.create('XPO.anbaa', '', {
 		mfateeh: ['XPO.qissah'],
 	});
 

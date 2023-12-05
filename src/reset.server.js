@@ -5,4 +5,7 @@ var parsestring = function (v, m) { // forces v to be a string, maximum
 	else v = '';
 	if (isnum(m)) v = v.substr(0, m);
 	return v;
+},
+get_time_now = function () {
+	return new Date().getTime();
 };
