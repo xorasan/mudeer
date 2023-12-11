@@ -65,7 +65,7 @@
 	border-bottom	0 !important
 [data-selected].nabaitem
 	background		transparent !important
-[data-rakkaz].list [data-selected].nabaitem .tag
+[data-focussed].list [data-selected].nabaitem .tag
 	border-color	@textxd
 	color			@textl
 	box-shadow		0 0 35px 10px @secondary

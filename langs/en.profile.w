@@ -1,3 +1,4 @@
+profile			Profile
 name			User Name
 displayname		Display Name
 shape			Appearance, Accessories, Clothes...

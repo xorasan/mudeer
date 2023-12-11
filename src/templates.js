@@ -13,11 +13,11 @@ var templates, namaavij;
 		keys: function (element) {
 			if (!(element instanceof HTMLElement)) return;
 			var keys = {};
-			var otherviews = element.querySelectorAll('[data-XPO.id]');
+			var otherviews = element.querySelectorAll('[data-id]');
 			for (var i in otherviews) {
 				if ( otherviews.hasOwnProperty(i) ) {
 					if (otherviews[i].dataset)
-						keys[ otherviews[i].dataset.XPO.id ] = otherviews[i];
+						keys[ otherviews[i].dataset.id ] = otherviews[i];
 				}
 			}
 			return keys;
@@ -29,14 +29,14 @@ var templates, namaavij;
 			if (o.id) clone.id = o.id;
 			if (o.classes) clone.className = o.classes;
 
-			if (o.status == 1) clone.dataset.XPO.selected = 1, clone.disabled = 0;
-			else if (o.status == 2) clone.disabled = 1, delete clone.dataset.XPO.selected;
-			else clone.disabled = 0, delete clone.dataset.XPO.selected;
+			if (o.status == 1) clone.dataset.selected = 1, clone.disabled = 0;
+			else if (o.status == 2) clone.disabled = 1, delete clone.dataset.selected;
+			else clone.disabled = 0, delete clone.dataset.selected;
 
-			if (o.XPO.data)
-			for (var i in o.XPO.data) {
-				if (o.XPO.data[i] !== undefined)
-					clone.dataset[i] = o.XPO.data[i];
+			if (o.data)
+			for (var i in o.data) {
+				if (o.data[i] !== undefined)
+					clone.dataset[i] = o.data[i];
 				else
 					delete clone.dataset[i];
 			}
@@ -48,17 +48,17 @@ var templates, namaavij;
 				 * cleanup previous mess from i18n
 				 * */
 				if (isundef(o[i+'$t'])) {
-					if (keys[i].dataset.XPO.i18n) {
+					if (keys[i].dataset.i18n) {
 						innertext(keys[i], '');
-						delete keys[i].dataset.XPO.i18n;
+						delete keys[i].dataset.i18n;
 					}
 				}
 
 				if ( !isundef(o[i]) || !isundef(o[i+'$h']) || !isundef(o[i+'$t']) ) {
-					if (o[i] == 'XPO.ixtaf') {
+					if (o[i] == 'ixtaf') {
 						keys[i].hidden = 1;
 					} else
-					if (o[i] == 'XPO.izhar') {
+					if (o[i] == 'izhar') {
 						keys[i].hidden = 0;
 					} else
 					if (keys[i] instanceof HTMLInputElement) {
@@ -75,29 +75,29 @@ var templates, namaavij;
 							keys[i].hidden = 1;
 						}
 					} else
-					if ( ['XPO.titlehours', 'XPO.titledays', 'XPO.titletime',
-							'XPO.time', 'XPO.timeshow', 'XPO.days', 'XPO.waqt']
-						.includes(i) ) { // dataset.XPO.time...
+					if ( ['titlehours', 'titledays', 'titletime',
+							'time', 'timeshow', 'days', 'waqt']
+						.includes(i) ) { // dataset.time...
 						if (o[i] !== undefined) {
-							keys[i].dataset.XPO.time = o[i];
+							keys[i].dataset.time = o[i];
 						}
 						// is this a deadline
-						if (o.XPO.deadline)
-							keys[i].dataset.XPO.deadline = 1;
+						if (o.deadline)
+							keys[i].dataset.deadline = 1;
 						else
-							delete keys[i].dataset.XPO.deadline;
+							delete keys[i].dataset.deadline;
 					} else // improve how this is handled
-					if (['XPO.titlei18n', 'XPO.bodyi18n'].includes(i)) {
+					if (['titlei18n', 'bodyi18n'].includes(i)) {
 						if (o[i]) {
 							keys[i].hidden = 0;
-							keys[i].dataset.XPO.i18n = o[i];
+							keys[i].dataset.i18n = o[i];
 						} else {
 							keys[i].hidden = 1;
-							delete keys[i].dataset.XPO.i18n;
+							delete keys[i].dataset.i18n;
 							keys[i].innerHTML = '';
 						}
 					} else // improve how this is handled
-					if (['XPO.titlehtml', 'XPO.bodyhtml', 'XPO.bodyshowhtml']
+					if (['titlehtml', 'bodyhtml', 'bodyshowhtml']
 						.includes(i)) { // raw HTML mode
 						if (o[i]) {
 							keys[i].hidden = 0;
@@ -107,13 +107,13 @@ var templates, namaavij;
 							keys[i].innerHTML = '';
 						}
 					} else
-					if (['XPO.icon', 'XPO.eqonah'].includes(i)) { // create SVG inside or img if src = /...
+					if (['icon', 'eqonah'].includes(i)) { // create SVG inside or img if src = /...
 						if (typeof o[i] === 'string' && o[i].length) {
 							keys[i].hidden = 0;
 							if (o[i].startsWith('/')) {
 								innerhtml(keys[i], '<img src="'+o[i]+'" />');
 							} else {
-								var e = XPO.icons.querySelector('#'+o[i]);
+								var e = icons.querySelector('#'+o[i]);
 								if (e)
 									keys[i].innerHTML	= '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
 							}
@@ -129,7 +129,7 @@ var templates, namaavij;
 						if (!isundef(html)) {
 							innerhtml(keys[i], html);
 						} else if (!isundef(trjm)) {
-							keys[i].dataset.XPO.i18n = trjm;
+							keys[i].dataset.i18n = trjm;
 						} else {
 							innertext(keys[i], o[i]);
 						}
@@ -137,7 +137,7 @@ var templates, namaavij;
 				}
 			}
 
-			Hooks.rununtilconsumed('XPO.templateset', [clone, o, keys, template]);
+			Hooks.rununtilconsumed('templateset', [clone, o, keys, template]);
 			
 			// TODO these need to be moved back to their own mods under a hook
 			translate && translate.update(clone.parentElement);
@@ -173,8 +173,8 @@ var templates, namaavij;
 
 			if (!clone)
 				clone = element.cloneNode(true),
-				template = clone.dataset.XPO.template,
-				delete clone.dataset.XPO.template,
+				template = clone.dataset.template,
+				delete clone.dataset.template,
 				clone.hidden = 0;
 
 			if (parent) {
@@ -185,7 +185,7 @@ var templates, namaavij;
 				} else
 					parent.appendChild(clone);
 				
-				Hooks.rununtilconsumed('XPO.widgets', parent);
+				Hooks.rununtilconsumed('widgets', parent);
 
 				return function (o) {
 					return templates.set(clone, o, template);
@@ -206,8 +206,8 @@ var templates, namaavij;
 			var clone, template;
 
 			clone = replacement.cloneNode(true),
-			template = clone.dataset.XPO.template,
-			delete clone.dataset.XPO.template,
+			template = clone.dataset.template,
+			delete clone.dataset.template,
 			clone.hidden = 0;
 
 			element.replaceWith(clone);
@@ -220,11 +220,11 @@ var templates, namaavij;
 		 * indexes any htm elements marked with [template=<name>]
 		 * */
 		index: function (parent) {
-			var elements = (parent||document.body).querySelectorAll('[data-XPO.template]');
+			var elements = (parent||document.body).querySelectorAll('[data-template]');
 			for (var i in elements) {
-				if ( elements.hasOwnProperty(i) && elements[i].dataset.XPO.template ) {
+				if ( elements.hasOwnProperty(i) && elements[i].dataset.template ) {
 					elements[i].hidden = 1;
-					index[ elements[i].dataset.XPO.template ] = elements[i];
+					index[ elements[i].dataset.template ] = elements[i];
 				}
 			}
 			return index;

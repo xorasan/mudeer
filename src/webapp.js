@@ -1,9 +1,8 @@
-//+ textsize dimmer runview view views icons exit visible lavaazim header
-//+ isdimmed status_bar_padding sahhar nawwam
 var Webapp, webapp, appname = 'APPNAME' || '',
 	// to avoid missing module errors
 	Offline = Offline || 0,
 	pager = pager || 0,
+	Pager = Pager || 0,
 	checkbox = checkbox || 0,
 	preferences = preferences || 0,
 	translate = translate || 0,
@@ -476,6 +475,26 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 		tallheaderui.style.opacity = 1 - percent;
 		tallheaderui.style.paddingTop = (12 * (1-percent))+'vh';
 	}
+
+	var home_views = ['main'];
+	Webapp.get_home_views = function () {
+		return home_views.concat([]);
+	};
+	Webapp.add_home_view = function (name) {
+		if (isarr(name)) {
+			name.forEach(function (o) {
+				Webapp.add_home_view(o)
+			});
+		} else if (!home_views.includes(name)) {
+			home_views.push(name);
+		}
+	};
+	Webapp.remove_home_view = function (name) {
+		home_views.splice( home_views.indexOf(name), 1 );
+	};
+	Webapp.is_at_home = function () {
+		return backstack.darajah === 0 && view.is_active( home_views );
+	};
 
 	webapp.ask_on_exit = webapp.bixraaj;
 

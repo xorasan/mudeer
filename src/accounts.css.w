@@ -2,7 +2,7 @@
 	border				2px solid @secondary
 [data-baidaa].profileitem .inta
 	display				inline-block !important
-[data-rakkaz] [data-selected].profileitem
+[data-focussed] [data-selected].profileitem
 	border-style		solid
 	border-color		@accent
 [data-selected].profileitem

@@ -271,22 +271,21 @@ var themes;
 		}, 'iconbrightness7');
 	});
 	Hooks.set('viewready', function (args) {
+		// TODO replace these everywhere with longer variables -_-
 		K = softkeys.K, // key names
 		P = softkeys.P; // presets
 
-		switch (args.name) {
-			case 'main':
-				softkeys.add({ n: 'Theme',
-					k: 'i',
-					ctrl: 1,
-					alt: 1,
-					i: 'icontheme',
-					c: function (k, e) {
-						themes.toggle();
-						e && e.preventDefault();
-					}
-				});
-				break;
+		if (Webapp.is_at_home()) {
+			softkeys.add({ n: 'Theme',
+				k: 'i',
+				ctrl: 1,
+				alt: 1,
+				i: 'icontheme',
+				c: function (k, e) {
+					themes.toggle();
+					e && e.preventDefault();
+				}
+			});
 		}
 	});
 })();

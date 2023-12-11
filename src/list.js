@@ -4,12 +4,6 @@
  * 
  * the dom list set/pop functions also mutate the adapter
  * */
-//+ first last message up down select press onpress popall idprefix adapter
-//+ beforepop beforeset uponend uponstart uponpastend uponpaststart selected
-//+ before gridnum hidetext listitem _listitem uponclick id2num mufarraq id_dom
-//+ bahac uponbahac rakkaz uponnavi uponrakkaz freeflow _muntahaabox muntahaa
-//+ _muntahaa mowdoo3 _katabmowdoo3 murakkaz baidaa eawwad ixtaf izhar afterset
-//+ mu3allaq ba3dihi namoovaj
 var List, list;
 ;(function(){
 	'use strict';
@@ -97,11 +91,11 @@ var List, list;
 		uponrakkaz: function (v, active) { // active = visible & view is active
 			if (v && active) softkeys.list.basic(this);
 		},
-		rakkaz: function (v, active) {
+		rakkaz: function (v, active) { // deprecated, use set_focus
 			var yes;
 			this.murakkaz = !!v;
-			if (v && !this.element.dataset.rakkaz) this.element.dataset.rakkaz = 1, yes = 1;
-			else if (!v && this.element.dataset.rakkaz) delete this.element.dataset.rakkaz, yes = 1;
+			if (v && !this.element.dataset.focussed) this.element.dataset.focussed = 1, yes = 1;
+			else if (!v && this.element.dataset.focussed) delete this.element.dataset.focussed, yes = 1;
 			(yes || active) && this.uponrakkaz && this.uponrakkaz(v, active);
 		},
 		/* TODO
@@ -249,7 +243,7 @@ var List, list;
 			}
 			return this;
 		},
-		baidaa: function (id, multiple) { // with multiple it also toggles
+		baidaa: function (id, multiple) { // with multiple it also toggles, depr, use highlight instead
 			id = id === undefined ? this.selected : id;
 			var items = this.keys.items.children, item;
 			for (var i in items) {
@@ -292,6 +286,9 @@ var List, list;
 			}
 			
 			return this;
+		},
+		select_by_uid: function (id, noscroll, silent, nofocus) {
+			return this.select(this.id2num(id), noscroll, silent, nofocus);
 		},
 		intaxabscroll: function (selected) { // select_scroll TODO rename
 			if (!this._scroll_on_focus) return;
@@ -450,7 +447,7 @@ var List, list;
 					var item = LV.adapter.get( o.uid );
 					if (item) {
 						LV.uponclick &&
-						LV.uponclick( item, e, parseint( LV.id2num(o.uid) ) );
+						LV.uponclick( item, e, LV.id2num(o.uid) );
 					}
 				};
 			}
@@ -560,7 +557,7 @@ var List, list;
 			if (element) {
 				var item = this.adapter.get( element.dataset.uid );
 				if (item) {
-					(this.element.dataset.rakkaz || force) &&
+					(this.element.dataset.focussed || force) &&
 					this.onpress && this.onpress( item, key, this.selected );
 				}
 			}
@@ -663,6 +660,10 @@ var List, list;
 			return LV;
 		},
 	};
+	
+	proto.set_focus = proto.rakkaz;
+	proto.highlight = proto.baidaa;
+	
 	List = list = function (element) { // TODO deprecate list
 		var LV = Object.create(proto);
 		element.dataset.focus = 'list';
@@ -690,7 +691,7 @@ var List, list;
 			 * */
 			LV.beforepress && LV.beforepress(i, e, uid);
 			LV.intaxabsaamitan( uid ); // select without trig event
-			var yes = LV.selected == uid && LV.element.dataset.rakkaz == 1;
+			var yes = LV.selected == uid && LV.element.dataset.focussed == 1;
 			LV.selected = uid;
 			LV.rakkaz(1, 1);
 			
@@ -708,3 +709,5 @@ var List, list;
 		return LV;
 	};
 })();
+
+

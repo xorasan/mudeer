@@ -3,7 +3,7 @@ var profilelist;
 ;(function(){
 	'use strict';
 
-	var open_keys, maxba = {};
+	var open_keys, maxba = {}, module_name = 'profile';
 	/* WHY since most profile text props have almost the same dialog logic
 	 * title, message, max, ..multiline
 	 */
@@ -22,7 +22,7 @@ var profilelist;
 			multiline: details[3],
 			c: function (k) {
 				item.tafseel = k;
-				Offline.add('profile', {
+				Offline.add(module_name, {
 					uid:		item.uid,
 					value:		k,
 					pending:	1,
@@ -60,15 +60,21 @@ var profilelist;
 		},
 	};
 	
-	Offline.create('profile', 0, {
+	Offline.create(module_name, 0, {
 		delay: -1, // never get from server, server uses broadcast for that
 		keyvalue: 1
 	});
 	
 	Hooks.set('ready', function () {
-		var dom_keys = view.dom_keys('profile');
+		if (get_global_object().Sidebar) { Sidebar.set({
+			uid: module_name,
+			title: translate( module_name ),
+			icon: 'iconperson',
+		}); }
 
-		profilelist = List( dom_keys.list ).idprefix('profile').listitem('profilekatab');
+		var dom_keys = view.dom_keys(module_name);
+
+		profilelist = List( dom_keys.list ).idprefix(module_name).listitem('profilekatab');
 		
 		profile.update(); // to maintain order
 
@@ -77,31 +83,31 @@ var profilelist;
 				edit_text_prop_dialog(item);
 			}
 		};
-		Network.intercept('profile', function (finish) {
+		Network.intercept(module_name, function (finish) {
 			/* receive profile updates when signed in
 			 * like with multiple sessions, if u make changes on another client
 			 * this one should receive those changes
 			 */
 			finish( sessions.signedin() ? 1 : undefined );
 		});
-		Offline.response.get('profile', function (response) {
+		Offline.response.get(module_name, function (response) {
 			maxba.profile = response;
 			profile.update();
 //			profilelist.select();
 		});
 
-//		$.taxeer('profile', function () { pager.intaxab('profile', 1); }, 500);
+//		$.taxeer(module_name, function () { pager.intaxab(module_name, 1); }, 500);
 	});
 	Hooks.set('viewready', function (args) {
-		if (args.name == 'profile') {
+		if (args.name == module_name) {
 			Webapp.header( ['Profile', 0, 'iconperson'] );
 			softkeys.list.basic(profilelist);
 			profilelist.select();
-			Offline.get('profile', 0, 0, Time.now());
+			Offline.get(module_name, 0, 0, Time.now());
 		}
 	});
 	Hooks.set('restore', function (args) {
-		if (view.is_active('profile') && backstack.darajah === 1)
+		if (view.is_active(module_name) && backstack.darajah === 1)
 			innertext(tafawwaq, '');
 	});
 	

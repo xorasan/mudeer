@@ -61,6 +61,9 @@ var Settings, settings, currentad;
 	var settingslist, keys;
 	
 	Settings = settings = {
+		get_dom_keys: function () {
+			return keys;
+		},
 		adaaf: function (name, getvalue, onpress, icon) { // add
 			settingsitems.push([name, getvalue, onpress, icon]);
 			settings.jaddad(settingsitems.length-1);
@@ -96,7 +99,8 @@ var Settings, settings, currentad;
 	Hooks.set('ready', function () {
 		if (get_global_object().Sidebar) { Sidebar.set({
 			uid: module_name,
-			title: 'Settings',
+			title: translate( module_name ),
+			icon: 'iconsettings',
 		}); }
 
 		keys = view.mfateeh(module_name);
@@ -118,90 +122,49 @@ var Settings, settings, currentad;
 			}
 		};
 
-		if (PRODUCTION && 'getKaiAd' in window)
-		getKaiAd({
-			publisher: '7e2cfabf-ef5c-46eb-8e57-c20f3d6a1171',
-			//slot: 'about-app', // optional
-			
-			test: PRODUCTION ? 0 : 1,
-			
-			timeout: 60*1000,
-			
-			h: 48,
-			w: 240,
-			// Max supported size is 240x264
-
-			// container is required for responsive ads
-			container: keys.ad,
-			onerror: function (e) { $.log.e(e); },
-			onready: function (ad) {
-				currentad = ad;
-
-				// Ad is ready to be displayed
-				// calling 'display' will display the ad
-				ad.call('display', {
-					// In KaiOS the app developer is responsible
-					// for user navigation, and can provide
-					// navigational className and/or a tabindex
-					//tabindex: 0,
-
-					// if the application is using
-					// a classname to navigate
-					// this classname will be applied
-					// to the container
-					//navClass: 'items',
-
-					// display style will be applied
-					// to the container block or inline-block
-					//display: 'block',
-				});
-			}
-		});
 	});
 	Hooks.set('viewready', function (args) {
-		switch (args.name) {
-			case 'main':
-				softkeys.add({ n: 'Settings',
-					ctrl: 1,
-					alt: 1,
-					k: 'p',
-					i: 'iconsettings', // TODO icons module should generate variables like icon_settings
-					c: function () {
-						Hooks.run('view', module_name);
-					}
-				});
-				break;
-			case module_name:
-				
-//				if (pager) {
-//					pager.intaxab(module_name, 1);
-//					webapp.header();
-//				} else { // since pager already shows context
-					webapp.header([[module_name], 0, 'iconsettings']);
-//				}
-				
-				softkeys.list.basic(settingslist);
-				softkeys.set(K.en, function () {
-					settingslist.press(K.en);
-				});
-				softkeys.set(K.bs, function () {
-					backstack.back();
-				});
+		if (Webapp.is_at_home()) {
+			softkeys.add({ n: 'Settings',
+				ctrl: 1,
+				alt: 1,
+				k: 'p',
+				i: 'iconsettings', // TODO icons module should generate variables like icon_settings
+				c: function () {
+					Hooks.run('view', module_name);
+				}
+			});
+		}
+		if (args.name == module_name) {
+			if (get_global_object().Sidebar) Sidebar.choose(module_name);
 
-				if (PRODUCTION && 'getKaiAd' in window)
-				softkeys.set('0', function () {
-					if (currentad) currentad.call && currentad.call('click');
-				}, translate('openad'), false);
+//			if (pager) {
+//				pager.intaxab(module_name, 1);
+//				webapp.header();
+//			} else { // since pager already shows context
+				webapp.header([[module_name], 0, 'iconsettings']);
+//			}
+			
+			softkeys.list.basic(settingslist);
+			softkeys.set(K.en, function () {
+				settingslist.press(K.en);
+			});
+			softkeys.set(K.bs, function () {
+				backstack.back();
+			});
 
-				/* TEST
-				 * this can be automated by giving a function to view.?set?
-				 * 
-				 * view should autocall this function on restore
-				 * it can find functions by looping
-				 * */
-				// restore scroll position
-				settingslist.select(undefined, 0);
-				break;
+			/* TEST
+			 * this can be automated by giving a function to view.?set?
+			 * 
+			 * view should autocall this function on restore
+			 * it can find functions by looping
+			 * */
+			// restore scroll position
+			settingslist.select(undefined, 0);
+			settingslist.set_focus(1, 1);
 		}
 	});
+
 })();
+
+

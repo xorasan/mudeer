@@ -1,4 +1,4 @@
-[data-rakkaz] [data-selected].haajahitem
+[data-focussed] [data-selected].haajahitem
 	border-style		solid
 	border-color		@accent
 [data-selected].haajahitem
@@ -9,7 +9,7 @@
 	background			@secondaryd
 [data-baidaa].qareebitem .inta
 	display				inline-block !important
-[data-rakkaz] [data-selected].qareebitem
+[data-focussed] [data-selected].qareebitem
 	border-style		solid
 	border-color		@accent
 [data-selected].qareebitem

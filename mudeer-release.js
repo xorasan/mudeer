@@ -64,7 +64,7 @@ var do_release = function (args) {
 	
 	var ugl = false, min = false, cmp = false, vrb = false, pro = false, dbg = false;
 	if (args.keys.pro || args.keys.p) ugl = true, min = true, cmp = true, pro = true;
-	if (args.keys.vrb || args.keys.v) vrb = args.keys.vrb || args.keys.v || false;
+	if (args.keys.vrb || args.keys.v) vrb = args.keys.vrb || args.keys.v || releasew.verbose || false;
 	if (args.keys.ugl || args.keys.u) ugl = true;
 	if (args.keys.cmp || args.keys.c) cmp = true;
 	if (args.keys.min || args.keys.m) min = true;
@@ -103,7 +103,7 @@ var do_release = function (args) {
 
 		combined_deps.forEach(function (o) {
 			if (previous_deps.includes(o)) {
-				echo( '   '+o+' ^dim^already copied, skipping~~ ' );
+				if (vrb) echo( '   '+o+' ^dim^already copied, skipping~~ ' );
 			} else {
 				echo( '   '+o+' ^dim^copying~~' );
 				Files.copy_recursive( $.path+'/deps/'+o, target_path+'/deps/'+o );

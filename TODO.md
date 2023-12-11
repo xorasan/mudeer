@@ -33,6 +33,10 @@ This is an incomplete progress list of features & known bugs.
 		* [x] should always be generated dynamically
 		* [x] save changes on server
 		* [ ] upload icon
+	
+	* [ ] Home
+		* [ ] `Webapp.is_at_home` checks if one of the views marked as home is active
+		* [ ] `Webapp.add_home_view`, `Webapp.remove_home_view`, `Webapp.get_home_views`
 
 * [ ] Softkeys
 	* [ ] move `Webapp.status` above the back button on desktop

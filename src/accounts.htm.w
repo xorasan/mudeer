@@ -1,5 +1,14 @@
 [view=accounts]
 	[id=list]
+[template=account_item] .listitem .relative
+	[id=name]
+	[id=displayname] .big
+	.flex
+		b 'created'
+		[id=created] .dim
+	.flex
+		b 'updated'
+		[id=updated] .dim
 [template=profileitem] .profileitem .relative
 	canvas [id=photo] .photo
 	.flex .pad .details .dim

@@ -34,6 +34,8 @@
 .list .item, .list .listitem
 	position		relative
 	border-bottom	1px solid @secondary
+.list .item:hover, .list .listitem:hover
+	background		@secondaryd
 [data-transparency] .list .item, [data-transparency] .list .listitem
 	border-bottom	1px solid transparent
 .list .item[data-baidaa] .baidaa, .list .listitem[data-baidaa] .baidaa
@@ -45,7 +47,7 @@
 	font-weight		bold
 .list .item[data-selected], .list .listitem[data-selected]
 	border-color	@textxd
-[data-rakkaz].list .item[data-selected], [data-rakkaz].list .listitem[data-selected]
+[data-focussed].list .item[data-selected], [data-focussed].list .listitem[data-selected]
 	background		linear-gradient(45deg, @primaryl -110%, @secondaryd 220%)
 	border-color	@accent
 [dir=rtl] .list .item[data-selected], [dir=rtl] .list .listitem[data-selected]
@@ -112,18 +114,18 @@
 	color			@redl !important
 	font-weight		bold
 
-//[data-rakkaz].list .item[data-selected] svg, [data-rakkaz].list .listitem[data-selected] svg
+//[data-focussed].list .item[data-selected] svg, [data-focussed].list .listitem[data-selected] svg
 //	fill			@primaryl
 
 .list .hide, .list .ixtaf
 	display			none
-[data-rakkaz].list [data-selected] .hide, [data-rakkaz].list [data-selected] .ixtaf
+[data-focussed].list [data-selected] .hide, [data-focussed].list [data-selected] .ixtaf
 	display			block
-[data-rakkaz].list [data-selected] .inline.hide, [data-rakkaz].list [data-selected] .inline.ixtaf
+[data-focussed].list [data-selected] .inline.hide, [data-focussed].list [data-selected] .inline.ixtaf
 	display			inline-block
-[data-rakkaz].list [data-selected] .flex.hide, [data-rakkaz].list [data-selected] .flex.ixtaf
+[data-focussed].list [data-selected] .flex.hide, [data-focussed].list [data-selected] .flex.ixtaf
 	display			flex
-[data-rakkaz].list [data-selected] .inlineflex.hide, [data-rakkaz].list [data-selected] .inlineflex.ixtaf
+[data-focussed].list [data-selected] .inlineflex.hide, [data-focussed].list [data-selected] .inlineflex.ixtaf
 	display			inline-flex
 
 .list [data-mufarraq]

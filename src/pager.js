@@ -1,6 +1,6 @@
 //+ jama3 mowjood muntaxab intaxab matn yameen shimaal ixtafasmaa izharasmaa
 //+ ixtaf izhar
-var pager;
+var Pager, pager;
 ;(function(){
 	var cn = pagermowjoodah.childNodes, zaahir = 1,
 		pagerasmaa = 1, settingsuid, saveto = 17;
@@ -9,7 +9,7 @@ var pager;
 		setcss(pagerui, 'height', pagermowjoodah.offsetHeight+'px');
 	};
 	
-	pager = {
+	Pager = pager = {
 		ixtaf: function () {
 			pagerui.hidden = 1;
 			delete document.body.dataset.pager;
@@ -117,6 +117,9 @@ var pager;
 			resize();
 		},
 	};
+	
+	Pager.choose = Pager.intaxab;
+	
 	Hooks.set('backstackview', function (args) {
 		if (pager.mowjood(backstack.states.view)) {
 			pager.intaxab(backstack.states.view);

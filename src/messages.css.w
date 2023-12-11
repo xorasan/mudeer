@@ -81,7 +81,7 @@
 	border-left		6px solid @accent
 [data-selected].messageitem
 	background		transparent !important
-[data-rakkaz].list [data-selected].messageitem .tag
+[data-focussed].list [data-selected].messageitem .tag
 	border-color	@textxd
 	color			@textl
 	box-shadow		0 0 35px 10px @secondary

@@ -6,7 +6,14 @@ var view;
 			return view.axav() === name;
 		},
 		is_active: function (name) {
-			return this.zaahir(name);
+			if (isarr(name)) {
+				for (var i = 0; i < name.length; ++i) {
+					if (this.zaahir(name[i])) return true;
+				}
+				return false;
+			} else {
+				return this.zaahir(name);
+			}
 		},
 		mfateeh: function (name) { // keys
 			var element = index[name];
