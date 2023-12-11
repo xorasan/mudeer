@@ -30,19 +30,20 @@ input.bare
 	z-index			3000
 	overflow		visible
 #itlaa3
-	top				70px
-	left			30px
+	top				45vh
+	left			20vw
+	right			20vw
 #itlaa3 .text
-	max-width		160px
-	padding			10px 15px
-	box-shadow		0 0 20px 0 @textd
-	border-radius	20px
+	padding			6px 10px
+	box-shadow		0 0 10px 0 @tertiary
+	border			1px solid @tertiaryl
+	border-radius	6px
 #taht3nsar .text
 	padding			5px
 	border-radius	5px
 	border			1px solid @tertiaryd
 #itlaa3 .text, #taht3nsar .text
-	background		@primary
+	background		@secondaryd
 	text-align		center
 //	margin			0 auto
 [data-transparency] #itlaa3 .text, [data-transparency] #taht3nsar .text

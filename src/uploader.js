@@ -92,7 +92,7 @@ RF3INTAHAA		= 90	;	// exited process
 				rawaa();
 			}
 		},
-		intaxab: function (file) {
+		intaxab: function (file) { // pick
 			markooz && markooz().blur();
 			if (raafi3.mulhaq) oninput(file);
 		},
@@ -101,7 +101,7 @@ RF3INTAHAA		= 90	;	// exited process
 	Uploader.stop	= Uploader.intahaa	;
 	Uploader.attach	= Uploader.iltahaq	;
 	Uploader.detach	= Uploader.infasal	;
-	Uploader.pick	= Uploader.pick		;
+	Uploader.pick	= Uploader.intaxab	;
 
 	Hooks.set('XPO.restore', function () { // called on backstack changes
 	});

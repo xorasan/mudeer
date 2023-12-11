@@ -7,7 +7,7 @@ var dialog;
 		cancel: 0,
 		onshow: 0,
 		hide: function () {
-			XPO.dialogui.hidden = 1;
+			dialogui.hidden = 1;
 			dialog.okay = 0;
 			dialog.cancel = 0;
 		},
@@ -17,42 +17,58 @@ var dialog;
 			// blur in case any prev input is focused, to allow esc
 			markooz() && markooz().blur();
 			
-			XPO.dialogui.hidden = 0;
-			var k			= templates.keys(XPO.dialogui)	,
-				max			= args.XPO.max		||	args.x	,
-				callback	= args.XPO.callback	||	args.c	,
-				message		= args.XPO.message	||	args.m	,
-				answer		= args.XPO.answer	||	args.a	,
-				question	= args.XPO.question	||	args.q	;
+			dialogui.hidden = 0;
+			var k			= templates.keys(dialogui)	,
+				max			= args.max		||	args.x	,
+				callback	= args.callback	||	args.c	,
+				message		= args.message	||	args.m	,
+				answer		= args.answer	||	args.a	,
+				question	= args.question	||	args.q	,
+				multiline	= args.multiline,
+				input_element;
+			
+			// clear previous data
+			k.input.value = '';
+			k.textarea.value = '';
+
+			if (multiline) {
+				ixtaf(k.input);
+				izhar(k.textarea);
+				input_element = k.textarea;
+			} else {
+				ixtaf(k.textarea);
+				izhar(k.input);
+				input_element = k.input;
+			}
 			
 			dialog.onshow && dialog.onshow(name);
 			
 			dialog.okay = function () {
-				var answer = k.XPO.input.value;
+				var answer = input_element.value;
 				if (max) answer = answer.slice(0, max);
 				callback && callback(answer);
 				document.activeElement && document.activeElement.blur();
-				Hooks.run('XPO.back');
+				Hooks.run('back');
 			};
 			dialog.cancel = function () {
 				document.activeElement && document.activeElement.blur();
-				Hooks.run('XPO.back');
+				Hooks.run('back');
 			};
 			
-			k.XPO.input.value = answer || '';
+			input_element.value = answer || '';
 			
-			attribute(k.XPO.input, 'max', max || 0);
+			attribute(input_element, 'max', max || 0);
 
 			if (question) {
-				k.XPO.input.hidden = 0;
-				k.XPO.input.focus();
+				input_element.hidden = 0;
+				input_element.focus();
 			} else {
-				k.XPO.input.hidden = 1;
+				input_element.hidden = 1;
 			}
-			innertext(k.XPO.message, '');
-			k.XPO.message.dataset.XPO.i18n = message || '';
+			innertext(k.message, '');
+			k.message.dataset.i18n = message || '';
 			
-			translate.update(XPO.dialogui);
+			translate.update(dialogui);
 		},
 	};
 

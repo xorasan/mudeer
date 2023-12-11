@@ -1,9 +1,8 @@
-//+ mfateeh dom_keys axad axav fahras ishtaghal zaahir is_active
 var view;
 ;(function(){
 	var index = {};
 	view = {
-		zaahir: function (name) {
+		zaahir: function (name) { // is_active, deprecated
 			return view.axav() === name;
 		},
 		is_active: function (name) {
@@ -15,16 +14,16 @@ var view;
 
 			return false;
 		},
-		ishtaghal: function (name) {
+		ishtaghal: function (name) { // run, deprecated
 			var level	= backstack.level			,
 				element	= view.axad(name)			,
 				keys	= templates.keys(element)	;
 
-			Hooks.run('XPO.viewready', {
-				XPO.name: name,
-				XPO.element: element,
-				XPO.keys: keys,
-				XPO.level: level,
+			Hooks.run('viewready', {
+				name: name,
+				element: element,
+				keys: keys,
+				level: level,
 			});
 		},
 		axav: function (name, onlyelement) { // get
@@ -53,14 +52,14 @@ var view;
 			view.axav(name, onlyelement);
 		},
 		fahras: function () { // index
-			var elements = document.body.querySelectorAll('[data-XPO.view]');
+			var elements = document.body.querySelectorAll('[data-view]');
 			for (var i in elements) {
-				if ( elements.hasOwnProperty(i) && elements[i].dataset.XPO.view ) {
+				if ( elements.hasOwnProperty(i) && elements[i].dataset.view ) {
 					// hide all views except main while indexing
-					if (elements[i].dataset.XPO.view !== 'XPO.main')
+					if (elements[i].dataset.view !== 'main')
 						elements[i].hidden = 1;
 
-					index[ elements[i].dataset.XPO.view ] = elements[i];
+					index[ elements[i].dataset.view ] = elements[i];
 				}
 			}
 			return index;
@@ -68,6 +67,7 @@ var view;
 	};
 	
 	view.get = view.axav;
+	view.run = view.ishtaghal;
 	view.dom_keys = view.mfateeh;
 
 })();

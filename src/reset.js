@@ -1,5 +1,8 @@
 // put global functions here available to both server and client
 var
+get_global_object = function () { // to check module prop in window.* or global.*
+	return window || {}; // TODO add global safely
+},
 generate_alias = function (o, l) { // this replaces helpers.alias database.alias wuqu3aat.alias
 	// this generates url friendly links for titles of say blog posts ...
 	o = o || '';

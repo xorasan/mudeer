@@ -1,4 +1,3 @@
-//+ nazzaf tsfeef
 var profile,
 	TAGMAX = 15,
 	ISMMUBEENMAX = 48,
@@ -54,9 +53,14 @@ Network.sync('profile', function (response) {
 	}
 //	lifestory	life story
 	if (isstr(value.lifestory)) {
-		response.sync('lifestory',
-			things.lifestory = profile.nazzaf(value.lifestory, HIKAAYAHMAX)
+		arr.push(
+			profile.value('lifestory',
+				things.lifestory = profile.nazzaf(value.lifestory, HIKAAYAHMAX)
+			)
 		);
+//		response.sync('lifestory',
+//			things.lifestory = profile.nazzaf(value.lifestory, HIKAAYAHMAX)
+//		);
 		tabdeel = 1;
 	}
 //	birthday		birthday
@@ -95,3 +99,5 @@ Network.sync('profile', function (response) {
 	}
 	else response.finish();
 });
+
+

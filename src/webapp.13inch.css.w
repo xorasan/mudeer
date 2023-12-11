@@ -3,7 +3,7 @@ html, body, svg text
 
 if min-height = 600px
 	html, body
-		padding			0px 5px 25vh 5px
+		padding			0px 5px 45vh 5px
 
 if min-width = 320px
 	#softkeysui .left
@@ -50,7 +50,7 @@ if min-width = 320px
 if min-width = 640px
 	body
 		max-width	640px
-		margin		0 auto !important
+		margin		0 auto
 	::-webkit-scrollbar
 		width						8px
 		height						8px

@@ -1,11 +1,7 @@
 //+ showhints press update saveto onnext onprev hfiz fasax nsee talaf actualpress
 //+ uponenter uponshiftenter autoheight baidaa
 /* TODO
-* add .alias to support linking secondary keysets to a shortcut entry
 * .row1 should be animated
-* move notifications above the back button on desktop
-  and they should have title desc icon
-  actions can be merged into the softkeys!!
 */
 /* FEATURES
 <element>.on_focus_prev() triggered when K.up is pressed on an element
@@ -46,8 +42,8 @@ var softkeys, K, P;
 	// loop up into parents as long as each parent has [focus=1] until [removable=1]
 	removableparent = function (element) {
 		var parent = element.parentElement;
-		if (parent.dataset.XPO.focus) {
-			if (parent.dataset.XPO.removable)
+		if (parent.dataset.focus) {
+			if (parent.dataset.removable)
 				return parent;
 			else // check parent's parent
 				return removableparent(parent);
@@ -68,39 +64,39 @@ var softkeys, K, P;
 			callback(key, e);
 		};
 		
-		o.XPO.name = args.name || args.n || '';
-		o.XPO.label = args[1] || args.label || args.l || '';
-		o.XPO.icon = args[2] || args.icon || args.i;
-		o.XPO.status = args[3] || args.status || args.s;
-		if (o.XPO.icon === false) {
-			o.XPO.name = k;
+		o.name = args.name || args.n || '';
+		o.label = args[1] || args.label || args.l || '';
+		o.icon = args[2] || args.icon || args.i;
+		o.status = args[3] || args.status || args.s;
+		if (o.icon === false) {
+			o.name = k;
 		}
 		
 		if (!isarr(args)) { // only .add API
-			o.XPO.key =   (args.ctrl ? 'ctrl ' : '')
+			o.key =   (args.ctrl ? 'ctrl ' : '')
 						+ (args.alt ? 'alt ' : '')
 						+ (args.shift ? 'shift ' : '')
 						+ (args.key || uid)
 						;
 		}
 
-		if ( k == K.sl	) classes = 'XPO.left'	;
-		if ( k == K.en	) classes = 'XPO.center';
-		if ( k == K.sr	) classes = 'XPO.right'	;
-		if ( k == '*'	) classes = 'XPO.star'	;
-		if ( k == '#'	) classes = 'XPO.hash'	;
+		if ( k == K.sl	) classes = 'left'	;
+		if ( k == K.en	) classes = 'center';
+		if ( k == K.sr	) classes = 'right'	;
+		if ( k == '*'	) classes = 'star'	;
+		if ( k == '#'	) classes = 'hash'	;
 
 		if ([K.sr, K.sl, K.en].includes(k)) {
-			parent = XPO.skmain;
+			parent = skmain;
 		} else {
-			parent = XPO.skhints;
+			parent = skhints;
 		}
-		o.id = 'XPO.sk'+k;
+		o.id = 'sk'+k;
 		o.classes = classes;
 
-		index[k] = templates.get('XPO.skbutton', parent, 0, o.id)(o);
+		index[k] = templates.get('skbutton', parent, 0, o.id)(o);
 		
-		XPO.skdots.hidden = totalvisible() ? 0 : 1;
+		skdots.hidden = totalvisible() ? 0 : 1;
 
 		resize();
 	},
@@ -118,9 +114,9 @@ var softkeys, K, P;
 	};
 	totalvisible = function () {
 		var total = 0;
-		for (var i in XPO.skhints.childNodes) {
-			if (XPO.skhints.childNodes.hasOwnProperty(i))
-				if (!XPO.skhints.childNodes[i].hidden) total++;
+		for (var i in skhints.childNodes) {
+			if (skhints.childNodes.hasOwnProperty(i))
+				if (!skhints.childNodes[i].hidden) total++;
 		}
 		return total;
 	};
@@ -130,16 +126,16 @@ var softkeys, K, P;
 	 * */
 	P.empty = function () {
 		M[K.sr] = [function () {
-			Hooks.run('XPO.back');
+			Hooks.run('back');
 			return 1;
-		}, 0, 'XPO.iconclose'];
+		}, 0, 'iconclose'];
 		M[K.bs] = [function () {
-			Hooks.run('XPO.minimize');
+			Hooks.run('minimize');
 		}];
 		M['#'] = [function () {
 			softkeys.showhints();
 			return 1;
-		}/*, '#', 'XPO.iconhelp'*/];
+		}/*, '#', 'iconhelp'*/];
 		softkeys.update();
 	},
 	
@@ -152,7 +148,7 @@ var softkeys, K, P;
 		clear: function () {
 			M = {};
 			softkeys.update();
-			backstack.set('XPO.softkeys', M);
+			backstack.set('softkeys', M);
 			return softkeys;
 		},
 		havaf: function (name) {
@@ -172,28 +168,28 @@ var softkeys, K, P;
 					talaf(name);
 				}
 				softkeys.update();
-				backstack.set('XPO.softkeys', M);
+				backstack.set('softkeys', M);
 			}
 			return softkeys;
 		},
 		update: function () {
-			XPO.skhints.innerHTML = '';
-			XPO.skmain.innerHTML = '';
+			skhints.innerHTML = '';
+			skmain.innerHTML = '';
 			// update labels, icons etc
 			if (M) for (var k in M) updatekey(k);
 		},
 		showhints: function () {
-			delete XPO.softkeysui.dataset.XPO.hidden;
-			setdata(XPO.softkeysui, 'XPO.shown', 1);
-			if (!XPO.skhelp.hidden) {
-				XPO.skhelp.hidden = 1;
+			delete softkeysui.dataset.hidden;
+			setdata(softkeysui, 'shown', 1);
+			if (!skhelp.hidden) {
+				skhelp.hidden = 1;
 				preferences.set(7, 1);
 			}
-//			XPO.skhints.hidden = 0;
-			$.taxeer('XPO.softkeyshints', function () {
-				popdata(XPO.softkeysui, 'XPO.shown');
-				XPO.softkeysui.dataset.XPO.hidden = 1;
-//				XPO.skhints.hidden = 1;
+//			skhints.hidden = 0;
+			$.taxeer('softkeyshints', function () {
+				popdata(softkeysui, 'shown');
+				softkeysui.dataset.hidden = 1;
+//				skhints.hidden = 1;
 			}, 2500);
 		},
 		/* remember one or more actions which you can recall later
@@ -243,7 +239,7 @@ var softkeys, K, P;
 					adaaf(name, callback, label, icon, status);
 				}
 				softkeys.update(name);
-				backstack.set('XPO.softkeys', M);
+				backstack.set('softkeys', M);
 			}
 			return this;
 		},
@@ -270,7 +266,7 @@ var softkeys, K, P;
 				M[ o.uid ] = o;
 				
 				updatekey(o.uid);
-				backstack.set('XPO.softkeys', M);
+				backstack.set('softkeys', M);
 			}
 			return this;
 		},
@@ -293,7 +289,7 @@ var softkeys, K, P;
 			softkeys.update();
 			
 			// save this in the current darajah of backstack
-			backstack.set('XPO.softkeys', M);
+			backstack.set('softkeys', M);
 		},
 		actualpress: function (k, e, longpress) {
 			var pd = function () { e && e.preventDefault() };
@@ -322,7 +318,7 @@ var softkeys, K, P;
 			k = k.toLowerCase();
 
 			// for compat on desktop
-			if (e && e.type && e.type == 'XPO.mousewheel') {
+			if (e && e.type && e.type == 'mousewheel') {
 				if (e.y <= -1) k = K.up;
 				if (e.y >=  1) k = K.dn;
 			}
@@ -368,7 +364,7 @@ var softkeys, K, P;
 			}
 			
 			if (a instanceof HTMLButtonElement) {
-				if (a.dataset.XPO.remover && k == K.en) {
+				if (a.dataset.remover && k == K.en) {
 					var parent = removableparent(a);
 					
 					// first try focusing prev, if not found, focus next
@@ -429,7 +425,7 @@ var softkeys, K, P;
 			}
 			else if (a) {
 				if ( is_navigable( a )
-					|| a.parentElement.dataset.XPO.focus ) {
+					|| a.parentElement.dataset.focus ) {
 					if (k == K.up || k == left_key) caught = focusprev(a), pd();
 					if (k == K.dn || k == right_key) caught = focusnext(a), pd();
 					if (k == K.en && a.onclick) a.onclick(), pd();
@@ -441,14 +437,14 @@ var softkeys, K, P;
 			 * */
 			if (editmode && !length) {
 				if (k == K.bs) {
-					if (a.dataset.XPO.removable)
+					if (a.dataset.removable)
 						caught = focusprev(a), a.remove(), pd();
 					else
-						/*Hooks.run('XPO.back'), webapp.blur(), */pd();
+						/*Hooks.run('back'), webapp.blur(), */pd();
 				}
 			}
 			
-			caught = caught || Hooks.rununtilconsumed('XPO.softkey', [k, e || {}, e && e.type, longpress]);
+			caught = caught || Hooks.rununtilconsumed('softkey', [k, e || {}, e && e.type, longpress]);
 			if (caught) return;
 
 			var mmm = M[kraw] || M[k];
@@ -489,11 +485,11 @@ var softkeys, K, P;
 			}
 
 			if (isundef(caught) || caught == 1) { // true|1|undef = yes; 0|false = no
-				var softkey_element = elementbyid( 'XPO.sk'+k );
+				var softkey_element = elementbyid( 'sk'+k );
 				if (softkey_element) {
-					setdata(softkey_element, 'XPO.hawm', 1);
-					$.taxeer('XPO.sk'+k, function () {
-						popdata(softkey_element, 'XPO.hawm');
+					setdata(softkey_element, 'hawm', 1);
+					$.taxeer('sk'+k, function () {
+						popdata(softkey_element, 'hawm');
 					}, 400);
 				}
 			}
@@ -526,10 +522,10 @@ var softkeys, K, P;
 		}
 	};
 	listener('resize', function () {
-		$.taxeer('XPO.resizesoftkeys', function () { resize(); }, 100);
+		$.taxeer('resizesoftkeys', function () { resize(); }, 100);
 	});
 	resize();
-	Hooks.set('XPO.contextmenu', function (e) {
+	Hooks.set('contextmenu', function (e) {
 		var a = document.activeElement;
 		// BUG idk why but this can't detect .altKey
 		if (a && (a instanceof HTMLInputElement
@@ -541,16 +537,16 @@ var softkeys, K, P;
 			return 1;
 		}
 	});
-	Hooks.set('XPO.ready', function () {
-		XPO.skhints.onclick =
-		XPO.skdots.onclick = function () {
+	Hooks.set('ready', function () {
+		skhints.onclick =
+		skdots.onclick = function () {
 			softkeys.showhints();
 		};
 	});
-	Hooks.set('XPO.mousewheel', function (e) {
+	Hooks.set('mousewheel', function (e) {
 		e && softkeys.press('', e, e.type);
 	});
-	Hooks.set('XPO.keyup', function (e) {
+	Hooks.set('keyup', function (e) {
 ////		$.log( 'keyup', lastkey, e.key.toLowerCase() );
 //
 //		if (repeatmode) {
@@ -560,11 +556,11 @@ var softkeys, K, P;
 //			e && softkeys.press(e.key, e, e.type, inlongpress);
 //		} else if (lastkey) {
 ////			$.log( 'short press' );
-//			$.taxeer('XPO.keyup', function () {
+//			$.taxeer('keyup', function () {
 //				e && softkeys.press(e.key, e, e.type, 0);
 //			}, 40);
 //		}
-//		$.taxeercancel('XPO.keydownlongpress');
+//		$.taxeercancel('keydownlongpress');
 //		inlongpress = 0;
 //		lastkey = 0;
 //		repeatmode = 0;
@@ -575,30 +571,30 @@ var softkeys, K, P;
 			if (len) {
 				var min = parseint(getattribute(a, 'min') || 0);
 				var max = parseint(getattribute(a, 'max') || 0);
-				if (min && len < min) a.dataset.XPO.under = 1, yes = 1;
-				else delete a.dataset.XPO.under;
-				if (max && len > max) a.dataset.XPO.over = 1, yes = 2;
-				else delete a.dataset.XPO.over;
+				if (min && len < min) a.dataset.under = 1, yes = 1;
+				else delete a.dataset.under;
+				if (max && len > max) a.dataset.over = 1, yes = 2;
+				else delete a.dataset.over;
 			} else {
-				delete a.dataset.XPO.under;
-				delete a.dataset.XPO.over;
+				delete a.dataset.under;
+				delete a.dataset.over;
 			}
 			
-			$.taxeer('XPO.softkeysminmax', function () {
+			$.taxeer('softkeysminmax', function () {
 				if (yes === 1) webapp.taht3nsar('-'+(min-len));
 				else if (yes === 2) webapp.taht3nsar(len+' / '+max+' +'+(len-max));
 				else webapp.taht3nsar(len);
 			}, 50);
 			
-			$.taxeer('XPO.softkeysautoheight', function () {
+			$.taxeer('softkeysautoheight', function () {
 				autoheight(a);
 			}, 100);
 		} else {
 		}
-		Hooks.rununtilconsumed('XPO.softkey', [e.key.toLowerCase(), e || {}, e && e.type, 0]);
+		Hooks.rununtilconsumed('softkey', [e.key.toLowerCase(), e || {}, e && e.type, 0]);
 		preventdefault(e);
 	});
-	Hooks.set('XPO.keydown', function (e) {
+	Hooks.set('keydown', function (e) {
 //		$.log( 'keydown', e.key, time.now() - lastkeytime );
 		if (time.now() - lastkeytime > 60 || lastkeytime === undefined || !PRODUCTION) {
 			// hook.softkey also first inside .press
@@ -618,39 +614,39 @@ var softkeys, K, P;
 //		if (repeatmode) {
 //			e && softkeys.press(e.key, e, e.type, 0);
 //		} else {
-//			$.taxeer('XPO.keydown', function () {
+//			$.taxeer('keydown', function () {
 //				lastkey = 0;
 ////				$.log( 'expired' );
 //			}, 200);
-//			$.taxeer('XPO.keydownlongpress', function () {
+//			$.taxeer('keydownlongpress', function () {
 ////				$.log( 'long press active' );
 //				inlongpress = e.key.toLowerCase();
 //			}, 400);
 //		}
 //		e && e.preventDefault();
 	});
-	Hooks.set('XPO.templateset', function (args) {
+	Hooks.set('templateset', function (args) {
 		var c = args[0],
 			o = args[1],
 			k = args[2],
 			t = args[3];
 		
-		if (t === 'XPO.skbutton') {
-			if (k.XPO.icon && !o.XPO.icon)
-				k.XPO.icon.remove();
+		if (t === 'skbutton') {
+			if (k.icon && !o.icon)
+				k.icon.remove();
 			
-			if (!o.XPO.label && !o.XPO.icon)
+			if (!o.label && !o.icon)
 				c.hidden = 1;
 //			return 1; // to let sk.touch run
 		}
 	});
-	Hooks.set('XPO.restore', function (args) {
-		var oldM = backstack.get('XPO.softkeys');
+	Hooks.set('restore', function (args) {
+		var oldM = backstack.get('softkeys');
 		if (oldM) {
 			M = Object.assign({}, oldM);
 			softkeys.update();
 		}
 	});
 
-	if (preferences.get(softkeys.saveto, 1)) XPO.skhelp.hidden = 1;
+	if (preferences.get(softkeys.saveto, 1)) skhelp.hidden = 1;
 })();

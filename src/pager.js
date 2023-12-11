@@ -2,45 +2,45 @@
 //+ ixtaf izhar
 var pager;
 ;(function(){
-	var cn = XPO.pagermowjoodah.childNodes, zaahir = 1,
+	var cn = pagermowjoodah.childNodes, zaahir = 1,
 		pagerasmaa = 1, settingsuid, saveto = 17;
 	
 	var resize = function () {
-		setcss(XPO.pagerui, 'height', XPO.pagermowjoodah.offsetHeight+'px');
+		setcss(pagerui, 'height', pagermowjoodah.offsetHeight+'px');
 	};
 	
 	pager = {
 		ixtaf: function () {
-			XPO.pagerui.hidden = 1;
-			delete document.body.dataset.XPO.pager;
+			pagerui.hidden = 1;
+			delete document.body.dataset.pager;
 			zaahir = 0;
 		},
 		izhar: function () {
-			XPO.pagerui.hidden = 0;
-			document.body.dataset.XPO.pager = pagerasmaa ? 2 : 1;
+			pagerui.hidden = 0;
+			document.body.dataset.pager = pagerasmaa ? 2 : 1;
 			zaahir = 1;
 		},
 		ixtafasmaa: function () {
 			for (var i = 0; i < cn.length; ++i) {
 				var keys = templates.keys(cn[i]);
-				keys.XPO.name.hidden = 1;
+				keys.name.hidden = 1;
 			}
-			if (zaahir) document.body.dataset.XPO.pager = 1;
-			else delete document.body.dataset.XPO.pager;
+			if (zaahir) document.body.dataset.pager = 1;
+			else delete document.body.dataset.pager;
 			resize();
 		},
 		izharasmaa: function () {
 			for (var i = 0; i < cn.length; ++i) {
 				var keys = templates.keys(cn[i]);
-				keys.XPO.name.hidden = 0;
+				keys.name.hidden = 0;
 			}
-			if (zaahir) document.body.dataset.XPO.pager = 2;
-			else delete document.body.dataset.XPO.pager;
+			if (zaahir) document.body.dataset.pager = 2;
+			else delete document.body.dataset.pager;
 			resize();
 		},
 		mowjood: function (ism) {
 			for (var i = 0; i < cn.length; ++i) {
-				if (cn[i].dataset.XPO.ism == ism)
+				if (cn[i].dataset.ism == ism)
 					return cn[i];
 			}
 			return false;
@@ -49,14 +49,14 @@ var pager;
 			var o = pager.mowjood(ism);
 			if (o) {
 				var keys = templates.keys(o);
-				if (matn !== undefined) keys.XPO.label.hidden = 0;
-				else keys.XPO.label.hidden = 1;
-				innertext(keys.XPO.label, matn);
+				if (matn !== undefined) keys.label.hidden = 0;
+				else keys.label.hidden = 1;
+				innertext(keys.label, matn);
 			}
 		},
 		intaxab: function (ism, ishtaghal) {
 			for (var i = 0; i < cn.length; ++i) {
-				if (cn[i].dataset.XPO.ism == ism) {
+				if (cn[i].dataset.ism == ism) {
 					attribute(cn[i], 'selected', 1);
 					if (ishtaghal) cn[i].click(), scrollintoview(cn[i]);
 				} else {
@@ -74,7 +74,7 @@ var pager;
 			var m = pager.muntaxab();
 			if (m && zaahir && backstack.darajah <= 1) {
 				var sibl = nextsibling(m);
-				if (sibl) pager.intaxab(sibl.dataset.XPO.ism, 1);
+				if (sibl) pager.intaxab(sibl.dataset.ism, 1);
 				// else if firstsibling()
 			}
 		},
@@ -82,52 +82,52 @@ var pager;
 			var m = pager.muntaxab();
 			if (m && zaahir && backstack.darajah <= 1) {
 				var sibl = prevsibling(m);
-				if (sibl) pager.intaxab(sibl.dataset.XPO.ism, 1);
+				if (sibl) pager.intaxab(sibl.dataset.ism, 1);
 				// else if lastsibling()
 			}
 		},
 		safaa: function () {
-			innertext(XPO.pagermowjoodah, '');
+			innertext(pagermowjoodah, '');
 		},
 		jama3: function (ism, eqonah, ismzaahiri) {
 			var clone = pager.mowjood(ism);
 			if (clone) {
 				templates.set(clone, {
-					XPO.name: ismzaahiri || ism,
-					XPO.icon: eqonah,
-				}, 'XPO.pagerzir');
+					name: ismzaahiri || ism,
+					icon: eqonah,
+				}, 'pagerzir');
 			} else {
-				clone = templates.get('XPO.pagerzir', XPO.pagermowjoodah)({
-					XPO.name: ismzaahiri || ism,
-					XPO.icon: eqonah,
+				clone = templates.get('pagerzir', pagermowjoodah)({
+					name: ismzaahiri || ism,
+					icon: eqonah,
 				});
 			}
 			var keys = templates.keys(clone);
-			keys.XPO.name.hidden = !pagerasmaa;
-			clone.dataset.XPO.ism = ism;
-			clone.dataset.XPO.ismzaahiri = ismzaahiri || ism;
+			keys.name.hidden = !pagerasmaa;
+			clone.dataset.ism = ism;
+			clone.dataset.ismzaahiri = ismzaahiri || ism;
 			clone.onclick = function () {
-				if (ism == 'XPO.main') {
+				if (ism == 'main') {
 					if (backstack.darajah > 0) backstack.back(); else backstack.main();
 				} else {
-					Hooks.run('XPO.view', ism);
+					Hooks.run('view', ism);
 				}
 			};
 			
 			resize();
 		},
 	};
-	Hooks.set('XPO.backstackview', function (args) {
+	Hooks.set('backstackview', function (args) {
 		if (pager.mowjood(backstack.states.view)) {
 			pager.intaxab(backstack.states.view);
 		}
 	});
-	Hooks.set('XPO.restore', function (darajah) {
+	Hooks.set('restore', function (darajah) {
 		if (darajah === 0 && backstack.states.main) {
-			pager.intaxab('XPO.main');
+			pager.intaxab('main');
 		}
 	});
-	Hooks.set('XPO.softkey', function (args) {
+	Hooks.set('softkey', function (args) {
 		var a = args[0], e = args[1];
 		var yes;
 		if (e.ctrlKey) {
@@ -140,19 +140,19 @@ var pager;
 		}
 		if (yes) return 1;
 	});
-	Hooks.set('XPO.ready', function (darajah) {
+	Hooks.set('ready', function (darajah) {
 		if (preferences) pagerasmaa = preferences.get(saveto, 1) || pagerasmaa;
 		
-		settingsuid = settings.adaaf('XPO.pagerasmaa', function () {
+		settingsuid = settings.adaaf('pagerasmaa', function () {
 			pagerasmaa = preferences.get(saveto, 1);
 			if (pagerasmaa) pager.izharasmaa(); else pager.ixtafasmaa();
-			return [pagerasmaa ? 'XPO.on' : 'XPO.off' ];
+			return [pagerasmaa ? 'on' : 'off' ];
 		}, function () {
 			preferences.set(saveto, preferences.get(saveto, 1) ? 0 : 1);
-		}, 'XPO.icontab');
+		}, 'icontab');
 
 		pager.izhar();
-//		pager.jama3('XPO.main');
-//		pager.intaxab('XPO.main');
+//		pager.jama3('main');
+//		pager.intaxab('main');
 	});
 })();

@@ -1,3 +1,5 @@
+[view=accounts]
+	[id=list]
 [template=profileitem] .profileitem .relative
 	canvas [id=photo] .photo
 	.flex .pad .details .dim

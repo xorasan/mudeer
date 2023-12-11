@@ -1,6 +1,6 @@
 //+ textsize dimmer runview view views icons exit visible lavaazim header
 //+ isdimmed status_bar_padding sahhar nawwam
-var webapp, appname = 'APPNAME' || '',
+var Webapp, webapp, appname = 'APPNAME' || '',
 	// to avoid missing module errors
 	Offline = Offline || 0,
 	pager = pager || 0,
@@ -240,7 +240,7 @@ var webapp, appname = 'APPNAME' || '',
 	 * webapp features like 3inch handles linked-modules functionality example:
 	 * when backstack reports darajah, 3inch updates softkeys
 	 * */
-	webapp = {
+	Webapp = webapp = {
 		visible: 1,
 		isdimmed: 0,
 		/* an array of features that can be check like

@@ -45,6 +45,7 @@
 	border			1px solid @secondaryd
 	border-radius	5px
 	padding			0 5px
+	white-space		nowrap
 #softkeysui .row1
 	min-height		26px
 #softkeysui .row1 button

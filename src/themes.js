@@ -1,168 +1,167 @@
-//+ toggle saveto saveto_contrast
 var themes;
 ;(function(){
 	var K, P, settingsuid, current = 0, contrast = 0;
 	
 	var store = {
 		0: {
-			XPO.status:		'rgba(0,0,0,0.6)',
-			XPO.statusm:	'rgba(0,0,0,0.2)',
+			status:		'rgba(0,0,0,0.6)',
+			statusm:	'rgba(0,0,0,0.2)',
 			
-			XPO.textl:		'#fff',
-			XPO.text:		'#ddd',
-			XPO.textd:		'#aaa',
-			XPO.textdt:		'#aaaaaa55',
-			XPO.textxd:		'#777',
-			XPO.textxdt:	'#77777755',
+			textl:		'#fff',
+			text:		'#ddd',
+			textd:		'#aaa',
+			textdt:		'#aaaaaa55',
+			textxd:		'#777',
+			textxdt:	'#77777755',
 
-			XPO.primaryl:	'#050505',
-			XPO.primary:	'black',
-			XPO.primaryd:	'black',
-			XPO.primaryt:	'rgba(0,0,0,0.8)', // perfect transparent level
-			XPO.primaryxt:	'rgba(0,0,0,0.4)',
+			primaryl:	'#050505',
+			primary:	'black',
+			primaryd:	'black',
+			primaryt:	'rgba(0,0,0,0.8)', // perfect transparent level
+			primaryxt:	'rgba(0,0,0,0.4)',
 
-			XPO.secondaryl:	'#353535',
-			XPO.secondary:	'#333',
-			XPO.secondaryd:	'#252525',
-			XPO.secondaryt:	'rgba(40,40,40,0.8)',
+			secondaryl:	'#353535',
+			secondary:	'#333',
+			secondaryd:	'#252525',
+			secondaryt:	'rgba(40,40,40,0.8)',
 
-			XPO.tertiaryl:	'#454545',
-			XPO.tertiary:	'#444',
-			XPO.tertiaryd:	'#353535',
-			XPO.tertiaryt:	'rgba(53,53,53,0.8)',
+			tertiaryl:	'#454545',
+			tertiary:	'#444',
+			tertiaryd:	'#353535',
+			tertiaryt:	'rgba(53,53,53,0.8)',
 
-			XPO.accentl:	'#4ccbfc',
-			XPO.accent:		'#04baf5',
-			XPO.accentt:	'rgba(4, 186, 245, 0.7)',
-			XPO.accentxt:	'rgba(4, 186, 245, 0.4)',
-			XPO.accentd:	'#0284c0',
-			XPO.accentdt:	'rgba(4, 126, 205, 0.7)',
+			accentl:	'#4ccbfc',
+			accent:		'#04baf5',
+			accentt:	'rgba(4, 186, 245, 0.7)',
+			accentxt:	'rgba(4, 186, 245, 0.4)',
+			accentd:	'#0284c0',
+			accentdt:	'rgba(4, 126, 205, 0.7)',
 
-			XPO.green:		'#0c0',
-			XPO.yellow:		'#ca0',
-			XPO.redl:		'#f99',
-			XPO.red:		'#c00',
-			XPO.redd:		'#900',
+			green:		'#0c0',
+			yellow:		'#ca0',
+			redl:		'#f99',
+			red:		'#c00',
+			redd:		'#900',
  		},
 		1: {
-			XPO.status:		'rgba(0,0,0,0.6)',
-			XPO.statusm:	'rgba(0,0,0,0.2)',
+			status:		'rgba(0,0,0,0.6)',
+			statusm:	'rgba(0,0,0,0.2)',
 
-			XPO.textl:		'#111',
-			XPO.text:		'#333',
-			XPO.textd:		'#666',
-			XPO.textdt:		'#66666655',
-			XPO.textxd:		'#888',
-			XPO.textxdt:	'#88888855',
+			textl:		'#111',
+			text:		'#333',
+			textd:		'#666',
+			textdt:		'#66666655',
+			textxd:		'#888',
+			textxdt:	'#88888855',
 
-			XPO.primaryl:	'#e6e6e6',
-			XPO.primary:	'#fff',
-			XPO.primaryd:	'#d6d6d6',
-			XPO.primaryt:	'rgba(255,255,255,0.8)', // perfect transparent level
-			XPO.primaryxt:	'rgba(255,255,255,0.4)',
+			primaryl:	'#e6e6e6',
+			primary:	'#fff',
+			primaryd:	'#d6d6d6',
+			primaryt:	'rgba(255,255,255,0.8)', // perfect transparent level
+			primaryxt:	'rgba(255,255,255,0.4)',
 
-			XPO.secondaryl:	'#e6e6e6',
-			XPO.secondary:	'#d6d6d6',
-			XPO.secondaryd:	'#c6c6c6',
-			XPO.secondaryt:	'rgba(180,180,180,0.8)',
+			secondaryl:	'#e6e6e6',
+			secondary:	'#d6d6d6',
+			secondaryd:	'#c6c6c6',
+			secondaryt:	'rgba(180,180,180,0.8)',
 
-			XPO.tertiaryl:	'#eee',
-			XPO.tertiary:	'#ddd',
-			XPO.tertiaryd:	'#ccc',
-			XPO.tertiaryt:	'rgba(204,204,204,0.8)',
+			tertiaryl:	'#eee',
+			tertiary:	'#ddd',
+			tertiaryd:	'#ccc',
+			tertiaryt:	'rgba(204,204,204,0.8)',
 
-			XPO.accentl:	'#0bb8cb',
-			XPO.accent:		'#00609a',
-			XPO.accentt:	'rgba(0, 67, 113, 0.7)',
-			XPO.accentxt:	'rgba(0, 67, 113, 0.4)',
-			XPO.accentd:	'#004371',
-			XPO.accentdt:	'rgba(0, 37, 93, 0.7)',
+			accentl:	'#0bb8cb',
+			accent:		'#00609a',
+			accentt:	'rgba(0, 67, 113, 0.7)',
+			accentxt:	'rgba(0, 67, 113, 0.4)',
+			accentd:	'#004371',
+			accentdt:	'rgba(0, 37, 93, 0.7)',
 
-			XPO.green:		'#0c0',
-			XPO.yellow:		'#ca0',
-			XPO.redl:		'#900',
-			XPO.red:		'#c00',
-			XPO.redd:		'#faa',
+			green:		'#0c0',
+			yellow:		'#ca0',
+			redl:		'#900',
+			red:		'#c00',
+			redd:		'#faa',
 		},
 		2: {
-			XPO.status:		'rgba(0,0,0,0.7)',
-			XPO.statusm:	'rgba(0,0,0,0.35)',
+			status:		'rgba(0,0,0,0.7)',
+			statusm:	'rgba(0,0,0,0.35)',
 			
-			XPO.textl:		'#fff',
-			XPO.text:		'#ddd',
-			XPO.textd:		'#aaa',
-			XPO.textdt:		'#aaaaaa55',
-			XPO.textxd:		'#777',
-			XPO.textxdt:	'#77777755',
+			textl:		'#fff',
+			text:		'#ddd',
+			textd:		'#aaa',
+			textdt:		'#aaaaaa55',
+			textxd:		'#777',
+			textxdt:	'#77777755',
 
-			XPO.primaryl:	'#050505',
-			XPO.primary:	'black',
-			XPO.primaryd:	'black',
-			XPO.primaryt:	'rgba(0,0,0,0.8)', // perfect transparent level
-			XPO.primaryxt:	'rgba(0,0,0,0.4)',
+			primaryl:	'#050505',
+			primary:	'black',
+			primaryd:	'black',
+			primaryt:	'rgba(0,0,0,0.8)', // perfect transparent level
+			primaryxt:	'rgba(0,0,0,0.4)',
 
-			XPO.secondaryl:	'#555',
-			XPO.secondary:	'#444',
-			XPO.secondaryd:	'#333',
-			XPO.secondaryt:	'rgba(60,60,60,0.8)',
+			secondaryl:	'#555',
+			secondary:	'#444',
+			secondaryd:	'#333',
+			secondaryt:	'rgba(60,60,60,0.8)',
 
-			XPO.tertiaryl:	'#777',
-			XPO.tertiary:	'#666',
-			XPO.tertiaryd:	'#555',
-			XPO.tertiaryt:	'rgba(83,83,83,0.8)',
+			tertiaryl:	'#777',
+			tertiary:	'#666',
+			tertiaryd:	'#555',
+			tertiaryt:	'rgba(83,83,83,0.8)',
 
-			XPO.accentl:	'#4ccbfc',
-			XPO.accent:		'#04baf5',
-			XPO.accentt:	'rgba(4, 186, 245, 0.7)',
-			XPO.accentxt:	'rgba(4, 186, 245, 0.4)',
-			XPO.accentd:	'#0284c0',
-			XPO.accentdt:	'rgba(4, 126, 205, 0.7)',
+			accentl:	'#4ccbfc',
+			accent:		'#04baf5',
+			accentt:	'rgba(4, 186, 245, 0.7)',
+			accentxt:	'rgba(4, 186, 245, 0.4)',
+			accentd:	'#0284c0',
+			accentdt:	'rgba(4, 126, 205, 0.7)',
 
-			XPO.green:		'#0c0',
-			XPO.yellow:		'#ca0',
-			XPO.redl:		'#f99',
-			XPO.red:		'#c00',
-			XPO.redd:		'#900',
+			green:		'#0c0',
+			yellow:		'#ca0',
+			redl:		'#f99',
+			red:		'#c00',
+			redd:		'#900',
  		},
 		3: {
-			XPO.status:		'rgba(0,0,0,0.6)',
-			XPO.statusm:	'rgba(0,0,0,0.2)',
+			status:		'rgba(0,0,0,0.6)',
+			statusm:	'rgba(0,0,0,0.2)',
 
-			XPO.textl:		'#111',
-			XPO.text:		'#333',
-			XPO.textd:		'#666',
-			XPO.textdt:		'#66666655',
-			XPO.textxd:		'#888',
-			XPO.textxdt:	'#88888855',
+			textl:		'#111',
+			text:		'#333',
+			textd:		'#666',
+			textdt:		'#66666655',
+			textxd:		'#888',
+			textxdt:	'#88888855',
 
-			XPO.primaryl:	'#e6e6e6',
-			XPO.primary:	'#fff',
-			XPO.primaryd:	'#d6d6d6',
-			XPO.primaryt:	'rgba(255,255,255,0.8)', // perfect transparent level
-			XPO.primaryxt:	'rgba(255,255,255,0.4)',
+			primaryl:	'#e6e6e6',
+			primary:	'#fff',
+			primaryd:	'#d6d6d6',
+			primaryt:	'rgba(255,255,255,0.8)', // perfect transparent level
+			primaryxt:	'rgba(255,255,255,0.4)',
 
-			XPO.secondaryl:	'#e6e6e6',
-			XPO.secondary:	'#d6d6d6',
-			XPO.secondaryd:	'#c6c6c6',
-			XPO.secondaryt:	'rgba(180,180,180,0.8)',
+			secondaryl:	'#e6e6e6',
+			secondary:	'#d6d6d6',
+			secondaryd:	'#c6c6c6',
+			secondaryt:	'rgba(180,180,180,0.8)',
 
-			XPO.tertiaryl:	'#eee',
-			XPO.tertiary:	'#ddd',
-			XPO.tertiaryd:	'#ccc',
-			XPO.tertiaryt:	'rgba(204,204,204,0.8)',
+			tertiaryl:	'#eee',
+			tertiary:	'#ddd',
+			tertiaryd:	'#ccc',
+			tertiaryt:	'rgba(204,204,204,0.8)',
 
-			XPO.accentl:	'#0bb8cb',
-			XPO.accent:		'#00609a',
-			XPO.accentt:	'rgba(0, 67, 113, 0.7)',
-			XPO.accentxt:	'rgba(0, 67, 113, 0.4)',
-			XPO.accentd:	'#004371',
-			XPO.accentdt:	'rgba(0, 37, 93, 0.7)',
+			accentl:	'#0bb8cb',
+			accent:		'#00609a',
+			accentt:	'rgba(0, 67, 113, 0.7)',
+			accentxt:	'rgba(0, 67, 113, 0.4)',
+			accentd:	'#004371',
+			accentdt:	'rgba(0, 37, 93, 0.7)',
 
-			XPO.green:		'#0c0',
-			XPO.yellow:		'#ca0',
-			XPO.redl:		'#900',
-			XPO.red:		'#c00',
-			XPO.redd:		'#faa',
+			green:		'#0c0',
+			yellow:		'#ca0',
+			redl:		'#900',
+			red:		'#c00',
+			redd:		'#faa',
 		},
 	};
 
@@ -206,8 +205,8 @@ var themes;
 
 			if (arglen === 1) {
 				if (store[theme]) {
-					XPO.dynamicstyle.innerHTML = XPO.updatetheme(store[theme]);
-					XPO.themecolor && XPO.themecolor.setAttribute('content', themes.get('XPO.status'));
+					dynamicstyle.innerHTML = updatetheme(store[theme]);
+					themecolor && themecolor.setAttribute('content', themes.get('status'));
 				}
 			}
 
@@ -245,7 +244,7 @@ var themes;
 		},
 	};
 	
-	Hooks.set('XPO.ready', function () {
+	Hooks.set('ready', function () {
 		if (preferences) {
 			current = preferences.get(themes.saveto, 1) || 0;
 			contrast = preferences.get(themes.saveto_contrast, 1) || 0;
@@ -253,35 +252,35 @@ var themes;
 
 		set_theme_with_contrast(current);
 		
-		settingsuid = settings.adaaf('XPO.theme', function () {
+		settingsuid = settings.adaaf('theme', function () {
 			var iswhite = preferences.get(themes.saveto, 1);
 			current = iswhite ? 1 : 0;
 			set_theme_with_contrast(current);
-			return [ iswhite ? 'XPO.white' : 'XPO.black' ];
+			return [ iswhite ? 'white' : 'black' ];
 		}, function () {
 			preferences.set(themes.saveto, preferences.get(themes.saveto, 1) ? 0 : 1);
-		}, 'XPO.icontheme');
+		}, 'icontheme');
 
-		settingsuid = settings.adaaf('XPO.contrast', function () {
+		settingsuid = settings.adaaf('contrast', function () {
 			var ishigh = preferences.get(themes.saveto_contrast, 1);
 			contrast = ishigh ? 1 : 0;
 			set_theme_with_contrast(current);
-			return [ ishigh ? 'XPO.high' : 'XPO.low' ];
+			return [ ishigh ? 'high' : 'low' ];
 		}, function () {
 			preferences.set(themes.saveto_contrast, preferences.get(themes.saveto_contrast, 1) ? 0 : 1);
-		}, 'XPO.iconbrightness7');
+		}, 'iconbrightness7');
 	});
-	Hooks.set('XPO.viewready', function (args) {
+	Hooks.set('viewready', function (args) {
 		K = softkeys.K, // key names
 		P = softkeys.P; // presets
 
-		switch (args.XPO.name) {
-			case 'XPO.main':
+		switch (args.name) {
+			case 'main':
 				softkeys.add({ n: 'Theme',
 					k: 'i',
 					ctrl: 1,
 					alt: 1,
-					i: 'XPO.icontheme',
+					i: 'icontheme',
 					c: function (k, e) {
 						themes.toggle();
 						e && e.preventDefault();

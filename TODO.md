@@ -27,11 +27,18 @@ This is an incomplete progress list of features & known bugs.
 
 * [ ] Webapp
 	* [ ] Notifications
+		* [ ] they should have title desc icon
 
 	* [ ] Manifest
 		* [x] should always be generated dynamically
 		* [x] save changes on server
 		* [ ] upload icon
+
+* [ ] Softkeys
+	* [ ] move `Webapp.status` above the back button on desktop
+	* [ ] `Webapp.notify` actions can be merged into the softkeys
+	* [ ] support new properties `order`, `last`, `first`, `before`, `after`
+	* [ ] add .alias to support linking secondary keysets to a shortcut entry
 
 * [ ] Backstack
 	* [ ] History

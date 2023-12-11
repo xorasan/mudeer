@@ -2,20 +2,20 @@
 var Settings, settings, currentad;
 ;(function(){
 	// TODO move this to settingslist.adapter
-	var settingsitems = [];
+	var settingsitems = [], module_name = 'settings';
 	function add(a) { settingsitems.push(a); }
 	// uid, getvalue, onpress
-	/*['XPO.quality', 0, function () {
-		Hooks.run('XPO.sheet', {
-			XPO.name: 'XPO.quality',
-			XPO.title: translate('XPO.quality'),
+	/*['quality', 0, function () {
+		Hooks.run('sheet', {
+			name: 'quality',
+			title: translate('quality'),
 		});
 	}],*/
 	add(['Mudeer '+$.b, function () {
 		return 'Web Framework';
 	}, function () {
 		open('https://github.com/xorasan/mudeer', '_blank');
-	}, 'XPO.iconmudeer']);
+	}, 'iconmudeer']);
 	// TODO if show if app has a source url
 	if (Config.repo) {
 		add([Config.appname+' '+BUILDNUMBER, function () {
@@ -24,39 +24,39 @@ var Settings, settings, currentad;
 			open(Config.repo, '_blank');
 		}, '/e.png']);
 	}
-	add(['XPO.timeformat', function () {
+	add(['timeformat', function () {
 		var is24 = preferences.get(24, 1);
-		return [is24 ? 'XPO.hours24' : 'XPO.hours12'];
+		return [is24 ? 'hours24' : 'hours12'];
 	}, function () {
 		var is24 = preferences.get(24, 1);
 		if (is24) preferences.set(24, 0);
 		else preferences.set(24, 1);
-	}, 'XPO.icontimer']);
-	add(['XPO.calendar', function () {
+	}, 'icontimer']);
+	add(['calendar', function () {
 		var isgregorian = preferences.get(26, 1);
-		return [isgregorian ? 'XPO.gregorian' : 'XPO.hijri'];
+		return [isgregorian ? 'gregorian' : 'hijri'];
 	}, function () {
 		var isgregorian = preferences.get(26, 1);
 		if (isgregorian) preferences.set(26, 0);
 		else preferences.set(26, 1);
-	}, 'XPO.icondaterange']);
+	}, 'icondaterange']);
 	// TODO if show if app supports transparency
-//	['XPO.transparency', function () {
+//	['transparency', function () {
 //		var isit = preferences.get(23, 1);
 //		webapp.transparency();
-//		return [isit ? 'XPO.on' : 'XPO.off'];
+//		return [isit ? 'on' : 'off'];
 //	}, function () {
 //		var isit = preferences.get(23, 1);
 //		if (isit) { preferences.set(23, 0); }
 //		else { preferences.set(23, 1); }
-//	}, 'XPO.iconbluron'],
-	add(['XPO.largetext', function () {
+//	}, 'iconbluron'],
+	add(['largetext', function () {
 		var largetext = preferences.get(9, 1);
 		webapp.textsize();
-		return [largetext ? 'XPO.on' : 'XPO.off'];
+		return [largetext ? 'on' : 'off'];
 	}, function () {
 		preferences.set(9, preferences.get(9, 1) ? 0 : 1);
-	}, 'XPO.iconformatsize']);
+	}, 'iconformatsize']);
 
 	var settingslist, keys;
 	
@@ -76,28 +76,33 @@ var Settings, settings, currentad;
 				var obj = {
 					uid: uid,
 				};
-				obj.XPO.index = uid;
-				obj.XPO.title$t = item[0];
-				obj.XPO.icon = item[3];
+				obj.index = uid;
+				obj.title$t = item[0];
+				obj.icon = item[3];
 				
-				if (body instanceof Array) obj.XPO.body$t = body[0];
-				else obj.XPO.body = body;
+				if (body instanceof Array) obj.body$t = body[0];
+				else obj.body = body;
 					
 				if (settingslist) {
 					settingslist.set(obj);
 					
-					if (backstack.states.view === 'XPO.settings')
+					if (backstack.states.view === module_name)
 						settingslist.select();
 				}
 			}
 		},
 	};
 
-	Hooks.set('XPO.ready', function () {
-		keys = view.mfateeh('XPO.settings');
+	Hooks.set('ready', function () {
+		if (get_global_object().Sidebar) { Sidebar.set({
+			uid: module_name,
+			title: 'Settings',
+		}); }
 
-		settingslist = list( keys.XPO.list ).idprefix('XPO.settings')
-						.listitem('XPO.settingsitem')
+		keys = view.mfateeh(module_name);
+
+		settingslist = list( keys.list ).idprefix(module_name)
+						.listitem('settingsitem')
 						.grid(3);
 		
 		settingslist.beforeset = function (item, id) {
@@ -108,8 +113,8 @@ var Settings, settings, currentad;
 		});
 		settingslist.onpress = function (item, key, uid) {
 			if (item) {
-				settings.axad(item.XPO.index)[2]();
-				settings.jaddad(item.XPO.index);
+				settings.axad(item.index)[2]();
+				settings.jaddad(item.index);
 			}
 		};
 
@@ -127,7 +132,7 @@ var Settings, settings, currentad;
 			// Max supported size is 240x264
 
 			// container is required for responsive ads
-			container: keys.XPO.ad,
+			container: keys.ad,
 			onerror: function (e) { $.log.e(e); },
 			onready: function (ad) {
 				currentad = ad;
@@ -153,26 +158,26 @@ var Settings, settings, currentad;
 			}
 		});
 	});
-	Hooks.set('XPO.viewready', function (args) {
-		switch (args.XPO.name) {
-			case 'XPO.main':
+	Hooks.set('viewready', function (args) {
+		switch (args.name) {
+			case 'main':
 				softkeys.add({ n: 'Settings',
 					ctrl: 1,
 					alt: 1,
 					k: 'p',
-					i: 'XPO.iconsettings',
+					i: 'iconsettings', // TODO icons module should generate variables like icon_settings
 					c: function () {
-						Hooks.run('XPO.view', 'XPO.settings');
+						Hooks.run('view', module_name);
 					}
 				});
 				break;
-			case 'XPO.settings':
+			case module_name:
 				
 //				if (pager) {
-//					pager.intaxab('XPO.settings', 1);
+//					pager.intaxab(module_name, 1);
 //					webapp.header();
 //				} else { // since pager already shows context
-					webapp.header([['XPO.settings'], 0, 'XPO.iconsettings']);
+					webapp.header([[module_name], 0, 'iconsettings']);
 //				}
 				
 				softkeys.list.basic(settingslist);
@@ -186,7 +191,7 @@ var Settings, settings, currentad;
 				if (PRODUCTION && 'getKaiAd' in window)
 				softkeys.set('0', function () {
 					if (currentad) currentad.call && currentad.call('click');
-				}, translate('XPO.openad'), false);
+				}, translate('openad'), false);
 
 				/* TEST
 				 * this can be automated by giving a function to view.?set?

@@ -66,9 +66,9 @@ var profilelist;
 	});
 	
 	Hooks.set('ready', function () {
-		var mfateeh = view.mfateeh('profile');
+		var dom_keys = view.dom_keys('profile');
 
-		profilelist = list( mfateeh.list ).idprefix('profile').listitem('profilekatab');
+		profilelist = List( dom_keys.list ).idprefix('profile').listitem('profilekatab');
 		
 		profile.update(); // to maintain order
 
@@ -90,11 +90,11 @@ var profilelist;
 //			profilelist.select();
 		});
 
-		$.taxeer('profile', function () { pager.intaxab('profile', 1); }, 500);
+//		$.taxeer('profile', function () { pager.intaxab('profile', 1); }, 500);
 	});
 	Hooks.set('viewready', function (args) {
 		if (args.name == 'profile') {
-			webapp.header( ['Profile', 0, 'iconperson'] );
+			Webapp.header( ['Profile', 0, 'iconperson'] );
 			softkeys.list.basic(profilelist);
 			profilelist.select();
 			Offline.get('profile', 0, 0, Time.now());

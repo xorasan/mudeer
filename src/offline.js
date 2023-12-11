@@ -34,10 +34,10 @@ var Offline, offline;
 						ixraaj[ uid ] = things[j].value;
 					}
 				}
-				/*else if (things.havaf) {
+				/*else if (things.remove) {
 					things = {
 						uid: things.uid,
-						havaf: 1,
+						remove: 1,
 					};
 				}*/
 				Network.sync(m.name, m.need, ixraaj || things);
@@ -120,7 +120,7 @@ var Offline, offline;
 		},
 		mundarij: {
 			add: {},
-			havaf: {},
+			remove: {},
 			get: {},
 		},
 		ready: false,
@@ -131,11 +131,11 @@ var Offline, offline;
 				Offline.mundarij.add[ name ] = Offline.mundarij.add[ name ] || {};
 				Offline.mundarij.add[ name ][ need ] = cb;
 			},
-			havaf: function (name, need, cb) {
+			remove: function (name, need, cb) {
 				if (typeof need == 'function') cb = need, need = 0;
 				need = need || 'default';
-				Offline.mundarij.havaf[ name ] = Offline.mundarij.havaf[ name ] || {};
-				Offline.mundarij.havaf[ name ][ need ] = cb;
+				Offline.mundarij.remove[ name ] = Offline.mundarij.remove[ name ] || {};
+				Offline.mundarij.remove[ name ][ need ] = cb;
 			},
 			get: function (name, need, cb) {
 				/* WHY use cases
@@ -177,14 +177,14 @@ var Offline, offline;
 				});
 			}
 		},
-		havaf: function (name, need, value) { // [ { uid }, { uid } ]
+		remove: function (name, need, value) { // [ { uid }, { uid } ]
 			if (arguments.length === 2) value = need, need = 0;
 			need = need || 'default';
 			if (!(value instanceof Array)) value = [value];
 			if (value instanceof Array) {
 				value.forEach(function (item) {
 					item.pending = 1;
-					item.havaf = 1;
+					item.remove = 1;
 				});
 				Offline.set(name+need, value, function (needssync) {
 					var m = maxaazin[ name+need ];
@@ -277,8 +277,8 @@ var Offline, offline;
 				val.uid = val.uid || uid;
 
 				val.pending = 0;
-				if (val.havaf === -1) { // truly purged on both ends
-					kind = Offline.mundarij['havaf'];
+				if (val.remove === -1) { // truly purged on both ends
+					kind = Offline.mundarij['remove'];
 					Offline.pop(name+need, val.uid);
 					val = val.uid;
 				} else {
@@ -477,10 +477,10 @@ var Offline, offline;
 			
 //			delete obj.photo;
 			
-//			if (obj.havaf && obj.uid > 0) {
+//			if (obj.remove && obj.uid > 0) {
 //				newobj = {
 //					uid: obj.uid,
-//					havaf: obj.havaf,
+//					remove: obj.remove,
 //				};
 //			} else {
 				delete obj._store;

@@ -128,25 +128,26 @@ MSJLINTAHAA		= 90	;	// exited recording
 	pausebtn = function () {
 		softkeys.set('5', function () {
 			musajjal.inqata3();
-		}, '5', 'XPO.iconpause');
+		}, '5', 'iconpause');
 	},
 	stopbtn = function () {
 		softkeys.set('8', function () {
 			musajjal.intahaa();
-		}, '8', 'XPO.iconstop');
+		}, '8', 'iconstop');
 	},
 	rewindbtn = function () {
 		softkeys.set('4', function () {
 			musajjal.irja3();
-		}, '4', 'XPO.iconfastrewind');
+		}, '4', 'iconfastrewind');
 	},
 	forwardbtn = function () {
 		softkeys.set('6', function () {
 			musajjal.id3am();
-		}, '6', 'XPO.iconfastforward');
+		}, '6', 'iconfastforward');
 	},
 	rawaa = function (nabaa) { // relay event
-		Hooks.run('XPO.musajjal', nabaa);
+		Hooks.run('musajjal', nabaa);
+		Hooks.run('recorder', nabaa);
 	};
 	
 	recorder = Recorder = musajjal = {
@@ -239,7 +240,7 @@ MSJLINTAHAA		= 90	;	// exited recording
 				musajjal.sajil = 0;
 				if (musajjal.mulhaq) {
 					waqtissawt();
-//					popdata(mfateeh.waqt, 'XPO.time');
+//					popdata(mfateeh.waqt, 'time');
 					stopbtn();
 					pausebtn();
 				}
@@ -267,8 +268,8 @@ MSJLINTAHAA		= 90	;	// exited recording
 				mfateeh.matn && ixtaf(mfateeh.matn);
 			}
 			if (!('require' in window) && haalah) {
-				if (haalah === -2) setdata(mfateeh.haalah, 'XPO.sawtmas3oob');
-				else if (haalah === -1) setdata(mfateeh.haalah, 'XPO.sawtmasool');
+				if (haalah === -2) setdata(mfateeh.haalah, 'sawtmas3oob');
+				else if (haalah === -1) setdata(mfateeh.haalah, 'sawtmasool');
 				else
 				navigator.permissions.query({name:'microphone'}).then(function(result) {
 					var react = function (s) {
@@ -339,7 +340,7 @@ MSJLINTAHAA		= 90	;	// exited recording
 	recorder.remove = recorder.itlaqsawt; // ? @TODO verify
 	recorder.record = recorder.isjal;
 	
-	Hooks.set('XPO.restore', function () { // called on backstack changes
+	Hooks.set('restore', function () { // called on backstack changes
 		musajjal.itlaqsawt(2);
 	});
 
