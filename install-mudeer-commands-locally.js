@@ -31,3 +31,8 @@ fs.readdirSync('.').forEach(file => {
 //		fs.symlinkSync(process.env.HOME+'/.local/bin/'+name, process.cwd()+'/'+file);
 	}
 });
+
+log(' in case these don\'t work, log out log back in again to the shell ');
+log(' or do: source ~/.profile \n');
+
+// https://askubuntu.com/questions/1144231/home-local-bin-not-in-path-for-ubuntu-19-04
