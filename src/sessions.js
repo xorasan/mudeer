@@ -1,5 +1,4 @@
-//+ signedin setqadam getqadam jaddad yameen shimaal uid
-var sessions,
+var Sessions, sessions,
 	USERNAMEMIN = 3,
 	USERNAMEMAX = 24,
 	PASSWORDMIN = 8,
@@ -117,8 +116,27 @@ var sessions,
 			}
 		});
 	}
+	function update_sidebar() {
+		if (get_global_object().Sidebar) {
+			if (Sessions.signedin()) {
+				Sidebar.remove('signin');
+				Sidebar.remove('signup');
+			} else {
+				Sidebar.set({
+					uid: 'signin',
+					title: xlate('signin'),
+					icon: 'iconperson',
+				});
+				Sidebar.set({
+					uid: 'signup',
+					title: xlate('signup'),
+					icon: 'iconpersonadd',
+				});
+			}
+		}
+	}
 	
-	sessions = {
+	Sessions = sessions = {
 		jaddad: function (parent) {
 			jaddadkeys(parent);
 			var current = parseint(parent.dataset.currentqadam || 0);
@@ -225,7 +243,7 @@ var sessions,
 			return preferences.get(1);
 		},
 		uid: function () { // signedin uid
-			return preferences.get(2, 1);
+			return preferences.get(2);
 		},
 		get: function (uri, dry) {
 			// indicates don't do anything on history pop events
@@ -380,7 +398,7 @@ var sessions,
 			}
 		},
 		signout: function () {
-			webapp.itlaa3( xlate('loggingout') );
+			Webapp.status( xlate('loggingout') );
 			Offline.recreate(function () {
 				preferences.pop( '@'); // waqt
 				preferences.pop( 1	);
@@ -393,10 +411,10 @@ var sessions,
 
 				cache = {};
 				
-				webapp.itlaa3( xlate('loggedout') );
-				
+				Webapp.status( xlate('loggedout') );
+				update_sidebar();
 				Hooks.run('sessionchange', 0);
-				pager.intaxab('main', 1);
+				Hooks.run('view', 'main');
 			});
 		},
 		usernameexists: function (user, temp) {
@@ -482,8 +500,9 @@ var sessions,
 				preferences.set( 22 , response.type		);
 				if (!signedin) { // only do this if wasn't prev logged in
 					Hooks.run('sessionchange', response.key);
-					webapp.itlaa3( xlate('loggedin') );
-					pager.intaxab('main', 1);
+					update_sidebar();
+					Webapp.status( xlate('loggedin') );
+					Hooks.run('view', 'main');
 				}
 			}
 		});
@@ -508,7 +527,7 @@ var sessions,
 		});
 		
 		// TODO handle session changes (you're not logged in...)
-		settings.adaaf('signout', 0, function () {
+		Settings.adaaf('signout', 0, function () {
 			Hooks.run('dialog', {
 				m: 'signoutconfirm',
 				c: function () {

@@ -16,7 +16,7 @@
  * 
  * */
 
-var Server;
+var Server, SocketIO;
 ;(function(){
 	'use strict';
 	
@@ -53,8 +53,8 @@ var Server;
 			
 			var express			= require('./deps/express');			// web framework external module
 			var fileupload		= require('./deps/express-fileupload');
-//			var serveStatic		= require('serve-static');		// serve static files
-//			var socketIo		= require('socket.io');			// web socket external module
+//			var serveStatic		= require('serve-static');				// serve static files
+			var socketIo		= require('./deps/socket.io');			// web socket external module
 
 			var app = express();
 
@@ -96,7 +96,15 @@ var Server;
 				res.sendFile( public_path+'index.html' );
 			});
 
-			app.listen(options.port);
+			var http = require('http');
+			var server = http.createServer(app);
+			SocketIO = new socketIo.Server(server);
+			SocketIO.on('connection', function (socket) {
+				Hooks.run('socket', socket);
+			});
+
+//			app.listen(options.port);
+			server.listen(options.port);
 		}
 	};
 

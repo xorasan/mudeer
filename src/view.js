@@ -1,7 +1,7 @@
-var view;
+var View, view;
 ;(function(){
 	var index = {};
-	view = {
+	View = view = {
 		zaahir: function (name) { // is_active, deprecated
 			return view.axav() === name;
 		},
@@ -15,7 +15,7 @@ var view;
 				return this.zaahir(name);
 			}
 		},
-		mfateeh: function (name) { // keys
+		mfateeh: function (name) { // dom_keys
 			var element = index[name];
 			if (element) return templates.keys(element);
 
@@ -23,15 +23,23 @@ var view;
 		},
 		ishtaghal: function (name) { // run, deprecated
 			var level	= backstack.level			,
-				element	= view.axad(name)			,
-				keys	= templates.keys(element)	;
+				exists	= view.get_element(name)	;
 
-			Hooks.run('viewready', {
-				name: name,
-				element: element,
-				keys: keys,
-				level: level,
-			});
+			if (isundef(exists)) {
+				$.log.w('View not found: "'+name+'"');
+			} else {
+				var element	= view.get(name)			,
+					keys	= templates.keys(element)	;
+				Hooks.run('viewready', {
+					name: name,
+					element: element,
+					keys: keys,
+					level: level,
+				});
+			}
+		},
+		get_element: function (name) { // get dom element of a view
+			return this.get(name, 1);
 		},
 		axav: function (name, onlyelement) { // get
 			if (!name) {
@@ -56,7 +64,7 @@ var view;
 			}
 		},
 		axad: function (name, onlyelement) { // get, deprecated
-			view.axav(name, onlyelement);
+			return view.axav(name, onlyelement);
 		},
 		fahras: function () { // index
 			var elements = document.body.querySelectorAll('[data-view]');

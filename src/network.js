@@ -13,7 +13,10 @@
 var Network, network, sessions = sessions || 0;
 ;(function(){
 	'use strict';
-	var address = 'http://localhost:'+Config.port+'/', buildexpired = false, offlinetime,
+	var 
+//		address = 'http://localhost:'+Config.port+'/',
+		address = location.protocol + '//' + location.host + location.pathname,
+		buildexpired = false, offlinetime,
 		networkkeys, debug_network = 1;
 	
 	var error_log = function (v) { $.log( v ); };

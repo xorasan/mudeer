@@ -1,16 +1,13 @@
-//+ showhints press update saveto onnext onprev hfiz fasax nsee talaf actualpress
-//+ uponenter uponshiftenter autoheight baidaa
 /* TODO
 * .row1 should be animated
 */
 /* FEATURES
-<element>.on_focus_prev() triggered when K.up is pressed on an element
-<element>.on_focus_next() triggered when K.dn is pressed on an element
-all keyups are pd'd, fig out logic for keydowns in .press
-modifiers now do work! 13 sep 2023
-
+ * <element>.on_focus_prev() triggered when K.up is pressed on an element
+ * <element>.on_focus_next() triggered when K.dn is pressed on an element
+ * all keyups are pd'd, fig out logic for keydowns in .press
+ * modifiers now do work! 13 sep 2023
 */
-var softkeys, K, P;
+var Softkeys, softkeys, K, P;
 ;(function(){
 	K = { // key code names
 		mt:	'microphonetoggle',
@@ -33,7 +30,7 @@ var softkeys, K, P;
 		list: {},
 	};
 
-	var global_keys = ['f1', 'f2', 'f5', 'escape', K.sl, K.sr];
+	var global_keys = ['f1', 'f2', 'f5', 'escape', K.sl, K.sr], debug_softkeys = 1;
 
 	var hfizM = {}, M = {}, // mapped keys
 	current,
@@ -94,7 +91,14 @@ var softkeys, K, P;
 		o.id = 'sk'+k;
 		o.classes = classes;
 
-		index[k] = templates.get('skbutton', parent, 0, o.id)(o);
+		var before = 0;
+		if (args.first) {
+			before = parent.firstElementChild;
+		}
+		if (args.last) {
+			before = parent.lastElementChild;
+		}
+		index[k] = templates.get('skbutton', parent, before, o.id)(o);
 		
 		skdots.hidden = totalvisible() ? 0 : 1;
 
@@ -125,6 +129,14 @@ var softkeys, K, P;
 	 * putting these inside a function keeps them unique
 	 * */
 	P.empty = function () {
+		if (debug_softkeys) $.log.w('Softkeys.P.empty');
+//		Softkeys.add({ k: K.sr,
+//			i: 'iconclose',
+//			c: function () {
+//				Hooks.run('back');
+//				return 1;
+//			}
+//		});
 		M[K.sr] = [function () {
 			Hooks.run('back');
 			return 1;
@@ -133,13 +145,13 @@ var softkeys, K, P;
 			Hooks.run('minimize');
 		}];
 		M['#'] = [function () {
-			softkeys.showhints();
+			Softkeys.showhints();
 			return 1;
 		}/*, '#', 'iconhelp'*/];
-		softkeys.update();
+		Softkeys.update();
 	},
 	
-	softkeys = {
+	Softkeys = softkeys = {
 		P: P,
 		K: K,
 		saveto: 7,
@@ -244,16 +256,20 @@ var softkeys, K, P;
 			return this;
 		},
 		add: function (o) { // use this instead of .set
+			// adds a uid prop to provided object that you can use to remove this softkey later
+			// TODO maintain order after each addition / update
 			/* key uid is based on mods + keyname
-			properties
-			uid generated, you can later use it to remove keys
-			n name
-			h hidden
-			i icon
-			l label
-			s status
-			k key
-			c cb callback
+			   properties
+			   uid generated, you can later use it to remove keys
+			   n name
+			   h hidden
+			   i icon
+			   l label
+			   s status
+			   k key
+			   c cb callback
+			   first: keeps this softkey at the top
+			   last: keeps this softkey at the bottom
 			*/
 			o.callback = o.callback || o.c || o.cb;
 			o.key = tolower(o.key || o.k);
@@ -646,6 +662,11 @@ var softkeys, K, P;
 			M = Object.assign({}, oldM);
 			softkeys.update();
 		}
+	});
+	Hooks.set('backstack', function (level) {
+		softkeys_backstack.querySelectorAll('span').forEach(function (o, i) {
+			o.hidden = i > level;
+		});
 	});
 
 	if (preferences.get(softkeys.saveto, 1)) skhelp.hidden = 1;

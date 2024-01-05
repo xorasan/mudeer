@@ -41,16 +41,16 @@ if min-width = 600px
 [dir=rtl] .roomitem .details
 	left				0
 	right				64px
-.roomitem .photo, .membersitem .photo
+.roomitem .photo, .members_item .photo
 	width				60px
 	height				60px
 	border-radius		50%
 	margin				4px 0 0 4px
 	background-color	@secondaryt
 	overflow			hidden
-.membersitem
+.members_item
 	min-height			40px
-.membersitem .photo
+.members_item .photo
 	width				32px
 	height				32px
 	overflow			hidden

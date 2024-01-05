@@ -1,9 +1,9 @@
 /* @TODO
- * add .back_twice_to_exit, which adds having to press back/esc twice to exit with taxeer
+ * add .back_twice_to_exit, which adds having to press back/esc twice to exit with delay
  * also make the exit button red when in delay
  * is_darajah is_level or is_stage or is_state
  * */
-var backstack;
+var Backstack, backstack;
 ;(function(){
 	var s,
 	storage = {
@@ -12,20 +12,20 @@ var backstack;
 		1	:	{}, // lists, editors, renderuis, ...
 		0	:	{}, // main, ...
 	},
-	l = function () {
-		var darajah = 0;
-		if (s.dialog) darajah = 3;
-		else if (s.sheet) darajah = 2;
-		else if (s.view) darajah = 1;
-		else darajah = 0;
-		backstack.darajah = darajah;
-		return darajah;
+	do_level = function () {
+		var level = 0;
+		if (s.dialog) level = 3;
+		else if (s.sheet) level = 2;
+		else if (s.view) level = 1;
+		else level = 0;
+		backstack.darajah = level;
+		return level;
 	},
-	savefocus = function () { // save focus on each darajah, restore automatically
-		backstack.set('XPO.backstackfocus', document.activeElement);
+	savefocus = function () { // save focus on each level, restore automatically
+		backstack.set('backstackfocus', document.activeElement);
 	},
 	restorefocus = function () {
-		var active = backstack.get('XPO.backstackfocus');
+		var active = backstack.get('backstackfocus');
 		active && active.focus && active.focus();
 	};
 
@@ -40,7 +40,7 @@ var backstack;
 	 * 
 	 * the backstack event is fired on all changes
 	 * */
-	backstack = {
+	Backstack = backstack = {
 		darajah: 0,
 		states: {
 			dialog	:	0, // searches, dialogs, menus
@@ -58,71 +58,77 @@ var backstack;
 		dialog: function (args) {
 			savefocus();
 			s.dialog = args || 1;
-			l();
+			do_level();
 			storage[backstack.darajah] = {};
-			Hooks.rununtilconsumed('XPO.backstackdialog', args);
-			Hooks.run('XPO.backstack', backstack.darajah);
+			Hooks.rununtilconsumed('backstackdialog', args);
+			Hooks.run('backstack', backstack.darajah);
 		},
 		sheet: function (args) {
 			savefocus();
 			s.sheet = args || 1;
-			l();
+			do_level();
 			storage[backstack.darajah] = {};
-			Hooks.rununtilconsumed('XPO.backstacksheet', args);
-			Hooks.run('XPO.backstack', backstack.darajah);
+			Hooks.rununtilconsumed('backstacksheet', args);
+			Hooks.run('backstack', backstack.darajah);
 		},
 		view: function (args) {
+			if (args == 'main') {
+				s.view = 0;
+				this.main(args);
+				return;
+			}
+			
 			savefocus();
 			s.view = args;
-			l();
+			do_level();
 			storage[backstack.darajah] = {};
-			Hooks.rununtilconsumed('XPO.backstackview', args);
-			Hooks.run('XPO.backstack', backstack.darajah);
+			Hooks.rununtilconsumed('backstackview', args);
+			Hooks.run('backstack', backstack.darajah);
 		},
 		main: function (args) {
 			savefocus();
 			s.main = args || 1;
-			l();
+			do_level();
 			storage[backstack.darajah] = {};
-			Hooks.rununtilconsumed('XPO.backstackmain', args);
-			Hooks.run('XPO.backstack', backstack.darajah);
+			Hooks.rununtilconsumed('backstackmain', args);
+			Hooks.run('backstack', backstack.darajah);
 		},
 		back: function () {
 			/*
 			 * if any dialog is open, close them first, then sheets, then mains
 			 * */
 			if (s.dialog)
-				s.dialog	= 0, l(), Hooks.run('XPO.closeall', 3);
+				s.dialog	= 0, do_level(), Hooks.run('closeall', 3);
 			else if (s.sheet)
-				s.sheet		= 0, l(), Hooks.run('XPO.closeall', 2);
+				s.sheet		= 0, do_level(), Hooks.run('closeall', 2);
 			else if (s.view)
-				s.view = 0, s.main = 1, l(), Hooks.run('XPO.closeall', 1);
+				s.view = 0, s.main = 1, do_level(), Hooks.run('closeall', 1);
 			else
-				s.main		= 0, l(), Hooks.run('XPO.closeall', 0);
+				s.main		= 0, do_level(), Hooks.run('closeall', 0);
 			
 			/*
 			 * then see what is left open and refire its event with stored args
 			 * */
-			Hooks.run('XPO.restore', backstack.darajah);
-			Hooks.run('XPO.backstack', backstack.darajah);
+			Hooks.run('restore', backstack.darajah);
+			Hooks.run('backstack', backstack.darajah);
 			
 			restorefocus();
 		},
 	};
 	
-	Hooks.set('XPO.back', function () {
+	Hooks.set('back', function () {
 		backstack.back();
 	});
-	Hooks.set('XPO.dialog', function (args) {
+	Hooks.set('dialog', function (args) {
 		backstack.dialog(args);
 	});
-	Hooks.set('XPO.sheet', function (args) {
+	Hooks.set('sheet', function (args) {
 		backstack.sheet(args);
 	});
-	Hooks.set('XPO.view', function (args) {
+	Hooks.set('view', function (args) {
 		backstack.view(args);
 	});
-	Hooks.set('XPO.main', function (args) {
+	Hooks.set('main', function (args) {
 		backstack.main(args);
 	});
 

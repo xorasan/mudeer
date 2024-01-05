@@ -53,6 +53,15 @@ var templates, namaavij;
 						delete keys[i].dataset.i18n;
 					}
 				}
+				
+				var has_time = i+'$time';
+				if (!isundef( o[has_time] )) {
+					if (isundef( o[has_time] )) {
+						popdata(keys[i], 'time');
+						innertext(keys[i], '');
+					} else
+						setdata(keys[i], 'time', o[has_time]);
+				}
 
 				if ( !isundef(o[i]) || !isundef(o[i+'$h']) || !isundef(o[i+'$t']) ) {
 					if (o[i] == 'ixtaf') {

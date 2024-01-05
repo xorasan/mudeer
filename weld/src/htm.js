@@ -29,7 +29,7 @@
 			'wbr'
 		],
 		quotesmask: /[ '"]/,
-		pathmask: '\\w\\=\\:\\;\\.\\,\\-\\!\\&\\/\\# ا-ي',
+		pathmask: '\\w\\=\\:\\;\\.\\#\\(\\)\\%\\,\\-\\!\\&\\/\\# ا-ي',
 		
 		/*
 		 * this should also return a map of all uglifiable keywords
@@ -235,6 +235,7 @@
 					}
 
 					// tag-name#id.class.class
+					// TODO #id vs url(#id), fix
 					var matches = command.line.match(/([\!\w\_\-]*)(\#*[\w\_\-\#]*)*(\.*[\w\_\-\.]*)*/) || '';
 					if (matches) {
 						tag.name = (matches[1] || 'div');
@@ -242,10 +243,10 @@
 						if (matches[3]) tag.classes = tag.classes.concat( matches[3].split('.') );
 					}
 					
-					matches = command.line.match(/(^| )*\#([a-zA-Z0-9\-]*)/g) || '';
+					matches = command.line.match(/(^| )*\#([a-zA-Z0-9\_\-]*)/g) || '';
 					if (matches.length) {
 						for (var j in matches) {
-							var attrib = matches[j].match(/\#([a-zA-Z0-9\-]*)/);
+							var attrib = matches[j].match(/\#([a-zA-Z0-9\_\-]*)/);
 							if (attrib) {
 								attrib = attrib[1].trim();
 								if (attrib.length && tag.id.indexOf(attrib) === -1)

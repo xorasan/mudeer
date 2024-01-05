@@ -32,10 +32,24 @@
 	z-index			200
 .z100
 	z-index			100
+[data-minimal] #tallheaderui
+	display			none
+[data-minimal] #tallscreenpadding
+	display			none
+[data-minimal] #headerui
+body[data-minimal]
+	padding-top		0
+	padding-bottom	0
 #tallheaderui
 	pointer-events	none
 	top				0
 	padding-top		12vh
+[data-sticky].headerui
+	z-index			100
+	background		@primaryt
+	position		sticky
+	top				0
+	backdrop-filter	blur(8px)
 .headerui .header[data-align="1"]
 	text-align		center
 .headerui .header[data-align="2"]

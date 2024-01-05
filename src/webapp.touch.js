@@ -10,21 +10,21 @@
 		size = 20, sizew = 15, caught = 0, start = 0;
 
 	var saveto = 18, settingsuid, webapptouchdir = 0;
-	Hooks.set('XPO.ready', function () {
+	Hooks.set('ready', function () {
 		/*if (preferences) webapptouchdir = preferences.get(saveto, 1) || 1;
 		webapp.touchdir = webapptouchdir;
 		
-		settingsuid = settings.adaaf('XPO.webapptouchdir', function () {
+		settingsuid = settings.adaaf('webapptouchdir', function () {
 			webapptouchdir = preferences.get(saveto, 1);
 			webapp.touchdir = webapptouchdir;
-			if (!webapptouchdir) delete document.body.dataset.XPO.align;
-			return [webapptouchdir ? 'XPO.on' : 'XPO.off' ];
+			if (!webapptouchdir) delete document.body.dataset.align;
+			return [webapptouchdir ? 'on' : 'off' ];
 		}, function () {
 			preferences.set(saveto, preferences.get(saveto, 1) ? 0 : 1);
 		});*/
 	});
 
-	Hooks.set('XPO.keyup', function (e) {
+	Hooks.set('keyup', function (e) {
 		var k = e.key.toLowerCase();
 		if (k === 'r' && e.ctrlKey)
 			location.reload(), preventdefault(e);
@@ -45,13 +45,13 @@
 
 		if (webapptouchdir) {
 			if ( x / innerwidth() < 0.5 ) {
-				document.body.dataset.XPO.align = 'XPO.left';
+				document.body.dataset.align = 'left';
 			} else {
-				delete document.body.dataset.XPO.align;
+				delete document.body.dataset.align;
 			}
 		}
 		
-		Hooks.run('XPO.navigationstart', [x, y]);
+		Hooks.run('navigationstart', [x, y]);
 	}, { passive: false });
 	listener('touchmove', function (e) {
 		curx = e.touches[0].clientX,
@@ -81,15 +81,15 @@
 		
 		if (horizontal !== 0 || vertical !== 0)
 			caught = 1,
-			Hooks.run('XPO.navigation', [horizontal, vertical]);
+			Hooks.run('navigation', [horizontal, vertical]);
 	});
 	listener('touchend', function (e) {
 		if (!caught) {
 			if ( e.timeStamp - start > 250 ) // held for 250ms or more
-				Hooks.run('XPO.navigationlongpress', [x, y, e.path, horizontal, vertical]);
+				Hooks.run('navigationlongpress', [x, y, e.path, horizontal, vertical]);
 			else
-				Hooks.run('XPO.navigationpress', [x, y, e.path, horizontal, vertical]);
+				Hooks.run('navigationpress', [x, y, e.path, horizontal, vertical]);
 		} else
-			Hooks.run('XPO.navigationend', [x, y, e.path, horizontal, vertical]);
+			Hooks.run('navigationend', [x, y, e.path, horizontal, vertical]);
 	});
 })();

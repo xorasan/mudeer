@@ -111,39 +111,34 @@ var Rooms, rooms;
 				n: 'room',
 				t: 'room',
 				i: function (k) {
-					k.searchmembers.focus();
+					k.search_members.focus();
 					l = list( k.members ).idprefix('members')
-								.listitem('membersitem');
+								.listitem('members_item');
 					l.onpress = function (o) {
 						l.baidaa();
 					};
 					l.afterset = function (o, clone, k) {
-						photo = setshape(o, k.photo);
-						photo.zoomlevel = 0.15;
-						photo.panned.y = 14;
-						photo.update();
 					};
-					var add = function (nataaij) {
+					var add = function (results) {
 						l.popall();
-						nataaij.forEach(function (o) {
+						results.forEach(function (o) {
 							if (o.uid !== suid)
 							l.set({
 								uid: o.uid,
-								shape: o.shape,
-								title: o.displayname || ('@'+o.username),
+								title: o.displayname || ('@'+o.name),
 							});
 						});
 					};
-					k.searchmembers.onkeyup = function () {
+					k.search_members.onkeyup = function () {
 						var str = this.value;
 						if (str.length)
-							Accounts.search(str, function (nataaij) {
-								add(nataaij);
+							Accounts.search(str, function (results) {
+								add(results);
 							});
 						else
 							l.popall();
 					};
-					k.searchmembers.onkeyup();
+					k.search_members.onkeyup();
 				},
 				c: function () {
 					if (l)
@@ -151,7 +146,7 @@ var Rooms, rooms;
 						var o = l.get();
 						if (o.uid !== suid) {
 							messages.open({
-								title: o.displayname || o.username,
+								title: o.displayname || o.name,
 								members: [[suid, 1], [o.uid, 0]]
 							});
 						}
@@ -242,14 +237,9 @@ var Rooms, rooms;
 			if (is_other && clone) {
 				$.taxeer('members'+item.uid, function () {
 					innerhtml(k.photo, '');
-					Accounts.get([is_other[0]], function (nataaij) {
-						nataaij.forEach(function (o) {
-							photo = setshape(o, k.photo, 1);
-							photo.zoomlevel = .3;
-							photo.panned.y = 25;
-//							photo.title( o.username.substr(0, 6) );
-							photo.update();
-							innertext(k.message, xlate(condition[2], o.displayname||o.username) );
+					Accounts.get([is_other[0]], function (results) {
+						results.forEach(function (o) {
+							innertext(k.message, xlate(condition[2], o.displayname||o.name) );
 						});
 					});
 				}, 50);
@@ -258,9 +248,9 @@ var Rooms, rooms;
 		roomslist.beforeset = function (item) {
 			var ret = rooms.is_other(item.members);
 			if (ret) {
-				Accounts.get([ret[0]], function (nataaij) {
-					nataaij.forEach(function (o) {
-						item.title = o.displayname || o.username;
+				Accounts.get([ret[0]], function (results) {
+					results.forEach(function (o) {
+						item.title = o.displayname || o.name;
 					});
 				});
 			}

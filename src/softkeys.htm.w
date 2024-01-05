@@ -5,9 +5,14 @@
 		.center .pad .padv .dim '#'
 		.center .icon [icon=iconmorevert]
 	#skmain		.row1
+	#softkeys_backstack .fixed
+		span .dot
+		span .dot
+		span .dot
+		span .dot
 	button [template=skbutton]
 		.icon [id=icon]
-		span .flex .tooltip
+		span .inline .tooltip
 			label [id=name] @hidden
 			.key .pad .tag .dim [id=key] @hidden
 		span [id=label] @hidden

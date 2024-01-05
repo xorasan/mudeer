@@ -1,7 +1,9 @@
 ;(function(){
 //	var x = 0, y = 0;
-	XPO.dimmer.onclick = function () {
-		if (XPO.dimmertext.innerText == '') backstack.back();
+	dimmer.onclick = function () {
+		if (dimmertext.innerText == '') {
+			Backstack.back();
+		}
 	};
 	/*
 	 * this messes up the nishaat pins list so it needs improvement

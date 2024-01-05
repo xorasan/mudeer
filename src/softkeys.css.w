@@ -9,6 +9,16 @@
 #softkeysui[data-hidden]
 	background		linear-gradient(0deg, @primaryt 0%, transparent)
 	opacity			0.85
+#softkeys_backstack
+	right			16px
+	bottom			66px
+#softkeys_backstack .dot
+	width			6px
+	height			6px
+	border-radius	8px
+	display			inline-block
+	border			1px solid @primaryt
+	background		@secondary
 #skhelp
 	margin-bottom	5px
 	font-size		125%
@@ -30,7 +40,7 @@
 	font-size		125%
 #softkeysui button .icon
 	display			inline-block
-[data-XPO.animations] #softkeysui button .icon
+[data-animations] #softkeysui button .icon
 	position		relative
 	transition		.2s right ease-out
 	right			0

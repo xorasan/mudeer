@@ -2,7 +2,7 @@
  * adds:
  * 	Databases.mongodb
  * 
- * 
+ * TODO: make async functions return value or error, make callbacks optional
  */
 
 var MongoDB;

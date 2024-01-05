@@ -132,9 +132,9 @@ intify = function (arr) {
 	}
 	return arr;
 },
-tolower = function (obj) {
-	return obj.toLowerCase();
+tolower = function (s) {
+	return (s||'').toLowerCase();
 },
-toupper = function (obj) {
-	return obj.toUpperCase();
+toupper = function (s) {
+	return (s||'').toUpperCase();
 };

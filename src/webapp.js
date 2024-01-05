@@ -308,7 +308,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 						delete title.dataset.i18n,
 						innertext(title, header_title || '');
 					}
-					if (header_title instanceof Array && header_subtitle[0]) {
+					if (header_subtitle instanceof Array && header_subtitle[0]) {
 						subtitle.dataset.i18n = header_subtitle[0];
 					} else {
 						delete subtitle.dataset.i18n,
@@ -465,7 +465,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	function on_scroll() {
 		var height = tallscreenpadding.offsetHeight * .75;
 		var percent = doc.scrollingElement.scrollTop / height;
-		if (percent > 1) {
+		if (percent > 1 || Webapp.is_minimal()) {
 			percent = 1;
 			ixtaf(tallheaderui);
 		} else {
@@ -475,6 +475,11 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 		tallheaderui.style.opacity = 1 - percent;
 		tallheaderui.style.paddingTop = (12 * (1-percent))+'vh';
 	}
+
+	Webapp.header_sticky = function (yes) {
+		if (yes) setdata(headerui, 'sticky', 1);
+		else popdata(headerui, 'sticky');
+	};
 
 	var home_views = ['main'];
 	Webapp.get_home_views = function () {
@@ -496,9 +501,9 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 		return backstack.darajah === 0 && view.is_active( home_views );
 	};
 
-	webapp.ask_on_exit = webapp.bixraaj;
+	Webapp.ask_on_exit = webapp.bixraaj;
 
-	webapp.itlaa3 = function (text, time) {
+	Webapp.itlaa3 = function (text, time) {
 		var element = itlaa3.firstElementChild;
 		if (text) {
 			if (text instanceof Array) {
@@ -519,8 +524,40 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 			itlaa3.hidden = 1;
 		}
 	};
-	webapp.status = webapp.itlaa3;
+	Webapp.status = webapp.itlaa3;
 	// TODO notify
+
+
+	// hint for modules to minimize screen space usage
+	// TODO report percentage when toggling for animation
+	var minimal_views = [];
+	Webapp.get_minimal_views = function () {
+		return minimal_views.concat([]);
+	};
+	Webapp.add_minimal_view = function (name) {
+		if (isarr(name)) {
+			name.forEach(function (o) {
+				Webapp.add_minimal_view(o)
+			});
+		} else if (!minimal_views.includes(name)) {
+			minimal_views.push(name);
+		}
+	};
+	Webapp.remove_minimal_view = function (name) {
+		minimal_views.splice( minimal_views.indexOf(name), 1 );
+	};
+	Webapp.is_minimal = function () {
+		return view.is_active( minimal_views );
+	};
+
+	Hooks.set('viewready', function (args) {
+		if (Webapp.is_minimal()) {
+			setdata(bod, 'minimal', 1);
+		} else {
+			popdata(bod, 'minimal', 1);
+		}
+		on_scroll();
+	});
 
 	// prevent default behavior from changing page on dropped file
 	listener('dragover', function (e) {
@@ -565,6 +602,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	});
 	listener('scrollend', function (e) {
 		Hooks.run('scrollend', doc.scrollingElement.scrollTop);
+		return;
 		var offset_height = tallscreenpadding.offsetHeight;
 		var height = offset_height * .75;
 		var percent = doc.scrollingElement.scrollTop / height;
@@ -631,3 +669,16 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	});
 	
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+

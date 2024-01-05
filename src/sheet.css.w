@@ -17,6 +17,9 @@
 #sheetui .container
 //	padding		6px 0 48px 0
 	padding		0 0 30px 0
+.list_sheet_item
+	padding-top			12px
+	padding-bottom		12px
 #sheetui [data-bardaa].container
 	opacity				.4
 	pointer-events		none

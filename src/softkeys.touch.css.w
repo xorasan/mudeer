@@ -1,3 +1,6 @@
+if max-width = 420px
+	#sksoftleft .tooltip
+		display		none
 if min-width = 321px
 	#softkeysui button
 		line-height		1

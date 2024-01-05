@@ -23,20 +23,20 @@
 .item .qrcode img
 	border-radius		8px
 	border				10px solid #fff
-.sheet .age
+.account_sheet .age
 	font-size			220%
 	font-weight			100
-.sheet .gender
+.account_sheet .gender
 	position			absolute
 	top					57px
 	right				6px
 	z-index				220
 	font-weight			bold
 	text-transform		uppercase
-.sheet .bio
+.account_sheet .bio
 	padding-top			20px
 	color				@text
-.sheet .photo
+.account_sheet .photo
 	width				100%
 	height				480px
 	z-index				100
@@ -44,9 +44,9 @@
 	background-size		auto 100%
 	background-color	@secondaryd
 	background-repeat	no-repeat
-[data-XPO.animate] .sheet .photo
+[data-animate] .account_sheet .photo
 	transition			transform 0.2s ease-in
-.sheet .extendedinfo
+.account_sheet .extendedinfo
 	position			absolute
 	z-index				120
 	top					70vh
@@ -54,20 +54,29 @@
 	width				calc(100% - 30px)
 	padding				15px 15px 150px 15px
 	background			linear-gradient(@primaryt 0%, @primary 100%)
-.sheet .item .title
+.account_sheet .item .title
 	font-size			125%
 	letter-spacing		-0.5px
 	margin-top			10px
 	font-weight			bold
-.sheet .heading
+.account_sheet .heading
 	margin				0 -15px
 
+.account_item .icon svg
+	width		64px
+	height		64px
+.account_item .name
+.account_item .displayname
+.account_item .created
+.account_item .updated
+	
+
 if min-width = 640px
-	.sheet .extendedinfo
+	.account_sheet .extendedinfo
 		border-top-right-radius	15px
 		border-top-left-radius	15px
 		width			570px
-	.sheet .title
+	.account_sheet .title
 		font-size		150%
 
 #profilephotosui .item .details

@@ -3,7 +3,7 @@
 	[id=container] .container
 [sheet=list_sheet]
 	[id=list]
-[template=list_sheet_item] .listitem .pad .padv .flex
+[template=list_sheet_item] .listitem .pad .padv .flex .list_sheet_item
 	[id=icon] .icon
 	[id=title] .bold .pad
 	[id=value] .pad

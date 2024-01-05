@@ -18,13 +18,13 @@ big, .big
 	font-size		300%
 .huge
 	font-size		400%
-html, body
+body
 	font-size		100%
 	padding			0 0 20px 0
 	margin			0
 	color			@text
 //	overflow-x		hidden		this messes with sticky positioning
-	overscroll-behavior		none
+//	overscroll-behavior		none
 	width			100%
 body
 	background-color		@primary

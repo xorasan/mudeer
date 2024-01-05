@@ -1,4 +1,3 @@
-//+ scrollto scrolltobottom isatbottom isattop scrolltotop itlaa3
 var scrollingelement = function () {
 	var darajah = backstack.darajah;
 	if ([0, 1].includes(darajah)) {
@@ -17,7 +16,7 @@ var datepicker = datepicker || 0;
 //	if ('onlargetextenabledchanged' in window)
 //		onlargetextenabledchanged = function () { webapp.textsize(); };
 
-	webapp.taht3nsar = function (text, time, taht) { // below element
+	Webapp.taht3nsar = function (text, time, taht) { // below element
 		taht = document.activeElement || taht;
 		var element = taht3nsar.firstElementChild;
 		if (text) {
@@ -50,66 +49,72 @@ var datepicker = datepicker || 0;
 			taht3nsar.hidden = 1;
 		}
 	};
-	webapp.scrollto = function (element) {
+	Webapp.scrollto = function (element) {
 		var se = scrollingelement();
 		se.scrollTop = 0 + (element ? element.offsetTop - (se.clientHeight / 4) : 0);
 	};
-	webapp.scrolltotop = function () {
+	Webapp.scrolltotop = function () {
 		var se = scrollingelement();
 		se.scrollTop = 0;
 	};
-	webapp.scrolltobottom = function () {
+	Webapp.scrolltobottom = function () {
 		var se = scrollingelement();
 		se.scrollTop = se.scrollHeight - se.clientHeight;
 		return se.scrollTop;
 	};
-	webapp.isatop = function () {
+	Webapp.isatop = function () {
 		var se = scrollingelement();
 		return Math.floor(se.scrollTop) === 0;
 	};
-	webapp.isatbottom = function () {
+	Webapp.isatbottom = function () {
 		var se = scrollingelement();
 		return Math.floor(se.scrollTop) === se.scrollHeight - se.clientHeight;
 	};
-	hooks.set('closeall', function (darajah) {
-		if (darajah === 3) {
+	Hooks.set('closeall', function (level) {
+		if (level === 3) {
 			datepicker && datepicker.hide();
 			dialog.hide();
-			webapp.blur();
+			Webapp.blur();
 		}
-		if (darajah === 2) sheet.hide(), webapp.blur();
-		if (darajah === 1) view.axad('main'), webapp.blur();
-		if (darajah === 0)
-			webapp.itlaa3( translate('exiting') ),
+		if (level === 2) sheet.hide(), Webapp.blur();
+		if (level === 1) view.get('main'), Webapp.blur();
+		if (level === 0)
+			Webapp.status( translate('exiting') ),
 			$.taxeer('exit', function () {
-				webapp.exit();
+				Webapp.exit();
 			});
 	});
-	hooks.set('restore', function (darajah) {
-		if (darajah === 3) webapp.dimmer(600);
-		if (darajah === 2) webapp.dimmer(400);
-		if (darajah === 1) webapp.dimmer();
-		if (darajah === 0) webapp.header(), webapp.dimmer();
+	Hooks.set('restore', function (level) {
+		if (level === 3) Webapp.dimmer(600);
+		if (level === 2) Webapp.dimmer(400);
+		if (level === 1) Webapp.dimmer();
+		if (level === 0) Webapp.header(), Webapp.dimmer();
 	});
-	hooks.set('backstackdialog', function (args) {
+	Hooks.set('backstackdialog', function (args) {
 		var date = 0;
 		if (datepicker && args instanceof HTMLElement) date = 1;
 
 		webapp.dimmer(600);
-		softkeys.clear();
-		softkeys.set(K.sl, function () {
-			if (date) datepicker.okay && datepicker.okay(args);
-			else dialog.okay && dialog.okay();
-		}, 0, 'icondone');
-		softkeys.set(K.sr, function () {
-			if (date) datepicker.cancel && datepicker.cancel();
-			else dialog.cancel && dialog.cancel();
-		}, 0, 'iconclose');
+		Softkeys.clear();
+		Softkeys.add({ k: K.sl,
+			i: 'icondone',
+			c: function () {
+				if (date) datepicker.okay && datepicker.okay(args);
+				else dialog.okay && dialog.okay();
+			}
+		});
+		Softkeys.add({ k: K.sr,
+			i: 'iconclose',
+			c: function () {
+				if (date) datepicker.cancel && datepicker.cancel();
+				else dialog.cancel && dialog.cancel();
+			}
+		});
 
 		if (date) datepicker.show(args);
 		else dialog.show(args);
 	});
-	hooks.set('backstacksheet', function (args) {
+	Hooks.set('backstacksheet', function (args) {
 		webapp.dimmer(400);
 		softkeys.clear();
 		if (args.callback || args.c) {
@@ -123,23 +128,23 @@ var datepicker = datepicker || 0;
 		sheet.show(args);
 		softkeys.showhints();
 	});
-	hooks.set('backstackview', function (name) {
-		webapp.dimmer();
-		softkeys.clear();
-		softkeys.P.empty();
-		softkeys.set(K.sr, function () {
-			hooks.run('back');
+	Hooks.set('backstackview', function (name) {
+		Webapp.dimmer();
+		Softkeys.clear();
+		Softkeys.P.empty();
+		Softkeys.set(K.sr, function () {
+			Hooks.run('back');
 		}, 0, 'iconarrowback');
-		view.ishtaghal(name);
-		softkeys.showhints();
+		View.run(name);
+		Softkeys.showhints();
 		return 1; // stop propagation
 	});
-	hooks.set('backstackmain', function (name) {
-		softkeys.clear();
-		softkeys.P.empty();
-		view.ishtaghal('main');
+	Hooks.set('backstackmain', function (name) {
+		Softkeys.clear();
+		Softkeys.P.empty();
+		View.run('main');
 	});
-	hooks.set('ready', function () {
+	Hooks.set('ready', function () {
 		settings.adaaf('animations', function () {
 			var animationsoff = preferences.get(15, 1);
 			if (animationsoff) {

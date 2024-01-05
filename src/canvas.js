@@ -1,5 +1,5 @@
 // TODO add props mw, mh
-var canvas;
+var Canvas, canvas;
 var calcdistance = function (x1, y1, x2, y2) {
 	var dx = x2 - x1; dx *= dx;
 	var dy = y2 - y1; dy *= dy;
@@ -19,7 +19,7 @@ var calcdistance = function (x1, y1, x2, y2) {
 		return (ang < 0 ? ang + 360 : ang);
 	};
 	
-	canvas = function (element) {
+	Canvas = canvas = function (element) {
 		var c = {
 			f: '#fff',
 			s: -1,
@@ -76,6 +76,7 @@ var calcdistance = function (x1, y1, x2, y2) {
 		c.line = function (points, s, f) {
 			c.fillcolor(f);
 			c.strokecolor(s);
+			var lw = c.o.lineWidth;
 
 			points.forEach(function (p, i) {
 				if (i === 0) {
@@ -96,6 +97,8 @@ var calcdistance = function (x1, y1, x2, y2) {
 					if (f != -1) c.o.fill();
 				}
 			});
+			
+			c.o.lineWidth = lw;
 		};
 		c.circle = function (x, y, r, sa, ea, s, f) {
 			c.fillcolor(f);
@@ -111,11 +114,13 @@ var calcdistance = function (x1, y1, x2, y2) {
 			c.o.clearRect(x, y, w, h);
 		};
 		
+		c.text = c.matn;
+		
 		return c;
 	};
 	
-	canvas.coordtoangle = coordtoangle;
-	canvas.todegrees = todegrees;
-	canvas.toradians = toradians;
+	Canvas.coordtoangle = coordtoangle;
+	Canvas.todegrees = todegrees;
+	Canvas.toradians = toradians;
 
 })();

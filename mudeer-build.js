@@ -542,6 +542,8 @@ var do_build = function (args, xpo) {
 	args.keys.uglify		= args.keys.uglify		|| args.keys.ugl;
 	args.keys.verbose		= args.keys.verbose		|| args.keys.vrb;
 
+	var remove_comments = args.keys.remove_comments || conf.remove_comments || false;
+
 	// by default, assume admin version is wanted
 	if (!args.keys.client && !args.keys.all)
 		args.keys.admin = true;
@@ -558,7 +560,7 @@ var do_build = function (args, xpo) {
 
 	args.keys.appname = conf.appname || conf.name;
 
-	managedincludes(conf, args);
+	managedincludes( conf, args );
 
 	if (conf.kind == 'client') {
 		// compress svg icons into dev-public/icons.svg
@@ -580,6 +582,7 @@ var do_build = function (args, xpo) {
 		production:		args.keys.production || 0		,
 		buildnumber:	BUILDNUMBER || 0				,
 		compress:		args.keys.c || args.keys.compress || false		,
+		remove_comments:		remove_comments			,
 		linkify:		true,
 		server:			conf.kind == 'server' || false,
 		client:			conf.kind == 'client' || false,
@@ -634,20 +637,26 @@ var do_build = function (args, xpo) {
 		parsedoutput.rawjs = 'var Config='+JSON.stringify(trimmed_conf)+';\n'+parsedoutput.rawjs;
 		Files.set.file( xpath+'a.js', ( parsedoutput.rawjs || '' ) );
 		printsize(prespace+'a.js', (parsedoutput.rawjs||'').length );
-		var swjs;
-		try {
-			swjs = Files.get.file('src/sw.js');
-		} catch (e) {}
-		if (swjs) {
-			swjs = swjs.toString();
-			swjs = swjs.replace(/BUILDNUMBER/g, BUILDNUMBER);
-			
-			var parsedoutputswjs = Uglify.minify(swjs, {
-				fromString:			true,
-				mangle:				true,
-			});
-			Files.set.file( xpath+'_.js', ( parsedoutputswjs.code || '' ) );
-			printsize(prespace+'_.js', (parsedoutputswjs.code||'').length );
+
+		if (conf.src.includes('sw')) {
+			var swjs;
+			try {
+				swjs = Files.get.file($.path+'/src/sw.js');
+			} catch (e) {
+				$.log( e );
+			}
+			if (swjs) {
+				swjs = swjs.toString();
+				swjs = swjs.replace(/BUILDNUMBER/g, parseInt(BUILDNUMBER)+1);
+				
+				var parsedoutputswjs = { code: swjs };
+//				var parsedoutputswjs = Uglify.minify(swjs, {
+//					fromString:			true,
+//					mangle:				true,
+//				});
+				Files.set.file( xpath+'_.js', ( parsedoutputswjs.code || '' ) );
+				printsize(prespace+'_.js', (parsedoutputswjs.code||'').length );
+			}
 		}
 
 	}

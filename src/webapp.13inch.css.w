@@ -2,8 +2,8 @@ html, body, svg text
 	font-family		Segoe UI, Noto Naskh Arabic UI, sans-serif
 
 if min-height = 600px
-	html, body
-		padding			0px 5px 45vh 5px
+	body
+		padding			0px 5px 50vh 5px
 
 if min-width = 320px
 	#softkeysui .left
@@ -20,11 +20,10 @@ if min-width = 320px
 //		display			none
 	#softkeysui .row2 button:hover .tooltip label
 		display			flex
-	#softkeysui .row2 button .tooltip
-		display			none
 	#softkeysui[data-shown] .row2 button .tooltip
 		font-size		80%
 	#softkeysui .row2 button .tooltip
+		display			none
 		position		absolute
 		right			70px
 		align-items		center
@@ -36,6 +35,7 @@ if min-width = 320px
 		width			max-content
 		padding			8px
 		border-radius	8px
+		pointer-events	none
 	#softkeysui button .key
 		margin			2px
 		padding			2px
@@ -91,8 +91,6 @@ if min-width = 1024px
 		max-width	840px
 	#eqonahui
 		display			inline-block
-	#skenter
-		width		96px
 	#softkeysui .row1 button
 		height		96px
 	#softkeysui .row1 button svg

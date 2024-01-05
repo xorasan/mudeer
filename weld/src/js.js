@@ -9,6 +9,25 @@
 	var Uglify = require('../../deps/uglify-js'),
 		Files, Slang;
 
+	var RE_BLOCKS = new RegExp([
+	  /\/(\*)[^*]*\*+(?:[^*\/][^*]*\*+)*\//.source,           // $1: multi-line comment
+	  /\/(\/)[^\n]*$/.source,                                 // $2 single-line comment
+	  /"(?:[^"\\]*|\\[\S\s])*"|'(?:[^'\\]*|\\[\S\s])*'/.source, // - string, don't care about embedded eols
+	  /(?:[$\w\)\]]|\+\+|--)\s*\/(?![*\/])/.source,           // - division operator
+	  /\/(?=[^*\/])[^[/\\]*(?:(?:\[(?:\\.|[^\]\\]*)*\]|\\.)[^[/\\]*)*?\/[gim]*/.source
+	  ].join('|'),                                            // - regex
+	  'gm'  // note: global+multiline with replace() need test
+	);
+
+	// remove comments, keep other blocks
+	function removeComments(str) {
+	  return str.replace(RE_BLOCKS, function (match, mlc, slc) {
+		return mlc ? ' ' :         // multiline comment (replace with space)
+			   slc ? '' :          // single/multiline comment
+			   match;              // divisor, regex, or string, return as-is
+	  });
+	}
+
 	var _mod = {
 		process: function (text, options) {
 			text = text || '';
@@ -102,6 +121,10 @@
 				text = Uglify.minify( text, uglifyoptions );
 			} else {
 				text = {code: text};
+			}
+
+			if (options.remove_comments) {
+				text.code = removeComments( text.code );
 			}
 
 			return text;

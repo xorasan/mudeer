@@ -83,6 +83,56 @@ Sessions = sessions = {
 		);
 	},
 
+	get_session_account: function (key, callback) {
+		if (!isfun(callback)) {
+			$.log.e(' get_session_account needs a callback ');
+			return false;
+		}
+		
+		if (!isstr(key)) {
+			callback(false);
+			return false;
+		}
+
+		// does the session exist
+		MongoDB.get(Config.database.name, tbl_adwr, {
+			hash:	parsestring(key),
+		}, function (sessionrow) {
+			// yes
+			if (sessionrow) {
+				// update .updated to keep session alive
+				MongoDB.set(Config.database.name, tbl_adwr, [{
+					uid: sessionrow.uid,
+					updated: get_time_now(),
+				}], function () {
+					// does the linked account exist and is allowed login
+					MongoDB.get(Config.database.name, tbl_hsbt, {
+						uid:		sessionrow.account,
+//						status:		0, // TODO
+					}, function (accountrow) {
+						// yes, just return true
+						if (accountrow) {
+							var out_result = {
+								session: sessionrow,
+								account: accountrow
+							};
+							callback(out_result);
+							return out_result;
+						// no, return false to force logout
+						} else {
+							callback(false);
+							return false;
+						}
+					});
+				});
+			// no, return false to force logout
+			} else {
+				callback(false);
+				return false;
+			}
+		});
+	},
+
 	sendcaptcha: function (response) {
 		captcha.get(response.extra.boxdatabase, function (svg) {
 			response.need('captcha')
@@ -217,44 +267,13 @@ Sessions = sessions = {
 
 // key attached, verify & add account info
 Network.favor(PRIMARY).intercept('sessions', 'key', function (response) {
-	var database = response.extra.database;
-
-	if (!isstr(response.value)) {
-		response.intercept(false).finish();
-		return;
-	}
-
-	// does the session exist
-	MongoDB.get(database, tbl_adwr, {
-		hash:	parsestring(response.value),
-	}, function (sessionrow) {
-		// yes
-		if (sessionrow) {
-			// update .updated to keep session alive
-			MongoDB.set(database, tbl_adwr, [{
-				uid: sessionrow.uid,
-				updated: get_time_now(),
-			}], function () {
-				// does the linked account exist and is allowed login
-				MongoDB.get(database, tbl_hsbt, {
-					uid:		sessionrow.account,
-//					status:		0, // TODO
-				}, function (accountrow) {
-					// yes, just return true
-					if (accountrow) {
-						response.intercept(true);
-						sessions.account2extra(sessionrow, accountrow, response);
-					// no, return false to force logout
-					} else
-						response.intercept(false);
-
-					response.finish();
-				});
-			});
-		// no, return false to force logout
-		} else {
-			response.intercept(false);
+	Sessions.get_session_account(response.value, function (result) {
+		if (result) {
+			response.intercept(true);
+			Sessions.account2extra(result.session, result.account, response);
 			response.finish();
+		} else {
+			response.intercept(false).finish();
 		}
 	});
 });

@@ -92,6 +92,8 @@ var List, list;
 			if (v && active) softkeys.list.basic(this);
 		},
 		rakkaz: function (v, active) { // deprecated, use set_focus
+			if (this._prevent_focus) return;
+
 			var yes;
 			this.murakkaz = !!v;
 			if (v && !this.element.dataset.focussed) this.element.dataset.focussed = 1, yes = 1;
@@ -518,7 +520,7 @@ var List, list;
 		get: function (id) {
 			return this.keys.items.children[id];
 		},
-		pop: function (id) {
+		pop: function (id) { // deprecated, use remove_by_uid
 			var element, LV = this, uid;
 			if (isundef(id)) {
 				element = LV.get(LV.selected);
@@ -546,11 +548,17 @@ var List, list;
 				LV.uponhavaf && LV.uponhavaf( LV.length() );
 			}
 		},
+		remove_by_uid: function (uid) { // pop
+			return this.pop(uid);
+		},
 		popall: function () {
 			this.adapter = $.array();
 			innertext(this.keys.items, '');
 			innertext(this._muntahaabox, '');
 			this._katabmowdoo3();
+		},
+		remove_all: function () { // popall
+			return this.popall();
 		},
 		press: function (key, force) {
 			var element = this.get(this.selected);
@@ -663,6 +671,10 @@ var List, list;
 	
 	proto.set_focus = proto.rakkaz;
 	proto.highlight = proto.baidaa;
+	proto.prevent_focus = function (yes) {
+		this._prevent_focus = yes;
+		return this;
+	};
 	
 	List = list = function (element) { // TODO deprecate list
 		var LV = Object.create(proto);
