@@ -26,14 +26,14 @@ input, textarea
 input.bare
 	font-size			150%
 	border-bottom-width	1px
-#itlaa3, #taht3nsar
+#webapp_status_ui, #taht3nsar
 	z-index			3000
 	overflow		visible
-#itlaa3
+#webapp_status_ui
 	top				45vh
 	left			20vw
 	right			20vw
-#itlaa3 .text
+#webapp_status_ui .text
 	padding			6px 10px
 	box-shadow		0 0 10px 0 @tertiary
 	border			1px solid @tertiaryl
@@ -42,10 +42,10 @@ input.bare
 	padding			5px
 	border-radius	5px
 	border			1px solid @tertiaryd
-#itlaa3 .text, #taht3nsar .text
+#webapp_status_ui .text, #taht3nsar .text
 	background		@secondaryd
 	text-align		center
 //	margin			0 auto
-[data-transparency] #itlaa3 .text, [data-transparency] #taht3nsar .text
+[data-transparency] #webapp_status_ui .text, [data-transparency] #taht3nsar .text
 	background		@primaryt
 	border-color	@secondaryt

@@ -1,12 +1,13 @@
 /* TODO
-* .row1 should be animated
-*/
+ * .row1 should be animated
+ * simplify this module with better logic
+ */
 /* FEATURES
  * <element>.on_focus_prev() triggered when K.up is pressed on an element
  * <element>.on_focus_next() triggered when K.dn is pressed on an element
  * all keyups are pd'd, fig out logic for keydowns in .press
  * modifiers now do work! 13 sep 2023
-*/
+ */
 var Softkeys, softkeys, K, P;
 ;(function(){
 	K = { // key code names
@@ -179,8 +180,8 @@ var Softkeys, softkeys, K, P;
 				} else {
 					talaf(name);
 				}
-				softkeys.update();
-				backstack.set('softkeys', M);
+				Softkeys.update();
+				Backstack.set('softkeys', M);
 			}
 			return softkeys;
 		},
@@ -250,8 +251,8 @@ var Softkeys, softkeys, K, P;
 				} else {
 					adaaf(name, callback, label, icon, status);
 				}
-				softkeys.update(name);
-				backstack.set('softkeys', M);
+				Softkeys.update(name);
+				Backstack.set('softkeys', M);
 			}
 			return this;
 		},
@@ -282,7 +283,7 @@ var Softkeys, softkeys, K, P;
 				M[ o.uid ] = o;
 				
 				updatekey(o.uid);
-				backstack.set('softkeys', M);
+				Backstack.set('softkeys', M);
 			}
 			return this;
 		},
@@ -331,7 +332,7 @@ var Softkeys, softkeys, K, P;
 			var caught, pd = function () { preventdefault(e); };
 			
 			kraw = k;
-			k = k.toLowerCase();
+			if (isstr(k)) k = k.toLowerCase();
 
 			// for compat on desktop
 			if (e && e.type && e.type == 'mousewheel') {
@@ -512,8 +513,8 @@ var Softkeys, softkeys, K, P;
 		},
 	};
 	
-	softkeys.showhints();
-	softkeys.M = function () {
+	Softkeys.showhints();
+	Softkeys.M = function () {
 		return M;
 	};
 	
@@ -524,7 +525,7 @@ var Softkeys, softkeys, K, P;
 				setcss(a, 'height', a.scrollHeight+3+'px');
 		}
 	};
-	softkeys.autoheight = autoheight;
+	Softkeys.autoheight = autoheight;
 	// TODO make repeat logic here
 	var resize = function () {
 		var w = innerwidth(), sl = index[K.sl], sr = index[K.sr];
@@ -607,7 +608,7 @@ var Softkeys, softkeys, K, P;
 			}, 100);
 		} else {
 		}
-		Hooks.rununtilconsumed('softkey', [e.key.toLowerCase(), e || {}, e && e.type, 0]);
+		Hooks.rununtilconsumed('softkey', [(e.key||'').toLowerCase(), e || {}, e && e.type, 0]);
 		preventdefault(e);
 	});
 	Hooks.set('keydown', function (e) {
@@ -656,7 +657,9 @@ var Softkeys, softkeys, K, P;
 //			return 1; // to let sk.touch run
 		}
 	});
-	Hooks.set('restore', function (args) {
+	// needs to be set first, else any modifications in other module hooks before this cause bugs
+	Hooks.set_first('restore', function (args) {
+		$.log.w( 'Softkeys restore hook' );
 		var oldM = backstack.get('softkeys');
 		if (oldM) {
 			M = Object.assign({}, oldM);

@@ -13,6 +13,8 @@
 	'use strict';
 	var exiting = 0, backcount = 0, lasturiuponpop, evenlasturiuponpop;
 	
+	// OLD LOGIC
+	
 	/*
 	 * clear the history stack requires boilerplate code
 	 * basically whenever you call history.back, you shouldn't call it again
@@ -141,8 +143,43 @@
 			history.back();
 		},
 	};
-	Hooks.set('XPO.dompopstate', 'XPO.backstack', function (e) {
+	Hooks.set('dompopstate', 'backstack', function (e) {
 		backstack.onpopevent(e);
+	});
+
+	var chronicle = [];
+
+	// NEW LOGIC
+	/*
+	 * 
+	 */
+	// logic below is faulty, change it to reconstruction every time
+	// otherwise it's too unreliable
+	listener('popstate', function (event) {
+		$.log.w( 'popstate', event );
+		var crumbs = location.pathname.split('/');
+		if ( name.length > 1 && name[1].length ) {
+			Backstack.view(name[1], 1);
+			// 
+			Hooks.run( 'backstack-crumbs', crumbs.slice(2) );
+		} else {
+			if (Backstack.darajah)
+				Backstack.back();
+		}
+	});
+	
+	// backstack-* hooks are refined and validate calls
+	Hooks.set('backstack-view', function (args) {
+		$.log.w( 'backstack-view', args );
+		history.pushState({}, '', '/'+args)
+	});
+	Hooks.set('ready', function () {
+		$.taxeer('backstack-history-ready', function () {
+			var name = location.pathname.slice(1);
+			if ( name.length ) {
+				Backstack.view(name, 1);
+			}
+		}, 100);
 	});
 	
 })();

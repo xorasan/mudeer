@@ -269,7 +269,8 @@ Sessions = sessions = {
 Network.favor(PRIMARY).intercept('sessions', 'key', function (response) {
 	Sessions.get_session_account(response.value, function (result) {
 		if (result) {
-			response.intercept(true);
+			response.intercept(result.session.uid);
+			// this adds account+session info to .extra for other server modules to use
 			Sessions.account2extra(result.session, result.account, response);
 			response.finish();
 		} else {

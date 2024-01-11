@@ -9,7 +9,7 @@ var MongoDB;
 ;(function () {
 	'use strict';
 	const { MongoClient, ObjectId } = require('./deps/mongodb');
-	const uri = 'mongodb://localhost/';
+	const uri = process.env.DEWAAN_MONGO_URI || 'mongodb://localhost/';
 	const client = new MongoClient( uri );
 	var db, tbl_pops = 'pops', debug_mongodb = 0;
 

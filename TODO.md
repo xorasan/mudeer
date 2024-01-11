@@ -44,10 +44,11 @@ This is an incomplete progress list of features & known bugs.
 	* [ ] support new properties `order`, `last`, `first`, `before`, `after`
 	* [ ] add .alias to support linking secondary keysets to a shortcut entry
 
-* [ ] Backstack
+* [ ] Backstack [Discussion](Philosophy/Backstack.md)
+	* [x] Home > View > Sheet > Dialog, that's the ceiling by default, can be extended using history
 	* [ ] History
-		* [ ] Home > View > Sheet > Dialog, that's the ceiling by default
 		* [ ] recreate the stack when `Webapp` fires the `ready` hook
+		* [ ] offer modules a way to react to stack changes and break the default 4 ceiling
 		* [ ] using `Softkeys`, holding the back button should trigger a history list
 		* [ ] show hint that history list is available when there's more than 3ish items
 

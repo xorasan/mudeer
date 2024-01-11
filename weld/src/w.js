@@ -702,10 +702,11 @@
 					if (options.linkify) {
 						rawjs += result.parsed;
 						parsed = parsed.replace('<script>[%weld-script-marker-'+i+'%]</script>', function () {
+							// TODO add ROOT support for script src "/"
 							if (options.client)
-							return '<script src=a.js></script>';
+							return '<script src=/a.js></script>';
 							else
-							return '<script src=&.js></script>';
+							return '<script src=/&.js></script>';
 						});
 					} else {
 						parsed = parsed.replace('[%weld-script-marker-'+i+'%]', function () {

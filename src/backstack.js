@@ -41,6 +41,7 @@ var Backstack, backstack;
 	 * the backstack event is fired on all changes
 	 * */
 	Backstack = backstack = {
+		storage: storage,
 		darajah: 0,
 		states: {
 			dialog	:	0, // searches, dialogs, menus
@@ -71,7 +72,7 @@ var Backstack, backstack;
 			Hooks.rununtilconsumed('backstacksheet', args);
 			Hooks.run('backstack', backstack.darajah);
 		},
-		view: function (args) {
+		view: function (args, backing) {
 			if (args == 'main') {
 				s.view = 0;
 				this.main(args);
@@ -84,6 +85,9 @@ var Backstack, backstack;
 			storage[backstack.darajah] = {};
 			Hooks.rununtilconsumed('backstackview', args);
 			Hooks.run('backstack', backstack.darajah);
+
+			if (!backing)
+				Hooks.run('backstack-view', args);
 		},
 		main: function (args) {
 			savefocus();
@@ -92,6 +96,7 @@ var Backstack, backstack;
 			storage[backstack.darajah] = {};
 			Hooks.rununtilconsumed('backstackmain', args);
 			Hooks.run('backstack', backstack.darajah);
+			Hooks.run('backstack-main', 0);
 		},
 		back: function () {
 			/*
@@ -109,8 +114,8 @@ var Backstack, backstack;
 			/*
 			 * then see what is left open and refire its event with stored args
 			 * */
-			Hooks.run('restore', backstack.darajah);
-			Hooks.run('backstack', backstack.darajah);
+			Hooks.run('restore', Backstack.darajah);
+			Hooks.run('backstack', Backstack.darajah);
 			
 			restorefocus();
 		},

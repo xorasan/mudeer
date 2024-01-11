@@ -33,6 +33,17 @@ var profilelist;
 			q: details[0] || item.uid
 		});
 	};
+	function update_sidebar() { if (get_global_object().Sidebar) {
+		if (Sessions.signedin()) {
+			Sidebar.set({
+				uid: module_name,
+				title: translate( module_name ),
+				icon: 'iconperson',
+			});
+		} else {
+			Sidebar.remove(module_name);
+		}
+	} }
 	
 	Profile = profile = {
 		/* TODO IMPORTANT
@@ -65,13 +76,10 @@ var profilelist;
 		keyvalue: 1
 	});
 	
+	Hooks.set('sessionchange', function (signedin) {
+		update_sidebar();
+	});
 	Hooks.set('ready', function () {
-		if (get_global_object().Sidebar) { Sidebar.set({
-			uid: module_name,
-			title: translate( module_name ),
-			icon: 'iconperson',
-		}); }
-
 		var dom_keys = view.dom_keys(module_name);
 
 		profilelist = List( dom_keys.list ).idprefix(module_name).listitem('profilekatab');

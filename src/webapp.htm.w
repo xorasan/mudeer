@@ -8,7 +8,8 @@
 		[i18n=loading]
 #dimmer .fixed @hidden
 	#dimmertext
-img #eqonahui .fixed .top .right .z200 @src(e.png)
+// TODO support for ROOT for /
+img #eqonahui .fixed .top .right .z200 @src(/e.png)
 #tallheaderui .fixed .z100 .left .right .headerui
 	[id=header] .big .centertext [dir=1] @hidden
 		[id=icon] .giant .icon
@@ -22,8 +23,9 @@ img #eqonahui .fixed .top .right .z200 @src(e.png)
 			.vcenter .pad
 				[id=title] .bold
 				[id=subtitle] .dim
-#itlaa3 .fixed @hidden .flex
-	.text
+#webapp_status_ui .fixed @hidden .flex
+	.title [id=title]
+	.text [id=text]
 #taht3nsar .fixed @hidden .flex
 	.text
 button [template=checkbox] .checkbox .flex .row

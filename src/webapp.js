@@ -503,8 +503,11 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 
 	Webapp.ask_on_exit = webapp.bixraaj;
 
+	var status_dom_keys;
 	Webapp.itlaa3 = function (text, time) {
-		var element = itlaa3.firstElementChild;
+		status_dom_keys = status_dom_keys || templates.keys(webapp_status_ui);
+		// TODO add .title support
+		var element = status_dom_keys.text;
 		if (text) {
 			if (text instanceof Array) {
 				element.dataset.i18n = text[0];
@@ -513,15 +516,24 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 				delete element.dataset.i18n,
 				element.innerText = text;
 			}
-			itlaa3.hidden = 0;
+			webapp_status_ui.hidden = 0;
 
-			$.taxeer('itlaa3', function () {
-				webapp.itlaa3();
+			if (innerwidth() > 1024) webapp_status_ui.style.right = '-20px';
+			else webapp_status_ui.style.right = '';
+
+			$.taxeer('webapp_status_animation', function () {
+				webapp_status_ui.style.right = '';
+			}, 100);
+			$.taxeer('webapp_status', function () {
+				if (innerwidth() > 1024) webapp_status_ui.style.right = '-20px';
+				$.taxeer('webapp_status_final', function () {
+					webapp.itlaa3();
+				}, 100);
 			}, time||3000);
 		} else {
 			delete element.dataset.i18n,
 			element.innerText = '',
-			itlaa3.hidden = 1;
+			webapp_status_ui.hidden = 1;
 		}
 	};
 	Webapp.status = webapp.itlaa3;
@@ -622,8 +634,8 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 		header_keys = templates.keys(headerui);
 		tall_header_keys = templates.keys(tallheaderui);
 
-		webapp.header( xlate(appname) );
-//		webapp.itlaa3( xlate('loading') );
+		Webapp.header( xlate(appname) );
+//		Webapp.status( xlate('loading') );
 
 		xlate.update();
 		time && time.start();

@@ -3,6 +3,9 @@ var path = require('path');
 var fs = require('fs');
 var log = console.log;
 
+// TODO check if ~/.local/bin exists, first try installing there
+// or offer a choice between the two ~/bin/
+
 log(' This script creates shell scripts in ~/bin ');
 log(' They point to mudeer-*.js files in this directory ');
 log(' The path is static so run this script again ');

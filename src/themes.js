@@ -1,4 +1,4 @@
-var themes;
+var Themes, themes;
 ;(function(){
 	var K, P, settingsuid, current = 0, contrast = 0;
 	
@@ -181,7 +181,7 @@ var themes;
 		}
 	}
 
-	themes = {
+	Themes = themes = {
 		/* in preferences (using localStorage), use this key to remember theme
 		 * */
 		saveto: 19,

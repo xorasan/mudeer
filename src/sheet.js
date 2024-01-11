@@ -1,9 +1,9 @@
 //+ okay cancel onshow hide show index header zaahir
-var sheet;
+var Sheet, sheet;
 ;(function(){
 	var index = {}, header, container, active_sheet_name, ae, murakkaz;
 
-	sheet = {
+	Sheet = sheet = {
 		okay: 0,
 		cancel: 0,
 		onshow: 0,
@@ -171,6 +171,9 @@ function open_list_sheet(name, init, callback) { // string, fn( list ), fn( )
 		t: name,
 		i: function (k) {
 			new_list = list( k.list ).listitem( 'list_sheet_item' ).idprefix( 'list_sheet_item' );
+			new_list.after_set = function (o, c, k) {
+				if (o.count) izhar(k.count_tag); else ixtaf(k.count_tag);
+			};
 			if (isfun(init)) init(new_list);
 		},
 		c: function () {

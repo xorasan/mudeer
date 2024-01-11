@@ -45,6 +45,8 @@ if min-width = 321px
 		border			1px solid @tertiary
 		border-right	0
 		border-radius	10px 0 0 10px
+	#softkeysui .row2, #skdots
+		margin-bottom	80px
 #softkeysui[data-hidden] #skdots
 	display			flex
 	right			-2px

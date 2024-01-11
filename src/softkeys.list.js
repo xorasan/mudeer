@@ -26,17 +26,23 @@
 						e && e.preventDefault();
 					}
 				});
-				softkeys.set(K.rt, function (k, e) {
-					if (LV.element.dataset.focussed) {
-						LV.right();
-						e && e.preventDefault();
-					}
+				Softkeys.add({
+					k: K.rt,
+					c: function (k, e) {
+						if (LV.element.dataset.focussed) {
+							LV.right();
+							e && e.preventDefault();
+						}
+					},
 				});
-				softkeys.set(K.lf, function (k, e) {
-					if (LV.element.dataset.focussed) {
-						LV.left();
-						e && e.preventDefault();
-					}
+				Softkeys.add({
+					k: K.lf,
+					c: function (k, e) {
+						if (LV.element.dataset.focussed) {
+							LV.left();
+							e && e.preventDefault();
+						}
+					},
 				});
 			} else {
 				softkeys.talaf([K.en, K.up, K.dn, K.rt, K.lf]);

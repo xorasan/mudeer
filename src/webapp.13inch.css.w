@@ -63,8 +63,6 @@ if min-width = 640px
 if min-width = 800px
 	body
 		max-width	700px
-	#itlaa3 .text
-		font-size		150%
 	#dialogui
 		font-size		150%
 		padding-bottom	140px
@@ -83,8 +81,6 @@ if min-width = 800px
 		width			48px
 	#softkeysui button span
 		margin-left		8px
-	#softkeysui .row2, #skdots
-		margin-bottom	80px
 
 if min-width = 1024px
 	body
@@ -92,7 +88,24 @@ if min-width = 1024px
 	#eqonahui
 		display			inline-block
 	#softkeysui .row1 button
-		height		96px
+		height			96px
 	#softkeysui .row1 button svg
-		height		48px
-		width		48px
+		height			48px
+		width			48px
+	#webapp_status_ui
+		top				unset
+		left			unset
+		right			0
+		bottom			90px
+		max-height		64px
+		max-width		600px
+		letter-spacing	-1px
+		transition		right .1s ease-in
+	#webapp_status_ui .text
+		border-right	0 !important
+		border-radius	10px 0 0 10px
+		text-align		start
+
+
+
+

@@ -5,6 +5,7 @@ var Sessions, sessions,
 	PASSWORDMAX = 2048;
 ;(function(){
 	'use strict';
+	// TODO fix keyboard shows up and softkeys bottom row gets hidden
 	var cache = {}, lastsearch, mfateeh, usnmavlble = {};
 	
 	var jaddadkeys = function (parent) {
@@ -116,25 +117,38 @@ var Sessions, sessions,
 			}
 		});
 	}
-	function update_sidebar() {
-		if (get_global_object().Sidebar) {
-			if (Sessions.signedin()) {
-				Sidebar.remove('signin');
-				Sidebar.remove('signup');
-			} else {
-				Sidebar.set({
-					uid: 'signin',
-					title: xlate('signin'),
-					icon: 'iconperson',
-				});
-				Sidebar.set({
-					uid: 'signup',
-					title: xlate('signup'),
-					icon: 'iconpersonadd',
-				});
-			}
+	function update_sidebar() { if (get_global_object().Sidebar) {
+		if (Sessions.signedin()) {
+			Sidebar.remove('signin');
+			Sidebar.remove('signup');
+			Sidebar.set({
+				uid: 'signout',
+				title: xlate('signout'),
+				icon: 'iconexittoapp',
+				keep_open: 1,
+				callback: function () {
+					Hooks.run('dialog', {
+						m: 'signoutconfirm',
+						c: function () {
+							sessions.signout();
+						},
+					});
+				}
+			});
+		} else {
+			Sidebar.remove('signout');
+			Sidebar.set({
+				uid: 'signin',
+				title: xlate('signin'),
+				icon: 'iconperson',
+			});
+			Sidebar.set({
+				uid: 'signup',
+				title: xlate('signup'),
+				icon: 'iconpersonadd',
+			});
 		}
-	}
+	} }
 	
 	Sessions = sessions = {
 		jaddad: function (parent) {
@@ -242,8 +256,14 @@ var Sessions, sessions,
 		signedin: function () { // return session key
 			return preferences.get(1);
 		},
-		uid: function () { // signedin uid
-			return preferences.get(2);
+		uid: function () { // signedin account uid
+			return Preferences.get(2);
+		},
+		get_account_uid: function () {
+			return this.uid();
+		},
+		get_session_uid: function () {
+			return Preferences.get('session_uid');
 		},
 		get: function (uri, dry) {
 			// indicates don't do anything on history pop events
@@ -412,9 +432,8 @@ var Sessions, sessions,
 				cache = {};
 				
 				Webapp.status( xlate('loggedout') );
-				update_sidebar();
 				Hooks.run('sessionchange', 0);
-				Hooks.run('view', 'main');
+//				Hooks.run('view', 'main');
 			});
 		},
 		usernameexists: function (user, temp) {
@@ -453,13 +472,19 @@ var Sessions, sessions,
 			}
 		},
 	};
+	Hooks.set('sessionchange', function (signedin) {
+		$.log.w('Sessions', signedin ? 'signed in' : 'signed out');
+		update_sidebar();
+	});
 	Hooks.set('ready', function (args) {
 		Network.intercept('sessions', 'key', function (finish) {
 			finish(sessions.signedin() || undefined);
 		});
 		Network.response.intercept('sessions', 'key', function (response) {
 			if (response === false) {
-				sessions.signout();
+				Sessions.signout();
+			} else {
+				Preferences.set('session_uid', response);
 			}
 		});
 		Network.response.get('sessions', 'username_exists', function (response) {
@@ -525,16 +550,9 @@ var Sessions, sessions,
 				});
 			}
 		});
-		
-		// TODO handle session changes (you're not logged in...)
-		Settings.adaaf('signout', 0, function () {
-			Hooks.run('dialog', {
-				m: 'signoutconfirm',
-				c: function () {
-					sessions.signout();
-				},
-			});
-		});
+
+		Hooks.run('sessionchange', !!Sessions.signedin());
+
 		var m = view.mfateeh('signup');
 		var usnmfld = m.username;
 		usnmfld.onkeyup = function () {
@@ -555,7 +573,7 @@ var Sessions, sessions,
 		if (args.name == 'sessions') {
 		}
 		if (args.name == 'signin') {
-			webapp.header(xlate('signin'));
+			Webapp.header([['signin'], '', 'iconpersonadd']);
 			mfateeh = view.mfateeh('signin');
 			if (mfateeh.aqdaam.dataset.currentqadam === undefined)
 				mfateeh.aqdaam.dataset.currentqadam = 0;
@@ -565,7 +583,7 @@ var Sessions, sessions,
 			password_visibility( getattribute(mfateeh.password, 'type') == 'text' );
 		}
 		if (args.name == 'signup') {
-			webapp.header(xlate('signup'));
+			Webapp.header([['signup'], '', 'iconpersonadd']);
 			mfateeh = view.mfateeh('signup');
 			if (mfateeh.aqdaam.dataset.currentqadam === undefined)
 				mfateeh.aqdaam.dataset.currentqadam = 0;

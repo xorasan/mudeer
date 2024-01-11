@@ -24,12 +24,12 @@ var List, list;
 		beforepop: 0,
 		uponpastend: function () {
 			var yes = focusnext(this.element);
-			if (yes && yes.listobject) softkeys.list.basic(yes.listobject);
+			if (yes && yes.listobject) Softkeys.list.basic(yes.listobject);
 			return yes;
 		},
 		uponpaststart: function () {
 			var yes = focusprev(this.element);
-			if (yes && yes.listobject) softkeys.list.basic(yes.listobject);
+			if (yes && yes.listobject) Softkeys.list.basic(yes.listobject);
 			return yes;
 		},
 		// TODO
@@ -89,7 +89,7 @@ var List, list;
 			this.element.parentElement.hidden = 0;
 		},
 		uponrakkaz: function (v, active) { // active = visible & view is active
-			if (v && active) softkeys.list.basic(this);
+			if (v && active) Softkeys.list.basic(this);
 		},
 		rakkaz: function (v, active) { // deprecated, use set_focus
 			if (this._prevent_focus) return;

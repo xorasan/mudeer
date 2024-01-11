@@ -1,4 +1,5 @@
 // TODO add props mw, mh
+// TODO add maintain aspect ratio on resize given one min dimension
 var Canvas, canvas;
 var calcdistance = function (x1, y1, x2, y2) {
 	var dx = x2 - x1; dx *= dx;

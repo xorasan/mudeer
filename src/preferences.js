@@ -1,5 +1,5 @@
 //+ popall change
-var preferences;
+var Preferences, preferences;
 ;(function(){
 	'use strict';
 	/* LEGEND preferences local storage
@@ -51,7 +51,7 @@ var preferences;
 	 * 170		conf
 	 * 1100		umoor what tag(s) to show?
 	 * */
-	preferences = {
+	Preferences = preferences = {
 		popall: function () {
 			return localStorage.clear();
 		},

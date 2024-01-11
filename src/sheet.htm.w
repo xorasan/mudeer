@@ -5,5 +5,9 @@
 	[id=list]
 [template=list_sheet_item] .listitem .pad .padv .flex .list_sheet_item
 	[id=icon] .icon
-	[id=title] .bold .pad
+	.flex .vertical .narrowline
+		[id=title] .pad
+		[id=subtitle] .pad .dim .small
+	[id=count_tag] .tag @hidden
+		[id=count] .pad .dim
 	[id=value] .pad
