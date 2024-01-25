@@ -83,7 +83,7 @@ Sessions = sessions = {
 		);
 	},
 
-	get_session_account: function (key, callback) {
+	get_session_account: function (key, callback) { // returns { session, account }
 		if (!isfun(callback)) {
 			$.log.e(' get_session_account needs a callback ');
 			return false;

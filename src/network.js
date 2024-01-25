@@ -150,7 +150,8 @@ var Network, network, sessions = sessions || 0;
 					}
 				}
 			}
-			Hooks.run('responseget', response.sync);
+			Hooks.run('responseget', response.sync); // TODO deprecate
+			Hooks.run('response-get', response.sync);
 		}
 
 		if (response.sync) {
@@ -166,7 +167,8 @@ var Network, network, sessions = sessions || 0;
 					}
 				}
 			}
-			Hooks.run('responsesync', response.sync);
+			Hooks.run('responsesync', response.sync); // TODO deprecate
+			Hooks.run('response-sync', response.sync);
 		}
 	};
 

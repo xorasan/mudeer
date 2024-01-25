@@ -1,8 +1,9 @@
-//+ okay cancel onshow hide show
-var dialog;
+// TODO make dialogs recovering using uids and asking the requesting module to regenerate it on popstate
+var Dialog, dialog;
 ;(function(){
-
-	dialog = {
+	var current_name, current_uid;
+	
+	Dialog = dialog = {
 		okay: 0,
 		cancel: 0,
 		onshow: 0,
@@ -10,6 +11,14 @@ var dialog;
 			dialogui.hidden = 1;
 			dialog.okay = 0;
 			dialog.cancel = 0;
+			current_name = undefined;
+			current_uid = undefined;
+		},
+		get_name: function () {
+			return current_name;
+		},
+		get_uid: function () {
+			return current_uid;
 		},
 		show: function (args) {
 			args = args || {};
@@ -19,6 +28,8 @@ var dialog;
 			
 			dialogui.hidden = 0;
 			var k			= templates.keys(dialogui)	,
+				name		= args.name		||	args.n	,
+				uid			= args.uid		||	args.u	,
 				max			= args.max		||	args.x	,
 				callback	= args.callback	||	args.c	,
 				message		= args.message	||	args.m	,
@@ -26,6 +37,9 @@ var dialog;
 				question	= args.question	||	args.q	,
 				multiline	= args.multiline,
 				input_element;
+			
+			current_name = args.n = args.name = name;
+			current_uid = args.u = args.uid = uid;
 			
 			// clear previous data
 			k.input.value = '';
@@ -41,16 +55,16 @@ var dialog;
 				input_element = k.input;
 			}
 			
-			dialog.onshow && dialog.onshow(name);
+			Dialog.onshow && Dialog.onshow(name);
 			
-			dialog.okay = function () {
+			Dialog.okay = function () {
 				var answer = input_element.value;
 				if (max) answer = answer.slice(0, max);
 				callback && callback(answer);
 				document.activeElement && document.activeElement.blur();
 				Hooks.run('back');
 			};
-			dialog.cancel = function () {
+			Dialog.cancel = function () {
 				document.activeElement && document.activeElement.blur();
 				Hooks.run('back');
 			};
@@ -71,5 +85,39 @@ var dialog;
 			translate.update(dialogui);
 		},
 	};
+	Hooks.set('backstackdialog', function (args) {
+		var date = 0;
+		if (datepicker && args instanceof HTMLElement) date = 1;
+
+		Webapp.dimmer(600);
+		Softkeys.clear();
+		Softkeys.add({ k: K.sl,
+			i: 'icondone',
+			c: function () {
+				if (date) datepicker.okay && datepicker.okay(args);
+				else Dialog.okay && Dialog.okay();
+			}
+		});
+		Softkeys.add({ k: K.sr,
+			i: 'iconclose',
+			c: function () {
+				if (date) datepicker.cancel && datepicker.cancel();
+				else Dialog.cancel && Dialog.cancel();
+			}
+		});
+
+		if (date) datepicker.show(args);
+		else Dialog.show(args);
+	});
+	Hooks.set('backstack-crumbs', function (crumbs) {
+		if (!crumbs.is_dialog) {
+			if (!isundef(current_uid)) { // a dialog was active previously
+				// we dont trigger the Dialog.cancel function because it's deprecated
+				Hooks.run('dialog-cancel', current_name, current_uid);
+				Hooks.run('dialog-anyway', current_name, current_uid);
+			}
+			Dialog.hide(); // clear active dialog name and uid + okay/cancel funcs
+		}
+	});
 
 })();

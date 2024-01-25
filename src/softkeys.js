@@ -31,7 +31,7 @@ var Softkeys, softkeys, K, P;
 		list: {},
 	};
 
-	var global_keys = ['f1', 'f2', 'f5', 'escape', K.sl, K.sr], debug_softkeys = 1;
+	var global_keys = ['f1', 'f2', 'f5', 'escape', K.sl, K.sr], debug_softkeys = 0;
 
 	var hfizM = {}, M = {}, // mapped keys
 	current,

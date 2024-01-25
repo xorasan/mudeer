@@ -56,20 +56,26 @@ var Backstack, backstack;
 			if (key)	return storage[backstack.darajah][key]	;
 			else		return storage[backstack.darajah]		;
 		},
-		dialog: function (args) {
+		dialog: function (args, backing) {
 			savefocus();
 			s.dialog = args || 1;
 			do_level();
 			storage[backstack.darajah] = {};
 			Hooks.rununtilconsumed('backstackdialog', args);
+
+			if (!backing) Hooks.run('backstack-dialog', args);
+
 			Hooks.run('backstack', backstack.darajah);
 		},
-		sheet: function (args) {
+		sheet: function (args, backing) {
 			savefocus();
 			s.sheet = args || 1;
 			do_level();
 			storage[backstack.darajah] = {};
 			Hooks.rununtilconsumed('backstacksheet', args);
+
+			if (!backing) Hooks.run('backstack-sheet', args);
+
 			Hooks.run('backstack', backstack.darajah);
 		},
 		view: function (args, backing) {
@@ -84,59 +90,70 @@ var Backstack, backstack;
 			do_level();
 			storage[backstack.darajah] = {};
 			Hooks.rununtilconsumed('backstackview', args);
-			Hooks.run('backstack', backstack.darajah);
 
-			if (!backing)
-				Hooks.run('backstack-view', args);
+			if (!backing) Hooks.run('backstack-view', args);
+
+			Hooks.run('backstack', backstack.darajah);
 		},
-		main: function (args) {
+		main: function (args) { // 1 = active, 2 = Webapp startup
 			savefocus();
 			s.main = args || 1;
 			do_level();
 			storage[backstack.darajah] = {};
+			// this has to trigger before the next two to maintain titles in the backstack
+			Hooks.run('backstack-main', s.main);
+
 			Hooks.rununtilconsumed('backstackmain', args);
 			Hooks.run('backstack', backstack.darajah);
-			Hooks.run('backstack-main', 0);
+		},
+		is_main_in_startup: function () {
+			return s.main === 2 ? 1 : 0;
+		},
+		close_all: function () { // this should return the states to main
+			if (s.dialog)
+				s.dialog	= 0, do_level(),				Hooks.run('closeall', 3);
+
+			if (s.sheet)
+				s.sheet		= 0, do_level(),				Hooks.run('closeall', 2);
+
+			if (s.view)
+				s.view		= 0, s.main = 1, do_level(),	Hooks.run('closeall', 1);
 		},
 		back: function () {
-			/*
-			 * if any dialog is open, close them first, then sheets, then mains
-			 * */
+			// if any dialog is open, close them first, then sheets, then mains
 			if (s.dialog)
-				s.dialog	= 0, do_level(), Hooks.run('closeall', 3);
+				s.dialog	= 0, do_level(),				Hooks.run('closeall', 3);
 			else if (s.sheet)
-				s.sheet		= 0, do_level(), Hooks.run('closeall', 2);
+				s.sheet		= 0, do_level(),				Hooks.run('closeall', 2);
 			else if (s.view)
-				s.view = 0, s.main = 1, do_level(), Hooks.run('closeall', 1);
+				s.view		= 0, s.main = 1, do_level(),	Hooks.run('closeall', 1);
 			else
-				s.main		= 0, do_level(), Hooks.run('closeall', 0);
-			
-			/*
-			 * then see what is left open and refire its event with stored args
-			 * */
+				s.main		= 0, do_level(),				Hooks.run('closeall', 0);
+
+			// then see what is left open and refire its event with stored args
 			Hooks.run('restore', Backstack.darajah);
 			Hooks.run('backstack', Backstack.darajah);
-			
+
 			restorefocus();
 		},
 	};
 	
 	Hooks.set('back', function () {
-		backstack.back();
+		Backstack.back();
 	});
 	Hooks.set('dialog', function (args) {
-		backstack.dialog(args);
+		Backstack.dialog(args);
 	});
 	Hooks.set('sheet', function (args) {
-		backstack.sheet(args);
+		Backstack.sheet(args);
 	});
 	Hooks.set('view', function (args) {
-		backstack.view(args);
+		Backstack.view(args);
 	});
 	Hooks.set('main', function (args) {
-		backstack.main(args);
+		Backstack.main(args);
 	});
 
 	// used internally
-	s = backstack.states;
+	s = Backstack.states;
 })();

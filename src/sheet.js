@@ -1,7 +1,7 @@
-//+ okay cancel onshow hide show index header zaahir
 var Sheet, sheet;
 ;(function(){
-	var index = {}, header, container, active_sheet_name, ae, murakkaz;
+	var index = {}, header, container, active_sheet_name, active_sheet_uid, active_args, active_keys, new_list,
+		ae, murakkaz;
 
 	Sheet = sheet = {
 		okay: 0,
@@ -16,8 +16,17 @@ var Sheet, sheet;
 		get_active: function () {
 			return active_sheet_name;
 		},
+		get_active_uid: function () {
+			return active_sheet_uid;
+		},
 		get_active_title: function () {
 			return header.innerText;
+		},
+		get_title: function () {
+			return header.innerText;
+		},
+		set_title: function (text) {
+			return this.header(text);
 		},
 		bardaa: function (v) {
 			if (!container.firstElementChild) return;
@@ -49,22 +58,28 @@ var Sheet, sheet;
 		},
 		header: function (text) {
 			if (text) {
-				if (text instanceof Array) {
+				if (isarr(text)) {
 					header.dataset.i18n = text[0];
 				} else {
 					header.innerText = text;
 				}
 				header.hidden = 0;
-			} else
-				delete headerui.dataset.i18n,
-				header.innerText = '',
+			} else {
+				delete headerui.dataset.i18n;
+				header.innerText = '';
 				header.hidden = 1;
+			}
 		},
 		hide: function () {
+			$.log.w( 'Sheet hide' );
 			sheetui.hidden = 1;
 			sheet.okay = 0;
 			sheet.cancel = 0;
-			active_sheet_name = 0;
+			active_sheet_name = undefined;
+			active_sheet_uid = undefined;
+			active_args = undefined;
+			active_keys = undefined;
+			new_list = undefined;
 		},
 		show: function (args) {
 			ae = murakkaz = 0;
@@ -76,14 +91,23 @@ var Sheet, sheet;
 					name: args,
 				};
 			
+			active_args = args;
+			
 			var name		= args.name		||	args.n,
 				title		= args.title	||	args.t	||	'',
+				uid			= args.uid		||	args.u,
 				minqabl		= args.minqabl	||	args.b,
 				callback	= args.callback	||	args.c,
 				oncancel	= args.oncancel	||	args.x,
-				ayyihaal	= args.ayyihaal||	args.a,
+				ayyihaal	= args.ayyihaal	||	args.a,
 				init		= args.init		||	args.i,
 				keys;
+			
+			name = name || 'list_sheet';
+			new_list; // passed as 3rd arg to hooks
+			
+			args.n = args.name = name;
+			args.u = args.uid = uid;
 			
 			header.innerText = title;
 			
@@ -92,6 +116,7 @@ var Sheet, sheet;
 			var ui = index[name];
 			if (ui) {
 				active_sheet_name = name;
+				active_sheet_uid = uid;
 
 				var node = ui.cloneNode(true);
 				if (node) {
@@ -104,39 +129,64 @@ var Sheet, sheet;
 					translate && translate.update( sheetui );
 					Hooks.rununtilconsumed('widgets', sheetui);
 					
-					keys = templates.keys(container);
+					active_keys = keys = templates.keys(container);
+
+					if (name == 'list_sheet') {
+						new_list = list( keys.list ).listitem( 'list_sheet_item' ).idprefix( 'list_sheet_item' );
+						new_list.after_set = function (o, c, k) {
+							if (o.count) izhar(k.count_tag); else ixtaf(k.count_tag);
+						};
+						init && init( keys, uid, args, new_list );
+
+						var original_callback = callback;
+						callback = function () {
+							if (isfun(original_callback)) original_callback(new_list);
+						};
+					} else {
+						// optimally, your module should reconstruct a sheet using the entire Backstack state
+						init && init( keys, uid, args );
+					}
 					
-					init && init( keys );
+					// TODO transition modules to use this method to (re)construct sheets
+					Hooks.run('sheet-ready', args, keys, new_list);
 
 					Hooks.rununtilconsumed('widgets', sheetui);
 				}
 			}
 			
-			if (callback)
-			sheet.okay = function (args) {
+//			if (callback)
+			Sheet.okay = function () {
 				callback && callback( args || keys );
 				ayyihaal && ayyihaal( args || keys );
-				webapp.blur();
+				// TODO transition modules to use this method to (re)construct sheets
+				Hooks.run('sheet-okay', args, keys, new_list);
+				Hooks.run('sheet-anyway', args, keys, new_list);
+
+				Webapp.blur();
 				Hooks.run('back');
 			};
-			else
-			sheet.okay = 0;
+//			else
+//			Sheet.okay = 0;
 			
-			sheet.bardaa();
+			Sheet.bardaa();
 			if (isfun(minqabl)) {
-				var oldokay = sheet.okay;
-				sheet.okay = function (args) {
-					sheet.bardaa(1);
+				var oldokay = Sheet.okay;
+				Sheet.okay = function (args) {
+					Sheet.bardaa(1);
 					minqabl(args || keys, function (args) {
 						oldokay(args || keys);
 					});
 				};
 			}
 
-			sheet.cancel = function (args) {
+			Sheet.cancel = function () {
 				oncancel && oncancel( args || keys );
 				ayyihaal && ayyihaal( args || keys );
-				webapp.blur();
+				// TODO transition modules to use this method to (re)construct sheets
+				Hooks.run('sheet-cancel', args, keys, new_list);
+				Hooks.run('sheet-anyway', args, keys, new_list);
+
+				Webapp.blur();
 				Hooks.run('back');
 			};
 		},
@@ -156,19 +206,51 @@ var Sheet, sheet;
 		},
 	};
 	Hooks.set('ready', function () {
-		sheet.index();
+		Sheet.index();
 		var mfateeh = templates.keys(sheetui);
 		header = mfateeh.header;
 		container = mfateeh.container;
 	});
+	Hooks.set('backstacksheet', function (args) {
+		Webapp.dimmer(400);
+		Softkeys.clear();
+		if (args.callback || args.c) {
+			Softkeys.set(K.sl, function () {
+				Sheet.okay && Sheet.okay();
+			}, 0, 'icondone');
+		}
+		Softkeys.set(K.sr, function () {
+			Sheet.cancel && Sheet.cancel();
+		}, 0, 'iconarrowback');
+		Sheet.show(args);
+		Softkeys.showhints();
+	});
+	Hooks.set('backstack-crumbs', function (crumbs) {
+		if (!crumbs.is_sheet) {
+			if (!isundef(active_sheet_uid)) { // a sheet was active previously
+				// we dont trigger the Sheet.cancel function because it's deprecated
+				Hooks.run('sheet-cancel', active_args, active_keys, new_list);
+				Hooks.run('sheet-anyway', active_args, active_keys, new_list);
+			}
+			Sheet.hide(); // clear active sheet name and uid + okay/cancel funcs
+			Webapp.blur();
+		}
+	});
 
 })();
 
-function open_list_sheet(name, init, callback) { // string, fn( list ), fn( )
+// TODO deprecate this, if name is omitted, Sheet.show now has the same behavior
+function open_list_sheet(args, init, callback) { // string, fn( list ), fn( )
+	var name, uid;
+	if (typeof args === 'string')
+		args = {
+			name: args,
+		};
 	var new_list;
-	backstack.sheet({
+	Backstack.sheet({
 		n: 'list_sheet', // TODO make this default if no n, add searchbox
 		t: name,
+		u: args.u || args.uid,
 		i: function (k) {
 			new_list = list( k.list ).listitem( 'list_sheet_item' ).idprefix( 'list_sheet_item' );
 			new_list.after_set = function (o, c, k) {
@@ -181,3 +263,4 @@ function open_list_sheet(name, init, callback) { // string, fn( list ), fn( )
 		}
 	});
 }
+

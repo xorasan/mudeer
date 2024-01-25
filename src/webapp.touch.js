@@ -25,7 +25,7 @@
 	});
 
 	Hooks.set('keyup', function (e) {
-		var k = e.key.toLowerCase();
+		var k = tolower(e.key||'');
 		if (k === 'r' && e.ctrlKey)
 			location.reload(), preventdefault(e);
 		if (['escape', 'f11'].includes(k) && document.fullscreenElement)

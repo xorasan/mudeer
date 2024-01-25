@@ -262,10 +262,10 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 				}
 			}
 			if (err) {
-				webapp.header( translate && translate('unsupported') );
+				Webapp.header( translate && translate('unsupported') );
 				return 0;
 			} else {
-				webapp.header();
+				Webapp.header();
 				return 1;
 			}
 		},
@@ -295,7 +295,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 			else if (align == 2) header.dataset.align = '2';
 			else delete header.dataset.align;
 
-			if (backstack.darajah <= 1) {
+//			if (backstack.darajah <= 1) {
 				if (text) {
 //					if (pager && pager.mowjood(backstack.states.view)) {
 //						// defer header to pager
@@ -335,10 +335,12 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 				}
 				
 				if (!original_keys) this.header(text, align, tall_header_keys);
-			} else if (backstack.darajah === 2) {
-				sheet.header(text);
-			}
+//			} else if (backstack.darajah === 2) {
+//				sheet.header(text);
+//			}
 			translate.update();
+			
+			document.title = title.innerText + ( subtitle.innerText ? (' - ' + subtitle.innerText) : '' );
 		},
 		sahhar: function (what) { // keep awake wakelock TODO convert to english
 			if (navigator && navigator.requestWakeLock) {
@@ -651,7 +653,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 		if (Offline && Offline.init) {
 			Offline.init(function () {
 				Hooks.run('ready', 1);
-				backstack.main();
+				Backstack.main(2);
 				loadingbox.hidden = 1;
 			});
 		}
@@ -660,7 +662,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 			$.taxeer('loadingbox', function () {
 				loadingbox.hidden = 1;
 			});
-			backstack.main();
+			Backstack.main(2);
 		}
 
 		$.taxeer('on_scroll', function () {

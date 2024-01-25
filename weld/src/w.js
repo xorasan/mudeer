@@ -704,9 +704,9 @@
 						parsed = parsed.replace('<script>[%weld-script-marker-'+i+'%]</script>', function () {
 							// TODO add ROOT support for script src "/"
 							if (options.client)
-							return '<script src=/a.js></script>';
+							return '<script src=JAZAR/a.js></script>';
 							else
-							return '<script src=/&.js></script>';
+							return '<script src=JAZAR/&.js></script>';
 						});
 					} else {
 						parsed = parsed.replace('[%weld-script-marker-'+i+'%]', function () {

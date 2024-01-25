@@ -97,6 +97,8 @@ if min-height = 600px
 	align-items		center
 .upper
 	text-transform	uppercase
+.smallcaps
+	font-variant	small-caps
 .spaces
 	white-space		pre
 .ellipsis

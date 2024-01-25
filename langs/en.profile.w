@@ -1,5 +1,5 @@
 profile			Profile
-name			User Name
+name			Name
 displayname		Display Name
 shape			Appearance, Accessories, Clothes...
 lifestory		Life Story

@@ -45,12 +45,25 @@ var MongoDB;
 		try {
 			const collection = use_db( db ).collection( collection_name );
 
-			var created = get_time_now(), uid = doc.uid || generate_uid();
+			var created = get_time_now(), uid, ruid;
+			if (doc.uid) {
+				if (isnum(doc.uid) && doc.uid < 0) {
+					ruid = uid;
+					uid = generate_uid();
+				} else {
+					uid = doc.uid;
+				}
+			} else {
+				doc.uid = generate_uid();
+			}
+			delete doc.ruid; // this is never saved, only return back to client to update the correct temp doc
+			delete doc.uid; // this is a readonly system property
+			doc.updated = created; // needed for syncing in network module
 			delete doc.created; // this is a readonly system property
 
 			// Specify the update or the document to insert if not found
 			const update = {
-				$set: doc, // update props
+				$set: doc, // update props whether doc is found or not
 				$setOnInsert: { _id: uid, created: created },
 			};
 
@@ -63,12 +76,13 @@ var MongoDB;
 			if (result.upsertedCount > 0) {
 				doc.uid = result.upsertedId;
 				doc.created = created;
-				//$.log(' Doc inserted:', doc);
-			} else {
-				doc.uid = doc._id;
-				delete doc._id;
-				//$.log(' Doc updated:', doc);
+//				$.log(' Doc inserted:', doc);
+			} else { // TODO should i check result.matchedCount == 1?
+				doc.uid = doc._id || uid;
+				delete doc._id; // MongoDB doesnt even return this tho, prolly extraneous
+//				$.log(' Doc updated:', doc);
 			}
+			if (ruid) doc.ruid = ruid;
 		} catch (error) {
 			$.log.e(' Error during upsert:', error);
 		} finally {

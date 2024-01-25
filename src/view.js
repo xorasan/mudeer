@@ -21,17 +21,18 @@ var View, view;
 
 			return false;
 		},
-		ishtaghal: function (name) { // run, deprecated
+		ishtaghal: function (name, uid) { // run, deprecated
 			var level	= backstack.level			,
-				exists	= view.get_element(name)	;
+				exists	= View.get_element(name)	;
 
 			if (isundef(exists)) {
 				$.log.w('View not found: "'+name+'"');
 			} else {
 				var element	= view.get(name)			,
 					keys	= templates.keys(element)	;
-				Hooks.run('viewready', {
+				Hooks.run('viewready', { // TODO rename to view-ready
 					name: name,
+					uid: uid,
 					element: element,
 					keys: keys,
 					level: level,
@@ -40,6 +41,11 @@ var View, view;
 		},
 		get_element: function (name) { // get dom element of a view
 			return this.get(name, 1);
+		},
+		get_uid: function () {
+			if (Backstack.states.view) {
+				return Backstack.states.view.uid;
+			}
 		},
 		axav: function (name, onlyelement) { // get
 			if (!name) {
@@ -81,8 +87,28 @@ var View, view;
 		},
 	};
 	
-	view.get = view.axav;
-	view.run = view.ishtaghal;
-	view.dom_keys = view.mfateeh;
+	View.get		= View.axav;
+	View.run		= View.ishtaghal;
+	View.dom_keys	= View.mfateeh;
+
+	Hooks.set('backstackview', function (args) {
+		var name, uid;
+		if (isstr(args)) {
+			name = args;
+		} else if (args) {
+			name = args.name;
+			uid = args.uid;
+		}
+		Webapp.dimmer();
+		Softkeys.clear();
+		Softkeys.P.empty();
+		Softkeys.set(K.sr, function () {
+			Hooks.run('back');
+		}, 0, 'iconarrowback');
+		View.run(name, uid);
+		Softkeys.showhints();
+		return 1; // stop propagation
+	});
+
 
 })();

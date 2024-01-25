@@ -3,10 +3,10 @@
  * props ending in $h use innerhtml
  * 			...	   $t use [i18n]
  * */
-var templates, namaavij;
+var Templates, templates, namaavij;
 ;(function(){
 	var index = {};
-	templates = {
+	Templates = templates = {
 		mfateeh: function (element) {
 			return templates.keys(element);
 		},
@@ -21,6 +21,15 @@ var templates, namaavij;
 				}
 			}
 			return keys;
+		},
+		// matches properties in an object despite $suffixes, returns value
+		has_property: function (o, prop) {
+			for (var i in o) {
+				var name = i.split('$')[0];
+				if (name == prop)
+					return o[i];
+			}
+			return false;
 		},
 		set: function (clone, o, template) {
 			var keys = templates.keys(clone);
@@ -54,6 +63,9 @@ var templates, namaavij;
 					}
 				}
 				
+				var is_icon = !isundef( o[i+'$icon'] );
+				var is_image = !isundef( o[i+'$image'] );
+				
 				var has_time = i+'$time';
 				if (!isundef( o[has_time] )) {
 					if (isundef( o[has_time] )) {
@@ -63,7 +75,7 @@ var templates, namaavij;
 						setdata(keys[i], 'time', o[has_time]);
 				}
 
-				if ( !isundef(o[i]) || !isundef(o[i+'$h']) || !isundef(o[i+'$t']) ) {
+				if ( !isundef(o[i]) || !isundef(o[i+'$h']) || !isundef(o[i+'$t']) || is_icon || is_image ) {
 					if (o[i] == 'ixtaf') {
 						keys[i].hidden = 1;
 					} else
@@ -116,13 +128,17 @@ var templates, namaavij;
 							keys[i].innerHTML = '';
 						}
 					} else
-					if (['icon', 'eqonah'].includes(i)) { // create SVG inside or img if src = /...
-						if (typeof o[i] === 'string' && o[i].length) {
+					if (['icon', 'eqonah'].includes(i) || is_icon || is_image) { // create SVG inside or img if src = /...
+						var icon_src = o[i];
+						if (is_icon || is_image) {
+							icon_src = o[i+'$icon'] || o[i+'$image'];
+						}
+						if (isstr(icon_src) && icon_src.length) {
 							keys[i].hidden = 0;
-							if (o[i].startsWith('/')) {
-								innerhtml(keys[i], '<img src="'+o[i]+'" />');
+							if (icon_src.startsWith('/') || is_image) {
+								innerhtml(keys[i], '<img src="'+icon_src+'" />');
 							} else {
-								var e = icons.querySelector('#'+o[i]);
+								var e = icons.querySelector('#'+icon_src);
 								if (e)
 									keys[i].innerHTML	= '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
 							}

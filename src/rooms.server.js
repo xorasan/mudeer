@@ -2,130 +2,177 @@ var Rooms, rooms,
 	tbl_mklmt = 'rooms';
 
 ;(function(){
-	'use strict';
-	
-	var maxba = {}; // uid: {}
-	
-	Rooms = rooms = {
-		raakib: function (members) { // non-member profile
-			if (isarr(members))
-			for (var i = 0; i < members.length; ++i) {
-				var v = members[i];
-				if (v[1] !== 1) return v;
-			}
-		},
-		is_other: function (members, suid) { // other profile
-			if (isarr(members))
-			for (var i = 0; i < members.length; ++i) {
-				var v = members[i];
-				if (v[0] !== suid) return v;
-			}
-		},
-		is_you: function (members, suid) { // you
-			if (isarr(members))
-			for (var i = 0; i < members.length; ++i) {
-				var v = members[i];
-				if (v[0] === suid) return v;
-			}
-		},
-		maxba: function (uid, k, v) {
-			if (arguments.length === 0) return maxba;
-			var m = maxba[uid];
-			if (k && v && !m) m = maxba[uid] = {};
-			if (m) {
-				if (isundef(k)) { // remove from maxba
-					delete maxba[uid];
-				} else
-				if (isundef(v)) {
-					return m[k];
-				} else {
-					m[k] = v;
-				}
-			}
-		},
-		slow_mode: function (uid, caaniyaat) {
-			var v = rooms.maxba(uid, 'slow_mode');
-			var c = new Date().getTime();
-			if (isundef(v) || v < c) v = c;
+'use strict';
+var module_name = 'rooms';
+var maxba = {}; // uid: {}
 
-			v += caaniyaat*1000;
+Rooms = rooms = {
+	raakib: function (members) { // non-member profile
+		if (isarr(members))
+		for (var i = 0; i < members.length; ++i) {
+			var v = members[i];
+			if (v[1] !== 1) return v;
+		}
+	},
+	is_other: function (members, suid) { // other profile
+		if (isarr(members))
+		for (var i = 0; i < members.length; ++i) {
+			var v = members[i];
+			if (v[0] !== suid) return v;
+		}
+	},
+	is_you: function (members, suid) { // you
+		if (isarr(members))
+		for (var i = 0; i < members.length; ++i) {
+			var v = members[i];
+			if (v[0] === suid) return v;
+		}
+	},
+	maxba: function (uid, k, v) {
+		if (arguments.length === 0) return maxba;
+		var m = maxba[uid];
+		if (k && v && !m) m = maxba[uid] = {};
+		if (m) {
+			if (isundef(k)) { // remove from maxba
+				delete maxba[uid];
+			} else
+			if (isundef(v)) {
+				return m[k];
+			} else {
+				m[k] = v;
+			}
+		}
+	},
+	slow_mode: function (uid, caaniyaat) {
+		var v = rooms.maxba(uid, 'slow_mode');
+		var c = new Date().getTime();
+		if (isundef(v) || v < c) v = c;
 
-			rooms.maxba(uid, 'slow_mode', v);
-			rooms.maxba(uid, 'updated', c);
+		v += caaniyaat*1000;
+
+		rooms.maxba(uid, 'slow_mode', v);
+		rooms.maxba(uid, 'updated', c);
+		
+		rooms.finish_all(uid);
+		
+		return v;
+	},
+	members: function (uid, members) {
+		var v = rooms.maxba(uid, 'members');
+		if (!areobjectsequal(v, members) && members) {
+			rooms.maxba(uid, 'members', members);
+			rooms.maxba(uid, 'updated', new Date().getTime());
 			
 			rooms.finish_all(uid);
-			
-			return v;
-		},
-		members: function (uid, members) {
-			var v = rooms.maxba(uid, 'members');
-			if (!areobjectsequal(v, members) && members) {
-				rooms.maxba(uid, 'members', members);
-				rooms.maxba(uid, 'updated', new Date().getTime());
-				
-				rooms.finish_all(uid);
-			}
-		},
-		members_to_string: function (arr) {
-			var str = '';
-			arr.forEach(function (o) {
-				str += ' '+o[0]+':'+o[1];
-			});
-			return str;
-		},
-		to_members: function (str) {
-			var members = [];
-			str.trim().split(' ').forEach(function (v) {
-				v = intify(v.split(':'));
-				members.push( [v[0], v[1]] );
-			});
-			return members;
-		},
-		is_member: function (room, uid, type) { // is3udw, type
-			if (room) {
-				if (isstr(room.members)) {
-					if (room.members.match(' '+uid+':'+(type||'')))
-						return 1;
-				} else if (room.members) {
-					if (room.members[uid]) {
-						if (type) return room.members[uid] === type;
-						else return 1;
-					}
+		}
+	},
+	members_to_string: function (arr) {
+		var str = '';
+		arr.forEach(function (o) {
+			str += ' '+o[0]+':'+o[1];
+		});
+		return str;
+	},
+	to_members: function (str) {
+		var members = [];
+		str.trim().split(' ').forEach(function (v) {
+			v = intify(v.split(':'));
+			members.push( [v[0], v[1]] );
+		});
+		return members;
+	},
+	is_member: function (room, uid, type) { // is3udw, type
+		if (room) {
+			if (isstr(room.members)) {
+				if (room.members.match(' '+uid+':'+(type||'')))
+					return 1;
+			} else if (room.members) {
+				if (room.members[uid]) {
+					if (type) return room.members[uid] === type;
+					else return 1;
 				}
 			}
-		},
-		are_both_members: function (room, uid) { // ismaftooh
-			if (room) {
-				if (isstr(room.members)) {
-					if (room.members.match(' '+uid+':1')
-					&&	room.members.match(/\:1/g).length >= 2)
-						return 1;
-				} else if (room.members) {
-					var v = Object.values(room.members);
-					if (room.members[uid] === 1 && v[0] === 1 && v[1] === 1) {
-						return 1;
-					}
+		}
+	},
+	are_both_members: function (room, uid) { // ismaftooh
+		if (room) {
+			if (isstr(room.members)) {
+				if (room.members.match(' '+uid+':1')
+				&&	room.members.match(/\:1/g).length >= 2)
+					return 1;
+			} else if (room.members) {
+				var v = Object.values(room.members);
+				if (room.members[uid] === 1 && v[0] === 1 && v[1] === 1) {
+					return 1;
 				}
 			}
-		},
-		finish_all: function (uid) {
+		}
+	},
+	finish_all: function (uid) {
 //			$.log( 'finish_all', uid  );
-			$.slow_mode('mlkmtinahaa'+uid, function () {
-				var v = rooms.maxba(uid, 'members');
+		$.taxeer('mlkmtinahaa'+uid, function () {
+			var v = rooms.maxba(uid, 'members');
 //				$.log( 'finish_all ...', v );
-				if (v) {
-					v = Object.keys(v);
-					if (v.length) {
-						v = intify( v ); // [ int, int, ... ]
+			if (v) {
+				v = Object.keys(v);
+				if (v.length) {
+					v = intify( v ); // [ int, int, ... ]
 //						$.log( 'finish_all out', v );
-						Polling.finish_all(v);
-					}
+					Polling.finish_all(v);
 				}
-			}, 50);
-		},
-	};
-})();
-Network.intercept('rooms', function (response) {
+			}
+		}, 50);
+	},
+};
+Network.intercept(module_name, function (response) {
+	if (response.account) {
+		var arr = [], objs = [], limit = 100, maxba = rooms.maxba(), yes;
+
+//		for (var i in maxba) {
+//			if (maxba[i].updated > response.time
+//			&& rooms.is_member(maxba[i], response.account.uid)) {
+//				objs[i] = {
+//					uid:		parseint(i),
+//					slow_mode:		maxba[i].slow_mode,
+//				};
+//				yes = 1;
+//			}
+//		}
+		arr = Object.values(objs);
+		MongoDB.query(Config.database.name, module_name, {
+//			members: new RegExp(' '+response.account.uid+':'),
+			$or: [ { updated: { $gte: response.time || 0 } }, { created: { $gte: response.time || 0 } } ]
+			// TODO limit
+		}, function (outcome) {
+			outcome.rows.forEach(function (o, i) {
+				var x = objs[o.uid] || {}, members = [], membersobj = {};
+				if (o.members)
+				o.members.split(' ').forEach(function (v) {
+					v = v.split(':');
+					var a = parseint(v[0]),
+						b = parseint(v[1]);
+					if (isnum(a) && isnum(b)) {
+						membersobj[ a ] = b;
+						members.push([ a, b ]);
+					}
+				});
+				rooms.members(o.uid, membersobj);
+				x.uid			= o.uid;
+				x.name			= o.name;
+				x.link			= o.link;
+				x.members		= members;
+				x.created		= o.created;
+				x.updated		= o.updated;
+				objs[o.uid] = x;
+			});
+			arr = Object.values(objs);
+			if (arr.length) response.sync(arr), yes = 1;
+			if (yes) response.consumed(); else response.finish();
+		});
+
+	} else if (yes) response.consumed(); else response.finish();
+});
+Network.intercept('-rooms', function (response) {
 	if (response.account) {
 		var arr = [], objs = [], limit = 100, maxba = rooms.maxba(), yes;
 
@@ -170,7 +217,29 @@ Network.intercept('rooms', function (response) {
 
 	} else if (yes) response.consumed(); else response.finish();
 });
-Network.sync('rooms', function (response) {
+Network.sync(module_name, function (response) {
+	var value = response.value;
+	
+	if (!response.account) { response.finish(); return; } // not signed in
+	if (!value) { response.finish(); return; } // received nothing
+	
+	if (isarr(value)) {
+		// TODO make a Database.only_props func to filter out unwanted props from client
+		var arr = [];
+		value.forEach(function ({ uid, name, link, members }) {
+			arr.push({ uid, name, link, members });
+		});
+		MongoDB.set( Config.database.name, module_name, arr, function (result) {
+			var out = [];
+			result.rows.forEach(function ({ uid, ruid, name, link, members }) {
+				out.push({ uid, ruid, name, link, members });
+			});
+			response.sync(out)
+					.finish();
+		} );
+	}
+});
+Network.sync('-rooms', function (response) {
 	var value = response.value;
 	
 	if (!response.account) { response.finish(); return; } // not signed in
@@ -355,3 +424,4 @@ Network.batch('rooms', function () {
 });
 
 
+})();

@@ -1,7 +1,9 @@
 # Backstack
-The Backstack module is designed to give a predictable back button behavior.
+The Backstack module is designed to give a predictable back/forward button behavior (for web browsers).
 
 ## History API
+[Mozilla Developers Network: History API](https://developer.mozilla.org/en-US/docs/Web/API/History)
+
 * Take this URI as an example, `/rooms/lobby/meeting-of-the-minds`
 * By default, the first crumb is assumed to be a View name.
 	* `/rooms` would do `Hooks.run('view', 'rooms')`

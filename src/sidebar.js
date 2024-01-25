@@ -1,6 +1,6 @@
 var Sidebar, sidebar_sheet_list;
 ;(function(){
-	var sidebar_list, debug_sidebar = 1;
+	var sidebar_list, debug_sidebar = 0;
 	var sidebar_softkey = { n: 'Sidebar',
 		k: 'contextmenu',
 		last: 1,
@@ -87,7 +87,10 @@ var Sidebar, sidebar_sheet_list;
 						.listitem('sidebar_item');
 
 		sidebar_list.after_set = function (o, c, k) {
-			if (o.count) izhar(k.count_tag); else ixtaf(k.count_tag);
+			if (Templates.has_property(o, 'count'))
+				izhar(k.count_tag);
+			else
+				ixtaf(k.count_tag);
 		};
 		sidebar_list.onpress = function (o) {
 			sidebar_list.uponclick( o );

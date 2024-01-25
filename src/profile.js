@@ -75,6 +75,12 @@ var profilelist;
 		delay: -1, // never get from server, server uses broadcast for that
 		keyvalue: 1
 	});
+	function set_sidebar_and_header(subtitle) {
+		if (view.is_active(module_name)) {
+			if (get_global_object().Sidebar) Sidebar.choose(module_name);
+			webapp.header([[module_name], subtitle || '', 'iconperson']);
+		}
+	}
 	
 	Hooks.set('sessionchange', function (signedin) {
 		update_sidebar();
@@ -108,15 +114,17 @@ var profilelist;
 	});
 	Hooks.set('viewready', function (args) {
 		if (args.name == module_name) {
-			Webapp.header( ['Profile', 0, 'iconperson'] );
+			set_sidebar_and_header();
 			softkeys.list.basic(profilelist);
 			profilelist.select();
 			Offline.get(module_name, 0, 0, Time.now());
 		}
 	});
 	Hooks.set('restore', function (args) {
-		if (view.is_active(module_name) && backstack.darajah === 1)
+		if (view.is_active(module_name) && backstack.darajah === 1) {
+			set_sidebar_and_header();
 			innertext(tafawwaq, '');
+		}
 	});
 	
 })();

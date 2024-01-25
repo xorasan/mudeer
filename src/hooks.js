@@ -8,10 +8,20 @@
 // an EventEmmiter like api
 // register cross module and cross app hooks
 // jan 2024 Hooks.set_first these hooks get executed before normal hooks
+// 23 jan 2024 run* now supports 1+ arguments
 
 var Hooks, hooks;
 ;(function (){
 	'use strict';
+
+	var getargs = function (start_at, oldargs) {
+		var args = [];
+		for (var i = start_at || 0; i < oldargs.length; ++i) {
+			args.push( oldargs[i] );
+		}
+		return args;
+	};
+
 	Hooks = {
 		_registry_first: {},
 		_registry: {},
@@ -58,13 +68,15 @@ var Hooks, hooks;
 		// run all handlers listening on this id and pass it this extras object
 		// add a try/catch clause to both run* fn's; make contigencies
 		run: function (hook, extras) {
+			var args = getargs(1, arguments);
+
 			var handlers_first = Hooks._registry_first[hook];
 			var handlers = Hooks._registry[hook];
 			if (handlers_first instanceof Array || handlers instanceof Array) {
 				handlers = ( handlers_first || [] ).concat( handlers || [] );
 				for (var i in handlers) {
 					if (typeof handlers[i] === 'function') {
-						handlers[i](extras);
+						handlers[i].apply(handlers[i], args);
 					}
 				}
 				return true;
@@ -75,13 +87,15 @@ var Hooks, hooks;
 		// useful for cascading events like taps
 		// returns false if no handler returned true-like value
 		rununtilconsumed: function (hook, extras) {
+			var args = getargs(1, arguments);
+			
 			var handlers_first = Hooks._registry_first[hook];
 			var handlers = Hooks._registry[hook];
 			if (handlers_first instanceof Array || handlers instanceof Array) {
 				handlers = ( handlers_first || [] ).concat( handlers || [] );
 				for (var i in handlers) {
 					if (typeof handlers[i] === 'function') {
-						var returnedvalue = handlers[i](extras);
+						var returnedvalue = handlers[i].apply(handlers[i], args);
 						if (returnedvalue) {
 							return returnedvalue;
 						}

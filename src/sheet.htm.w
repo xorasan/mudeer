@@ -1,4 +1,4 @@
-.sheet #sheetui @hidden [view=sheet]
+.sheet #sheetui @hidden
 	[id=header] .header .centertext [dir=1]
 	[id=container] .container
 [sheet=list_sheet]

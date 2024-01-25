@@ -9,7 +9,7 @@
 #dimmer .fixed @hidden
 	#dimmertext
 // TODO support for ROOT for /
-img #eqonahui .fixed .top .right .z200 @src(/e.png)
+img #eqonahui .fixed .top .right .z200 @src(JAZAR/e.png)
 #tallheaderui .fixed .z100 .left .right .headerui
 	[id=header] .big .centertext [dir=1] @hidden
 		[id=icon] .giant .icon

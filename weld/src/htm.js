@@ -280,7 +280,7 @@
 					
 					// [name=value] [name]
 					// @todo this should be uglified as well
-					regex = /\[([\w\= ا-ي])+\]/g;
+					regex = /\[([\-\_\w\= ا-ي])+\]/g;
 					matches = command.line.match(regex) || '';
 					if (matches.length) {
 						for (var j in matches) {

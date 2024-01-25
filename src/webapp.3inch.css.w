@@ -30,14 +30,22 @@ input.bare
 	z-index			3000
 	overflow		visible
 #webapp_status_ui
-	top				45vh
-	left			20vw
-	right			20vw
+	top				unset
+	left			unset
+	right			0
+	bottom			90px
+	max-height		64px
+	max-width		600px
+	letter-spacing	-1px
+	transition		right .1s ease-in
 #webapp_status_ui .text
 	padding			6px 10px
 	box-shadow		0 0 10px 0 @tertiary
 	border			1px solid @tertiaryl
 	border-radius	6px
+	border-right	0 !important
+	border-radius	10px 0 0 10px
+	text-align		start
 #taht3nsar .text
 	padding			5px
 	border-radius	5px

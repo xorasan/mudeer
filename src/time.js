@@ -10,7 +10,7 @@ var Time, time;
 		weekdays = 'sunday monday tuesday wednesday thursday friday saturday'.split(' ');
 	
 	Time = time = function (parent) {
-		var items	= (parent||document).querySelectorAll('[data-XPO.time]'),
+		var items	= (parent||document).querySelectorAll('[data-time]'),
 			is24	= preferences.get(24, 1);
 
 		for (var i in items) {
@@ -18,18 +18,18 @@ var Time, time;
 				var e = items[i];
 				if (e) {
 					var dataset = e.dataset;
-					var datetime = dataset.XPO.time;
-					var by = dataset.XPO.by;
+					var datetime = dataset.time;
+					var by = dataset.by;
 					
 					datetime = parseInt(datetime);
 
-					if (e.dataset.XPO.deadline) {
+					if (e.dataset.deadline) {
 						if (time.now() < datetime)
-							delete e.dataset.XPO.past, e.dataset.XPO.future = 1;
+							delete e.dataset.past, e.dataset.future = 1;
 						else
-							delete e.dataset.XPO.future, e.dataset.XPO.past = 1;
+							delete e.dataset.future, e.dataset.past = 1;
 					} else
-						delete e.dataset.XPO.future, delete e.dataset.XPO.past;
+						delete e.dataset.future, delete e.dataset.past;
 
 					if (by) {
 						time.relativetime(0, items[i]);
@@ -65,48 +65,48 @@ var Time, time;
 			month = day * 30,
 			year = month * 12;
 		if (delta < minute) {
-			fuzzy = delta + ' ' + xlate('XPO.secondsago');
+			fuzzy = delta + ' ' + xlate('secondsago');
 		}
 		else if (delta < 2 * minute) {
-			fuzzy = parsefloat(delta / minute, 1) + xlate('XPO.minute');
+			fuzzy = parsefloat(delta / minute, 1) + xlate('minute');
 		}
 		else if (delta < hour) {
-			fuzzy = parsefloat(delta / minute, 1) + xlate('XPO.minutesago');
+			fuzzy = parsefloat(delta / minute, 1) + xlate('minutesago');
 		}
 		else if (Math.floor(delta / hour) == 1) {
-			fuzzy = 1 + xlate('XPO.hourago');
+			fuzzy = 1 + xlate('hourago');
 			var mins = Math.floor( (delta % hour) / minute );
-			if (mins) fuzzy += ' ' + parsefloat(mins, 1) + xlate('XPO.minutesago');
+			if (mins) fuzzy += ' ' + parsefloat(mins, 1) + xlate('minutesago');
 		}
 		else if (delta < day) {
-			fuzzy = Math.floor(delta / hour) + ' ' + xlate('XPO.hoursago');
+			fuzzy = Math.floor(delta / hour) + ' ' + xlate('hoursago');
 			var mins = Math.floor( (delta % hour) / minute );
-			if (mins) fuzzy += ' ' + mins + xlate('XPO.minutesago');
+			if (mins) fuzzy += ' ' + mins + xlate('minutesago');
 		}
 		else if (delta >= day && delta < month) {
 			var days = Math.floor(delta / day);
-			fuzzy = days === 1 ? 1 + xlate('XPO.dayago') : days + xlate('XPO.daysago');
+			fuzzy = days === 1 ? 1 + xlate('dayago') : days + xlate('daysago');
 			var hours = Math.floor( (delta % day) / hour );
 			if (hours)
 				fuzzy += ' ' + (hours === 1 ?
-								hours + xlate('XPO.hourago')
-								: hours + xlate('XPO.hoursago'));
+								hours + xlate('hourago')
+								: hours + xlate('hoursago'));
 		}
 		else if (delta > month && delta < year) {
 			var months = Math.floor(delta / month);
-			fuzzy = months === 1 ? months + xlate('XPO.monthago')
-					: months + xlate('XPO.monthsago');
+			fuzzy = months === 1 ? months + xlate('monthago')
+					: months + xlate('monthsago');
 			var days = Math.floor( (delta % month) / day );
-			if (days) fuzzy += ' ' + (days === 1 ? days + xlate('XPO.dayago')
-									: days + xlate('XPO.daysago'));
+			if (days) fuzzy += ' ' + (days === 1 ? days + xlate('dayago')
+									: days + xlate('daysago'));
 		}
 		else if (delta > year) {
 			var years = Math.floor(delta / year);
-			fuzzy = years === 1 ? years + xlate('XPO.yearago')
-					: years + xlate('XPO.yearsago');
+			fuzzy = years === 1 ? years + xlate('yearago')
+					: years + xlate('yearsago');
 			var months = Math.floor( (delta % year) / month );
-			if (months) fuzzy += ' ' + (months === 1 ? months + xlate('XPO.monthago')
-					: months + xlate('XPO.monthsago'));
+			if (months) fuzzy += ' ' + (months === 1 ? months + xlate('monthago')
+					: months + xlate('monthsago'));
 		}
 		return fuzzy;
 	};
@@ -137,75 +137,75 @@ var Time, time;
 
 		if (!future && delta < 15) {
 			if (muxtasar)
-			fuzzy = delta + translate('XPO.sseconds');
+			fuzzy = delta + translate('sseconds');
 			else
-			fuzzy = translate('XPO.justnow');
+			fuzzy = translate('justnow');
 		}
 		else if (delta < minute) {
 			if (muxtasar)
-			fuzzy = delta + translate('XPO.sseconds');
+			fuzzy = delta + translate('sseconds');
 			else
-			fuzzy = delta + ' ' + translate('XPO.secondsago');
+			fuzzy = delta + ' ' + translate('secondsago');
 		}
 		else if (delta < 2 * minute) {
 			if (muxtasar)
-			fuzzy = 1 + translate('XPO.sminutes');
+			fuzzy = 1 + translate('sminutes');
 			else
-			fuzzy = translate('XPO.aminuteago');
+			fuzzy = translate('aminuteago');
 		}
 		else if (delta < hour) {
 			if (muxtasar)
-			fuzzy = Math.floor(delta / minute) + translate('XPO.sminutes');
+			fuzzy = Math.floor(delta / minute) + translate('sminutes');
 			else
-			fuzzy = Math.floor(delta / minute) + ' ' + translate('XPO.minutesago');
+			fuzzy = Math.floor(delta / minute) + ' ' + translate('minutesago');
 		}
 		else if (Math.floor(delta / hour) == 1) {
-			fuzzy = 1 + translate('XPO.hourago');
+			fuzzy = 1 + translate('hourago');
 			var mins = Math.floor( (delta % hour) / minute );
 			if (mins) {
 				if (muxtasar)
-				fuzzy = ' ' + mins + translate('XPO.sminutes');
+				fuzzy = ' ' + mins + translate('sminutes');
 				else
-				fuzzy += ' ' + mins + translate('XPO.minutesago');
+				fuzzy += ' ' + mins + translate('minutesago');
 			}
 		}
 		else if (delta < day) {
-			fuzzy = Math.floor(delta / hour) + translate('XPO.hoursago');
+			fuzzy = Math.floor(delta / hour) + translate('hoursago');
 			var mins = Math.floor( (delta % hour) / minute );
-			if (mins) fuzzy += ' ' + mins + translate('XPO.minutesago');
+			if (mins) fuzzy += ' ' + mins + translate('minutesago');
 		}
 		else if (delta >= day && delta < month) {
 			var days = Math.floor(delta / day);
-			fuzzy = days === 1 ? 1 + translate('XPO.dayago') : days + translate('XPO.daysago');
+			fuzzy = days === 1 ? 1 + translate('dayago') : days + translate('daysago');
 			var hours = Math.floor( (delta % day) / hour );
 			if (hours)
 				fuzzy += ' ' + (hours === 1 ?
-								hours + translate('XPO.hourago')
-								: hours + translate('XPO.hoursago'));
+								hours + translate('hourago')
+								: hours + translate('hoursago'));
 		}
 		else if (delta > month && delta < year) {
 			var months = Math.floor(delta / month);
-			fuzzy = months === 1 ? months + translate('XPO.monthago')
-					: months + translate('XPO.monthsago');
+			fuzzy = months === 1 ? months + translate('monthago')
+					: months + translate('monthsago');
 			var days = Math.floor( (delta % month) / day );
-			if (days) fuzzy += ' ' + (days === 1 ? days + translate('XPO.dayago')
-									: days + translate('XPO.daysago'));
+			if (days) fuzzy += ' ' + (days === 1 ? days + translate('dayago')
+									: days + translate('daysago'));
 		}
 		else if (delta > year) {
 			var years = Math.floor(delta / year);
-			fuzzy = years === 1 ? years + translate('XPO.yearago')
-					: years + translate('XPO.yearsago');
+			fuzzy = years === 1 ? years + translate('yearago')
+					: years + translate('yearsago');
 			var months = Math.floor( (delta % year) / month );
-			if (months) fuzzy += ' ' + (months === 1 ? months + translate('XPO.monthago')
-					: months + translate('XPO.monthsago'));
+			if (months) fuzzy += ' ' + (months === 1 ? months + translate('monthago')
+					: months + translate('monthsago'));
 		}
 		
-		if (future) fuzzy = translate('XPO.infuture') +' '+ fuzzy;
+		if (future) fuzzy = translate('infuture') +' '+ fuzzy;
 		
 		return translate.a3daad(fuzzy);
 	};
 	time.relativetime = function (datetime, e, dataset) {
-		if (datetime === 'false') return translate('XPO.alongtime');
+		if (datetime === 'false') return translate('alongtime');
 
 		var today			= time.striptime().getTime(),
 			yesterday		= time.traversebydays(today, -1),
@@ -216,62 +216,62 @@ var Time, time;
 		if (e) {
 			dataset = e.dataset;
 
-			var datetime		= parseInt(dataset.XPO.time),
-				minus			= dataset.XPO.minus,
-				by				= dataset.XPO.by;
+			var datetime		= parseInt(dataset.time),
+				minus			= dataset.minus,
+				by				= dataset.by;
 
-			delete dataset.XPO.i18n;
+			delete dataset.i18n;
 
 			if (minus !== undefined) datetime = time.now() - datetime;
 			
-			if (by === 'XPO.age') {
+			if (by === 'age') {
 				innerhtml(e, time.fuzzytime(datetime));
 			} else
-			if (by === 'XPO.days') {
+			if (by === 'days') {
 				var days = time.days(datetime);
 				if (days < 0.1) days = days.toFixed(2);
 				else if (days < 1)  days = days.toFixed(1);
 				else days = Math.floor(days);
 				innerhtml(e, days + ' ' + translate('daysago'));
 			} else
-			if (by === 'XPO.hourly') {
+			if (by === 'hourly') {
 				innerhtml(e, time.formatdate( new Date(datetime), (is24 ? 'HH:mm' : 'hh:mma') ));
 			} else
-			if (by === 'XPO.yearly') {
+			if (by === 'yearly') {
 				innerhtml(e, time.formatdate( new Date(datetime), 'YYYY' ));
 			} else
-			if (by === 'XPO.monthly') {
+			if (by === 'monthly') {
 				innerhtml(e, time.formatdate( new Date(datetime), 'MMMM YYYY' ));
 			} else
-			if (by === 'XPO.daily') {
+			if (by === 'daily') {
 				innerhtml(e, time.formatdate( new Date(datetime), 'Do MMMM YYYY' ));
 			} else
-			if (by === 'XPO.minute') {
+			if (by === 'minute') {
 				innerhtml(e, time.formatdate( new Date(datetime), is24 ? 'HH:mm' : 'hh:mma' ));
 			} else {
 				if (datetime === today)
-					dataset.XPO.i18n = 'XPO.today';
+					dataset.i18n = 'today';
 				else if (datetime === yesterday)
-					dataset.XPO.i18n = 'XPO.yesterday';
+					dataset.i18n = 'yesterday';
 				else if (datetime === tomorrow)
-					dataset.XPO.i18n = 'XPO.tomorrow';
+					dataset.i18n = 'tomorrow';
 				else 
 					innerhtml(e, time.formatdate( new Date(datetime), 'Do MMM YYYY' ));
 			}
 		} else {
-			var at = translate('XPO.@');
-			var c = translate('XPO.,'); // unicode commas
+			var at = translate('@');
+			var c = translate(','); // unicode commas
 
 			var months	= ( ( time.now() - datetime ) / time.month	);
 			var days	= ( ( time.now() - datetime ) / time.day	);
 			
 			if (days <= 1) {
-				if (dataset && dataset.XPO.muxtasar == '3')
+				if (dataset && dataset.muxtasar == '3')
 					text += time.fuzzytime( datetime, 1 );
-				else if (dataset && dataset.XPO.muxtasar == '2')
+				else if (dataset && dataset.muxtasar == '2')
 					text += time.fuzzytime( datetime );
 				else {
-					if (dataset && !dataset.XPO.muxtasar)
+					if (dataset && !dataset.muxtasar)
 						text += time.fuzzytime( datetime ) + ' '+at+' ';
 					text += time.formatdate( new Date(datetime), (is24 ? 'HH:mm' : 'hh:mma') );
 				}
@@ -372,17 +372,17 @@ var Time, time;
 
 		val._minutes	= date.getMinutes()						,
 		val._seconds	= date.getSeconds()						,
-		val._ampm		= val._hours >= 12 ? translate('XPO.pm') : translate('XPO.am')		;
+		val._ampm		= val._hours >= 12 ? translate('pm') : translate('am')		;
 		
 		
 		// get translated month name
 		val._monthname = translate(val._monthname);
 		val._dayname = translate(val._dayname);
 		
-		val._o			= translate('XPO.th');
-		if (val._day === 1 || val._day === 21 || val._day === 31) val._o = translate('XPO.st');
-		if (val._day === 2 || val._day === 22) val._o = translate('XPO.nd');
-		if (val._day === 3 || val._day === 23) val._o = translate('XPO.rd');
+		val._o			= translate('th');
+		if (val._day === 1 || val._day === 21 || val._day === 31) val._o = translate('st');
+		if (val._day === 2 || val._day === 22) val._o = translate('nd');
+		if (val._day === 3 || val._day === 23) val._o = translate('rd');
 
 
 		var datetimestring = format;
@@ -430,19 +430,19 @@ var Time, time;
 		clearTimeout(timeout);
 		started = 0;
 	};
-	Hooks.set('XPO.visible', function () {
+	Hooks.set('visible', function () {
 		time.start();
 	});
-	Hooks.set('XPO.hidden', function () {
+	Hooks.set('hidden', function () {
 		time.stop();
 	});
 
-	Hooks.set('XPO.widgets', function (parent) {
+	Hooks.set('widgets', function (parent) {
 		if (parent) time(parent);
 	});
 
-	Hooks.set('XPO.ready', function () {
-//		settings && settings.adaaf('XPO.is24', function () {
+	Hooks.set('ready', function () {
+//		settings && settings.adaaf('is24', function () {
 //			TODO
 //		});
 	});

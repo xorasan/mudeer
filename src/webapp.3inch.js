@@ -90,55 +90,6 @@ var datepicker = datepicker || 0;
 		if (level === 1) Webapp.dimmer();
 		if (level === 0) Webapp.header(), Webapp.dimmer();
 	});
-	Hooks.set('backstackdialog', function (args) {
-		var date = 0;
-		if (datepicker && args instanceof HTMLElement) date = 1;
-
-		webapp.dimmer(600);
-		Softkeys.clear();
-		Softkeys.add({ k: K.sl,
-			i: 'icondone',
-			c: function () {
-				if (date) datepicker.okay && datepicker.okay(args);
-				else dialog.okay && dialog.okay();
-			}
-		});
-		Softkeys.add({ k: K.sr,
-			i: 'iconclose',
-			c: function () {
-				if (date) datepicker.cancel && datepicker.cancel();
-				else dialog.cancel && dialog.cancel();
-			}
-		});
-
-		if (date) datepicker.show(args);
-		else dialog.show(args);
-	});
-	Hooks.set('backstacksheet', function (args) {
-		webapp.dimmer(400);
-		softkeys.clear();
-		if (args.callback || args.c) {
-			softkeys.set(K.sl, function () {
-				sheet.okay && sheet.okay();
-			}, 0, 'icondone');
-		}
-		softkeys.set(K.sr, function () {
-			sheet.cancel && sheet.cancel();
-		}, 0, 'iconarrowback');
-		sheet.show(args);
-		softkeys.showhints();
-	});
-	Hooks.set('backstackview', function (name) {
-		Webapp.dimmer();
-		Softkeys.clear();
-		Softkeys.P.empty();
-		Softkeys.set(K.sr, function () {
-			Hooks.run('back');
-		}, 0, 'iconarrowback');
-		View.run(name);
-		Softkeys.showhints();
-		return 1; // stop propagation
-	});
 	Hooks.set('backstackmain', function (name) {
 		Softkeys.clear();
 		Softkeys.P.empty();

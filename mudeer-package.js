@@ -39,12 +39,24 @@ var do_package = function (args) {
 	var project_name = node_path.basename( process.cwd() );
 	var package_path = process.cwd() +'/packages/'+ project_name +'-'+BUILDNUMBER+'.tgz';
 
+	var no_deps = (args.keys.nodeps || args.keys.n);
 	var released = (args.keys.released || args.keys.r);
+	var filter_function;
+	if (no_deps) { // exclude the deps folder
+		filter_function = function (path, stat) {
+			if (path.startsWith('./deps')) {
+				return false;
+			}
+			return true;
+		};
+	}
 
+	// TODO print total size and files at the end
 	tar.c(
 		{
 			gzip: true,
 			file: package_path,
+			filter: filter_function,
 			cwd: 'released',
 			prefix: released ? 'released' : (project_name +'-'+BUILDNUMBER),
 		},

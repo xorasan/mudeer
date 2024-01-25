@@ -271,6 +271,7 @@ var Offline, offline;
 			});
 		},
 		save: function (name, need, value) { // hifz/save from Network.sync[name][need] value
+			if (debug_offline) $.log.w( 'Offline save', name, need, value );
 			for (var uid in value) {
 				var val = value[uid], kind = Offline.mundarij.add;
 				
@@ -1013,6 +1014,7 @@ var Offline, offline;
 	};
 	
 	Hooks.set('response-sync', function (payload) {
+		if (debug_offline) $.log.w( 'Offline response-sync', payload );
 		for (var name in payload) {
 			for (var need in payload[name]) {
 				var value = payload[name][need];

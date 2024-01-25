@@ -186,7 +186,7 @@ var messages;
 			}
 			else return current;
 		},
-		itlaqhaalah: function (m) {
+		apply_condition: function (m) {
 			if (m && current) {
 				var ret = rooms.uxraa(current.members);
 				var ret2 = rooms.uxraa(m.members);

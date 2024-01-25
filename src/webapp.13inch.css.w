@@ -92,19 +92,6 @@ if min-width = 1024px
 	#softkeysui .row1 button svg
 		height			48px
 		width			48px
-	#webapp_status_ui
-		top				unset
-		left			unset
-		right			0
-		bottom			90px
-		max-height		64px
-		max-width		600px
-		letter-spacing	-1px
-		transition		right .1s ease-in
-	#webapp_status_ui .text
-		border-right	0 !important
-		border-radius	10px 0 0 10px
-		text-align		start
 
 
 
