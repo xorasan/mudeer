@@ -249,6 +249,7 @@
 		if (chronicle.length) chronicle.pop();
 		
 		if (ignore_once) {
+			$.log.w( 'Backstate ignoring once' );
 			ignore_once = 0;
 			return;
 		}
@@ -289,11 +290,16 @@
 		if (states.view) { // rooms
 			var view_name = View.get();
 			var view_uid = View.get_uid();
-			state.view = view_name;
-			link += view_name+'/';
-			if (view_uid) { // room-uid
-				state.view_uid = view_uid;
-				link += view_uid+'/';
+			// if it's a home view and no uid is present, then stay at root
+			if (Webapp.is_home_view(view_name) && !view_uid) {
+				
+			} else {
+				state.view = view_name;
+				link += view_name+'/';
+				if (view_uid) { // room-uid
+					state.view_uid = view_uid;
+					link += view_uid+'/';
+				}
 			}
 		}
 		if (states.sheet) { // (create) room
@@ -354,6 +360,7 @@
 		$.taxeer('backstack-history-ready', function () {
 			var crumbs = parse_link( location.pathname );
 			restore_crumbs(crumbs);
+			Backstack.states.main = 1; // Testing
 		}, 100);
 	});
 	

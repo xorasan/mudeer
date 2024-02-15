@@ -4,25 +4,25 @@
 		edgestart = 0, // -1 left, 0 center, 1 right
 		edgeend = 0, lastitem, lamsahbar,
 		softkeystouchdpad = 1; // 1 hor, 2 vert
-	Hooks.set('XPO.ready', function () {
+	Hooks.set('ready', function () {
 		if (preferences) softkeystouchdpad = preferences.get(saveto, 1) || 1;
 		softkeys.touchdpad = softkeystouchdpad;
 		
-		settingsuid = settings.adaaf('XPO.softkeystouchdpad', function () {
+		settingsuid = settings.adaaf('softkeystouchdpad', function () {
 			softkeystouchdpad = preferences.get(saveto, 1);
 			softkeys.touchdpad = softkeystouchdpad;
-			return [softkeystouchdpad ? 'XPO.on' : 'XPO.off' ];
+			return [softkeystouchdpad ? 'on' : 'off' ];
 		}, function () {
 			preferences.set(saveto, preferences.get(saveto, 1) ? 0 : 1);
 		});
 	});
-	Hooks.set('XPO.navigationstart', function (args) {
+	Hooks.set('navigationstart', function (args) {
 		locked = 0; // free direction lock
 		if (args[0] > innerwidth(-60)) edgestart = 1;
 		else if (args[0] < 60) edgestart = -1;
 		else edgestart = 0;
 	});
-	Hooks.set('XPO.navigation', function (args) {
+	Hooks.set('navigation', function (args) {
 		if (!locked || locked === 2) {
 			if (args[0] > 0) { // right
 				if (softkeystouchdpad && !edgestart) softkeys.press(K.rt);
@@ -60,7 +60,7 @@
 			}
 		}
 	};
-	Hooks.set('XPO.navigationend', function (args) {
+	Hooks.set('navigationend', function (args) {
 		if (!softkeystouchdpad) {
 			// logic handled in navigation above
 			if (args[3] < 0) {
@@ -82,7 +82,7 @@
 			}
 		}
 	});
-	Hooks.set('XPO.navigationpress', function (args) {
+	Hooks.set('navigationpress', function (args) {
 		var isbutton = 0;
 		if (isarr(args[2]))
 		args[2].forEach(function (item) {
@@ -93,14 +93,14 @@
 				isbutton = 1;
 				item.focus();
 				if (lastitem) {
-					popdata(lastitem, 'XPO.lamsah');
+					popdata(lastitem, 'lamsah');
 					lastitem = 0;
 				}
-				setdata(item, 'XPO.lamsah', 1);
+				setdata(item, 'lamsah', 1);
 				lastitem = item;
-				$.taxeer('XPO.sklamsah', function () {
+				$.taxeer('sklamsah', function () {
 					if (lastitem) {
-						popdata(lastitem, 'XPO.lamsah');
+						popdata(lastitem, 'lamsah');
 						lastitem = 0;
 					}
 				}, 300);
@@ -109,17 +109,17 @@
 		if (args[1] > innerheight(-60)) {
 			if (softkeystouchdpad) doclick(args[2]);
 		} else
-		if (iswithinelement(args, XPO.skhints) || isbutton) {
+		if (iswithinelement(args, skhints) || isbutton) {
 			if (softkeystouchdpad) doclick(args[2]);
-			softkeys.showhints();
+//			Softkeys.showhints();
 		}
 		else if (softkeystouchdpad) {
-			if (!XPO.skhints.hidden) softkeys.showhints();
-			softkeys.press(K.en);
+			if (!skhints.hidden) Softkeys.showhints();
+			Softkeys.press(K.en);
 		}
 	});
-	Hooks.set('XPO.navigationlongpress', function (args) {
-		softkeys.showhints();
+	Hooks.set('navigationlongpress', function (args) {
+		Softkeys.showhints();
 	});
 
 	/* TAJREEBI lamsah bar yameen
@@ -131,15 +131,15 @@
 		
 	};
 	
-	listener(XPO.skhints, ['touchstart'/*, 'mousedown'*/], function (e) {
+	listener(skhints, ['touchstart'/*, 'mousedown'*/], function (e) {
 		preventdefault(e);
 		// when scrolled, raycast is off by scroll height
 		lamsahbar = [e.touches[0].pageX, e.touches[0].pageY-scrollingelement().scrollTop];
 	});
-	listener(XPO.skhints, ['touchmove'/*, 'mousemove'*/], function (e) {
+	listener(skhints, ['touchmove'/*, 'mousemove'*/], function (e) {
 		if (lamsahbar) {
 			lamsahbar = [e.touches[0].pageX, e.touches[0].pageY-scrollingelement().scrollTop];
-			var ch = XPO.skhints.children, el,
+			var ch = skhints.children, el,
 				path;
 			if (e.type == 'touchmove') {
 				path = raycast(lamsahbar[0], lamsahbar[1]);
@@ -154,16 +154,17 @@
 			if (el) {
 				for (var i in ch) {
 					if ( ch.hasOwnProperty(i) ) {
-						if (path[j] != el) popdata(ch[i], 'XPO.hawm');
+						if (path[j] != el) popdata(ch[i], 'hawm');
 					}
 				}
-				setdata(el, 'XPO.hawm', 1);
-				softkeys.showhints();
+				setdata(el, 'hawm', 1);
+//				Softkeys.showhints();
 			}
+			setdata(skhints, 'held', 1);
 		}
 	});
-	listener(XPO.skhints, ['touchend', 'touchcancel'/*, 'mouseup', 'mouseleave'*/], function (e) {
-		var ch = XPO.skhints.children, path;
+	listener(skhints, ['touchend', 'touchcancel'/*, 'mouseup', 'mouseleave'*/], function (e) {
+		var ch = skhints.children, path;
 		if (e.type == 'touchend' && lamsahbar) {
 			path = raycast(lamsahbar[0], lamsahbar[1]);
 		}
@@ -180,25 +181,26 @@
 		}
 		for (var i in ch) {
 			if ( ch.hasOwnProperty(i) ) {
-				popdata(ch[i], 'XPO.hawm');
+				popdata(ch[i], 'hawm');
 			}
 		}
+		popdata(skhints, 'held');
 		lamsahbar = 0;
 	});
 	
-	/*Hooks.set('XPO.templateset', function (args) {
+	/*Hooks.set('templateset', function (args) {
 		var c = args[0], // clone
 			o = args[1],
 			k = args[2],
 			t = args[3];
 		
-		if (t === 'XPO.skbutton') {
+		if (t === 'skbutton') {
 			listener(c, ['touchmove', 'mouseenter'], function () {
 				if (lamsahbar) {
 					lamsahbar = c;
 					$.log(c.id);
 					
-					setdata(c, 'XPO.hawm', 1);
+					setdata(c, 'hawm', 1);
 				}
 			});
 		}

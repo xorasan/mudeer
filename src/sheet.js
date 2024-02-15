@@ -1,6 +1,8 @@
+//icons hourglassempty
 var Sheet, sheet;
 ;(function(){
 	var index = {}, header, container, active_sheet_name, active_sheet_uid, active_args, active_keys, new_list,
+		before_okay,
 		ae, murakkaz;
 
 	Sheet = sheet = {
@@ -75,11 +77,15 @@ var Sheet, sheet;
 			sheetui.hidden = 1;
 			sheet.okay = 0;
 			sheet.cancel = 0;
-			active_sheet_name = undefined;
-			active_sheet_uid = undefined;
-			active_args = undefined;
-			active_keys = undefined;
-			new_list = undefined;
+			active_sheet_name	=
+			active_sheet_uid	=
+			active_args			=
+			active_keys			=
+			new_list			=
+			before_okay			= undefined;
+		},
+		set_before_okay: function (cb) {
+			before_okay = cb;
 		},
 		show: function (args) {
 			ae = murakkaz = 0;
@@ -96,7 +102,7 @@ var Sheet, sheet;
 			var name		= args.name		||	args.n,
 				title		= args.title	||	args.t	||	'',
 				uid			= args.uid		||	args.u,
-				minqabl		= args.minqabl	||	args.b,
+				minqabl		= args.minqabl	||	args.before_okay	||	args.b,
 				callback	= args.callback	||	args.c,
 				oncancel	= args.oncancel	||	args.x,
 				ayyihaal	= args.ayyihaal	||	args.a,
@@ -155,7 +161,7 @@ var Sheet, sheet;
 			}
 			
 //			if (callback)
-			Sheet.okay = function () {
+			var original_okay = function () {
 				callback && callback( args || keys );
 				ayyihaal && ayyihaal( args || keys );
 				// TODO transition modules to use this method to (re)construct sheets
@@ -165,16 +171,25 @@ var Sheet, sheet;
 				Webapp.blur();
 				Hooks.run('back');
 			};
+			Sheet.okay = function () {
+				if (isfun(before_okay)) {
+					Sheet.bardaa(1);
+					minqabl(args || keys, function (args) {
+						original_okay(args || keys);
+					});
+				} else {
+					original_okay();
+				}
+			};
 //			else
 //			Sheet.okay = 0;
 			
 			Sheet.bardaa();
 			if (isfun(minqabl)) {
-				var oldokay = Sheet.okay;
 				Sheet.okay = function (args) {
 					Sheet.bardaa(1);
 					minqabl(args || keys, function (args) {
-						oldokay(args || keys);
+						original_okay(args || keys);
 					});
 				};
 			}
@@ -223,7 +238,7 @@ var Sheet, sheet;
 			Sheet.cancel && Sheet.cancel();
 		}, 0, 'iconarrowback');
 		Sheet.show(args);
-		Softkeys.showhints();
+//		Softkeys.showhints();
 	});
 	Hooks.set('backstack-crumbs', function (crumbs) {
 		if (!crumbs.is_sheet) {

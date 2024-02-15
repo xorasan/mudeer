@@ -33,7 +33,7 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 		subtitle: conf.sub || '',
 		description: conf.desc || '',
 		display: 'standalone',
-		fullscreen: conf.fullscreen || '',
+		fullscreen: conf.fullscreen || undefined,
 		cursor: conf.cursor || 'false',
 		background_color: conf.bg || undefined,
 		type: conf.type,

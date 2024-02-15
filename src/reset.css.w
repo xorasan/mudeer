@@ -18,9 +18,11 @@ big, .big
 	font-size		300%
 .huge
 	font-size		400%
+.nowrap
+	white-space		nowrap
 body
 	font-size		100%
-	padding			0 0 20px 0
+	padding			0 0 74px 0
 	margin			0
 	color			@text
 //	overflow-x		hidden		this messes with sticky positioning

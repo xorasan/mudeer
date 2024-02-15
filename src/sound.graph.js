@@ -1,7 +1,7 @@
 //+ 
 var sound = sound || {};
 var Sound = Sound || sound;
-var sawthafr;
+var sawthafr, audio_graph;
 ;(function(){
 	'use strict';
 	

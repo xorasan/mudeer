@@ -14,10 +14,10 @@
  * darken, brighten by percentage
  * 
  * */
-var alwaan;
+var Colors;
 ;(function () {
 	'use strict';
-	alwaan = {
+	Colors = {
 		types: {
 			hex: 10,
 			rgb: 20,
@@ -187,7 +187,7 @@ var alwaan;
 			return hex.length == 1 ? "0" + hex : hex;
 		},
 		_rgbtohex: function (r, g, b) {
-			return "#" + alwaan._componenttohex(r) + alwaan._componenttohex(g) + alwaan._componenttohex(b);
+			return "#" + Colors._componenttohex(r) + Colors._componenttohex(g) + Colors._componenttohex(b);
 		},
 
 /*		_colornamesreverse: {
@@ -360,8 +360,8 @@ var alwaan;
 		},
 		
 		lwnlimit: function (l) {
-			alwaan.lwnfloor(l);
-			alwaan.lwnceil(l);
+			Colors.lwnfloor(l);
+			Colors.lwnceil(l);
 			return l;
 		},
 		lwnfloor: function (l) {
@@ -378,7 +378,7 @@ var alwaan;
 		},
 		
 		hex2lwn: function (hex) {
-			return alwaan._hextorgb(hex);
+			return Colors._hextorgb(hex);
 		},
 		argb2lwn: function (color) {
 			var l = {a: 1};
@@ -405,7 +405,7 @@ var alwaan;
 			if (comp === 0 || isundef(comp)) l.r -= dec;
 			if (comp === 1 || isundef(comp)) l.g -= dec;
 			if (comp === 2 || isundef(comp)) l.b -= dec;
-			alwaan.lwnfloor(l);
+			Colors.lwnfloor(l);
 			return l;
 		},
 		brighten: function (l, inc, comp) {
@@ -414,15 +414,15 @@ var alwaan;
 			if (comp === 0 || isundef(comp)) l.r += inc;
 			if (comp === 1 || isundef(comp)) l.g += inc;
 			if (comp === 2 || isundef(comp)) l.b += inc;
-			alwaan.lwnceil(l);
+			Colors.lwnceil(l);
 			return l;
 		},
 		
 		int2hex: function (color) {
-			 return alwaan.lwn2hex( alwaan.argb2lwn(color) );
+			 return Colors.lwn2hex( Colors.argb2lwn(color) );
 		},
 		lwn2hex: function (l) {
-			 return alwaan._rgbtohex(l.r, l.g, l.b);
+			 return Colors._rgbtohex(l.r, l.g, l.b);
 		},
 		
 		auto: function (unknown) {
@@ -470,57 +470,57 @@ var alwaan;
 					return 'hsla('+(this.h*359).toFixed()+', '+(this.s*100).toFixed()+'%, '+(this.l*100).toFixed()+'%, '+this.a+')';
 				},
 				tohex: function () {
-					return alwaan._rgbtohex(this.r, this.g, this.b);
+					return Colors._rgbtohex(this.r, this.g, this.b);
 				}
 			};
 
 			/*
 			 * this allows color name detection
 			 * */
-/*			if (alwaan._colornames[unknown]) {
-				obj.type = alwaan.types.name;
-				unknown = alwaan._colornames[unknown]
-				Object.assign( obj, alwaan._hextorgb(unknown) );
-				Object.assign( obj, alwaan._rgbtohsl(obj.r, obj.g, obj.b) );
+/*			if (Colors._colornames[unknown]) {
+				obj.type = Colors.types.name;
+				unknown = Colors._colornames[unknown]
+				Object.assign( obj, Colors._hextorgb(unknown) );
+				Object.assign( obj, Colors._rgbtohsl(obj.r, obj.g, obj.b) );
 				obj.a = 1;
 			} else*/
 			if (unknown.startsWith('#')) {
-				obj.type = alwaan.types.hex;
-				Object.assign( obj, alwaan._hextorgb(unknown) );
-				Object.assign( obj, alwaan._rgbtohsl(obj.r, obj.g, obj.b) );
+				obj.type = Colors.types.hex;
+				Object.assign( obj, Colors._hextorgb(unknown) );
+				Object.assign( obj, Colors._rgbtohsl(obj.r, obj.g, obj.b) );
 				obj.a = 1;
 			} else
 			if (unknown.startsWith('rgb')) {
-				obj.type = alwaan.types.rgb;
-				var comps = alwaan._breakup( unknown );
+				obj.type = Colors.types.rgb;
+				var comps = Colors._breakup( unknown );
 				obj.r = comps[0];
 				obj.g = comps[1];
 				obj.b = comps[2];
 				obj.a = comps[3];
-				Object.assign( obj, alwaan._rgbtohsl(obj.r, obj.g, obj.b) );
-//				Object.assign( obj, alwaan._rgbtohsv(obj.r, obj.g, obj.b) );
+				Object.assign( obj, Colors._rgbtohsl(obj.r, obj.g, obj.b) );
+//				Object.assign( obj, Colors._rgbtohsv(obj.r, obj.g, obj.b) );
 			} else
 			if (unknown.startsWith('hsl')) {
-				obj.type = alwaan.types.hsl;
-				var comps = alwaan._breakup( unknown );
+				obj.type = Colors.types.hsl;
+				var comps = Colors._breakup( unknown );
 				obj.h = comps[0]/359;
 				obj.s = comps[1]/100;
 				obj.l = comps[2]/100;
 				obj.a = comps[3];
 //				$.log.s( comps );
-				Object.assign( obj, alwaan._hsltorgb(obj.h, obj.s, obj.l) );
+				Object.assign( obj, Colors._hsltorgb(obj.h, obj.s, obj.l) );
 			} else
 				return false
 //			if (unknown.startsWith('hsv')) {
-//				obj.type = alwaan.types.hsv;
-//				var comps = alwaan._breakup( unknown );
+//				obj.type = Colors.types.hsv;
+//				var comps = Colors._breakup( unknown );
 //				obj.h = comps[0]/359;
 //				obj.s = comps[1]/100;
 //				obj.v = comps[2]/100;
 //				obj.a = comps[3];
-//				Object.assign( obj, alwaan._hsvtorgb(obj.h, obj.s, obj.v) );
+//				Object.assign( obj, Colors._hsvtorgb(obj.h, obj.s, obj.v) );
 //			} else {
-//				Object.assign( obj, alwaan._rgbtohsv(obj.r, obj.g, obj.b) );
+//				Object.assign( obj, Colors._rgbtohsv(obj.r, obj.g, obj.b) );
 //			}
 			
 			return obj;
@@ -528,8 +528,8 @@ var alwaan;
 
 		/*init: function () {
 			// gens a 'hex': 'colorname' object from 'colorname': 'hex'
-			for (var i in alwaan._colornames) {
-				alwaan._colornamesreverse[ alwaan._colornames[i] ] = i;
+			for (var i in Colors._colornames) {
+				Colors._colornamesreverse[ Colors._colornames[i] ] = i;
 			}
 
 		}*/

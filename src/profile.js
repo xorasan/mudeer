@@ -35,9 +35,15 @@ var profilelist;
 	};
 	function update_sidebar() { if (get_global_object().Sidebar) {
 		if (Sessions.signedin()) {
+			var name, displayname;
+			if (profilelist) {
+				name = (profilelist.adapter.get('name') || {}).value;
+				displayname = (profilelist.adapter.get('displayname') || {}).value;
+			}
 			Sidebar.set({
 				uid: module_name,
-				title: translate( module_name ),
+				title: displayname || translate( module_name ),
+				subtitle: name ? '@'+name : undefined,
 				icon: 'iconperson',
 			});
 		} else {
@@ -108,8 +114,10 @@ var profilelist;
 			maxba.profile = response;
 			profile.update();
 //			profilelist.select();
+			update_sidebar();
 		});
 
+		Offline.get(module_name, 0, 0, Time.now());
 //		$.taxeer(module_name, function () { pager.intaxab(module_name, 1); }, 500);
 	});
 	Hooks.set('viewready', function (args) {

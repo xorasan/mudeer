@@ -44,9 +44,9 @@ This is an incomplete progress list of features & known bugs.
 		* [ ] Have status pile up and show one by one
 		* [ ] Hold off until app visibility
 
-	* [*] Home
-		* [*] `Webapp.is_at_home` checks if one of the views marked as home is active
-		* [*] `Webapp.add_home_view`, `Webapp.remove_home_view`, `Webapp.get_home_views`
+	* [x] Home
+		* [x] `Webapp.is_at_home` checks if one of the views marked as home is active
+		* [x] `Webapp.add_home_view`, `Webapp.remove_home_view`, `Webapp.get_home_views`
 
 * [ ] Softkeys
 	* [ ] Move `Webapp.status` above the back button on desktop

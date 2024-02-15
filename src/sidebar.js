@@ -1,6 +1,6 @@
-var Sidebar, sidebar_sheet_list;
+var Sidebar, sidebar_list, sidebar_sheet_list;
 ;(function(){
-	var sidebar_list, debug_sidebar = 0;
+	var debug_sidebar = 0;
 	var sidebar_softkey = { n: 'Sidebar',
 		k: 'contextmenu',
 		last: 1,
@@ -46,6 +46,18 @@ var Sidebar, sidebar_sheet_list;
 				sidebar_sheet_list.pop(uid);
 			}
 		},
+		hide_item: function (uid) {
+			var o = sidebar_list.adapter.get(uid);
+			if (o) o.hidden = 1;
+			var c = sidebar_list.get_item_element_by_uid( uid );
+			if (c) ixtaf(c);
+		},
+		show_item: function (uid) {
+			var o = sidebar_list.adapter.get(uid);
+			if (o) o.hidden = 0;
+			var c = sidebar_list.get_item_element_by_uid( uid );
+			if (c) izhar(c);
+		},
 		open: function () {
 			if (innerwidth() > 1024) {
 //				sidebar_list.set_focus(1, 1);
@@ -60,11 +72,11 @@ var Sidebar, sidebar_sheet_list;
 							sidebar_list.uponclick(o);
 						}, 20);
 					};
-					sidebar_list.adapter.each(function (o) {
+					sidebar_list.adapter.each(function (o) { if (!o.hidden) {
 						o = shallowcopy(o);
 						delete o.id_dom;
 						l.set(o);
-					});
+					} });
 				});
 			}
 		},
@@ -102,16 +114,15 @@ var Sidebar, sidebar_sheet_list;
 			} else {
 				sidebar_list.select_by_uid( o.uid, 1, 1, 1 );
 
-				var name = o.uid;
-				Hooks.run('view', name);
+				Hooks.run('view', { name: o.uid, uid: o.luid });
 				
-				if (get_global_object().Pager) Pager.choose(name);
+				if (get_global_object().Pager) Pager.choose(o.uid);
 			}
 //			sidebar_list.set_focus();
 		};
 	});
 	Hooks.set('viewready', function (args) {
-		if (Backstack.darajah <= 1 && innerwidth() <= 1024) {
+		if (/*Backstack.darajah <= 1 && */innerwidth() <= 1024) {
 			Sidebar.set_softkey();
 		}
 	});

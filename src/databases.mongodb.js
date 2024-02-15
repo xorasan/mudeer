@@ -15,7 +15,7 @@ var MongoDB;
 
 	function generate_uid() { return new ObjectId().toString(); }
 
-	async function connect() {
+	async function connect() { // TODO hide sensitive data
 		Cli.echo(' ^bright^MongoDB~~ Connecting... ^dim^', uri, '~~');
 		try {
 			await client.connect();
@@ -48,13 +48,13 @@ var MongoDB;
 			var created = get_time_now(), uid, ruid;
 			if (doc.uid) {
 				if (isnum(doc.uid) && doc.uid < 0) {
-					ruid = uid;
+					ruid = doc.uid;
 					uid = generate_uid();
 				} else {
 					uid = doc.uid;
 				}
 			} else {
-				doc.uid = generate_uid();
+				uid = generate_uid();
 			}
 			delete doc.ruid; // this is never saved, only return back to client to update the correct temp doc
 			delete doc.uid; // this is a readonly system property
@@ -87,6 +87,7 @@ var MongoDB;
 			$.log.e(' Error during upsert:', error);
 		} finally {
 			if (isfun(cb)) cb( out_error, doc );
+			return { err: out_error, rows: [doc] };
 		}
 	}
 
@@ -106,45 +107,67 @@ var MongoDB;
 			});
 		}
 
-		if (isfun(cb)) {
-			var out = { rows: out_docs };
-			if (out_error) out.err = out_error;
-			cb( out );
-		}
+		var out = { rows: out_docs };
+		if (out_error) out.err = out_error;
+		if (isfun(cb)) cb( out );
+
+		return out;
 	}
 
 	// converts uid to _id and reverse on out, always outs an { err, rows: [] }
 	async function find_many_as_array(db, collection_name, filter, cb) {
-		if (debug_mongodb) $.log( ' find_many_as_array... ', collection_name );
+		if (debug_mongodb) $.log( ' find_many_as_array... ', collection_name, JSON.stringify(filter) );
 
-		if (isfun(cb)) {
-			var out_docs, out_error;
-			filter = filter || {};
-			// convert uid to _id
-			if (filter.uid) {
-				filter._id = filter.uid;
-				delete filter.uid;
-			}
+		var out_docs, out_error;
+		filter = filter || {};
+		// convert uid to _id
+		if (filter.uid) {
+			filter._id = filter.uid;
+			delete filter.uid;
+		}
 
-			try {
-				const collection = use_db( db ).collection( collection_name );
-				out_docs = await collection.find( filter ).toArray();
-				// convert _id to uid
-				out_docs = out_docs.map(function (o) {
-					o.uid = o._id;
-					delete o._id;
-					return o;
-				});
-			} catch (error) {
-				$.log.e(' Error during find_many_as_array:', error);
-			} finally {
-				var out = { rows: out_docs };
-				if (out_error) out.err = out_error;
-				cb( out );
-			}
+		try {
+			const collection = use_db( db ).collection( collection_name );
+			out_docs = await collection.find( filter ).toArray();
+			// convert _id to uid
+			out_docs = out_docs.map(function (o) {
+				o.uid = o._id;
+				delete o._id;
+				return o;
+			});
+		} catch (error) {
+			out_error = error;
+			$.log.e(' Error during find_many_as_array:', error);
+		} finally {
+			var out = { rows: out_docs };
+			if (out_error) out.err = out_error;
+			if (isfun(cb)) { cb( out ); }
+			return out;
+		}
+	}
+	
+	async function find_as_count(db, collection_name, filter, cb) {
+		if (debug_mongodb) $.log( ' find_as_count... ', collection_name, JSON.stringify(filter) );
 
-		} else {
-			Cli.echo( ' ^bright^find_many_as_array~~ needs a callback ' );
+		var out_count, out_error;
+		filter = filter || {};
+		// convert uid to _id
+		if (filter.uid) {
+			filter._id = filter.uid;
+			delete filter.uid;
+		}
+
+		try {
+			const collection = use_db( db ).collection( collection_name );
+			out_count = await collection.countDocuments( filter );
+		} catch (error) {
+			out_error = error;
+			$.log.e(' Error during find_as_count:', error);
+		} finally {
+			var out = { count: out_count };
+			if (out_error) out.err = out_error;
+			if (isfun(cb)) cb( out );
+			return out;
 		}
 	}
 
@@ -152,40 +175,38 @@ var MongoDB;
 	async function find_one(db, collection_name, filter, cb) {
 		if (debug_mongodb) $.log( ' find_one... ', collection_name );
 
-		if (isfun(cb)) {
-			var out_docs, out_error;
-			filter = filter || {};
-			// convert uid to _id
-			if (filter.uid) {
-				filter._id = filter.uid;
-				delete filter.uid;
-			}
+		var out_docs, out_error;
+		filter = filter || {};
+		// convert uid to _id
+		if (filter.uid) {
+			filter._id = filter.uid;
+			delete filter.uid;
+		}
 
-			try {
-				const collection = use_db( db ).collection( collection_name );
-				out_docs = await collection.find( filter ).limit(1).toArray();
-				// convert _id to uid
-				out_docs = out_docs.map(function (o) {
-					o.uid = o._id;
-					delete o._id;
-					return o;
-				});
-			} catch (error) {
-				$.log.e(' Error during find_one:', error);
-			} finally {
-				if (out_docs[0]) {
-					cb( out_docs[0] );
-				} else {
-					cb( false );
-				}
+		try {
+			const collection = use_db( db ).collection( collection_name );
+			out_docs = await collection.find( filter ).limit(1).toArray();
+			// convert _id to uid
+			out_docs = out_docs.map(function (o) {
+				o.uid = o._id;
+				delete o._id;
+				return o;
+			});
+		} catch (error) {
+			$.log.e(' Error during find_one:', error);
+		} finally {
+			if (out_docs[0]) {
+				if (isfun(cb)) cb( out_docs[0] );
+				return out_docs[0];
+			} else {
+				if (isfun(cb)) cb( false );
+				return false;
 			}
-
-		} else {
-			Cli.echo( ' ^bright^find_one~~ needs a callback ' );
 		}
 	}
 
 	// outs (err, deletedCount)
+	// TODO add support for inserting more props easily, so it acts more like a trash bin
 	async function delete_one(db, collection_name, uid, cb, alt_collection_name) {
 		$.log( ' delete_one... ', collection_name );
 
@@ -209,6 +230,7 @@ var MongoDB;
 			$.log.e(' Error during delete_one:', error);
 		} finally {
 			if (isfun(cb)) cb( out_error, result );
+			return { err: out_error, uid: result };
 		}
 	}
 
@@ -268,6 +290,29 @@ var MongoDB;
 
 			cb( out_uids, out_error );
 		}
+
+		return { err: out_error, uids: out_uids };
+	}
+
+	// this doesn't add deleted items to pops
+	async function delete_many_without_notice(db, collection_name, filter, cb) {
+		if (debug_mongodb) $.log( ' delete_many_without_notice... ', collection_name );
+
+		var result, out_error;
+
+		try {
+			const collection = use_db( db ).collection( collection_name );
+			result = await collection.deleteMany( filter )
+			
+			if (result.deletedCount) {
+			}
+		} catch (error) {
+			out_error = error;
+			$.log.e(' Error during delete_many_without_notice:', error);
+		} finally {
+			if (isfun(cb)) cb( out_error, result );
+			return { err: out_error, count: result.deletedCount };
+		}
 	}
 
 	module.exports = Databases.mongodb = MongoDB = {
@@ -275,8 +320,10 @@ var MongoDB;
 		db		: use_db,
 		set		: upsert_one_or_many,
 		query	: find_many_as_array,
+		count	: find_as_count,
 		get		: find_one,
 		pop		: delete_many,
+		purge	: delete_many_without_notice,
 		uid		: generate_uid,
 	};
 })();

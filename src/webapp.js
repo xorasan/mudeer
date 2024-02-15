@@ -461,23 +461,49 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 
 			if (innerheight() <= 480) doc.body.dataset.keyboardopen = 1;
 			else delete doc.body.dataset.keyboardopen;
+			
+			$.taxeer('webapp-on-scroll', function () {
+				on_scroll();
+			});
 		},
 	};
 
+	Webapp.get_tall_screen_height = function () {
+		return tallscreenpadding.offsetHeight;
+	};
+	Webapp.get_header_height = function () {
+		return headerui.offsetHeight;
+	};
+	var previous_tall_height;
 	function on_scroll() {
 		var height = tallscreenpadding.offsetHeight * .75;
 		var percent = doc.scrollingElement.scrollTop / height;
+
+		if (previous_tall_height != innerheight()) {
+			if (innerheight() < 600)
+				percent = 1;
+			else
+				percent = 0;
+		}
+
+		previous_tall_height = innerheight();
+		
 		if (percent > 1 || Webapp.is_minimal()) {
 			percent = 1;
 			ixtaf(tallheaderui);
 		} else {
 			izhar(tallheaderui);
 		}
-		headerui.style.opacity = percent;
-		tallheaderui.style.opacity = 1 - percent;
-		tallheaderui.style.paddingTop = (12 * (1-percent))+'vh';
-	}
+		var header_pct = percent * .8;
+		if (header_pct >= .8) header_pct = 1;
+		headerui.style.opacity = header_pct;
 
+		var tall_pct = (1 - percent) * .8;
+		if (tall_pct >= .8) tall_pct = 1;
+		tallheaderui.style.opacity = tall_pct;
+		tallheaderui.style.paddingTop = (12 * (1 - percent))+'vh';
+	}
+	Webapp.on_scroll = on_scroll;
 	Webapp.header_sticky = function (yes) {
 		if (yes) setdata(headerui, 'sticky', 1);
 		else popdata(headerui, 'sticky');
@@ -499,6 +525,9 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	Webapp.remove_home_view = function (name) {
 		home_views.splice( home_views.indexOf(name), 1 );
 	};
+	Webapp.is_home_view = function (name) {
+		return Webapp.get_home_views().includes(name);
+	};
 	Webapp.is_at_home = function () {
 		return backstack.darajah === 0 && view.is_active( home_views );
 	};
@@ -507,7 +536,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 
 	var status_dom_keys;
 	Webapp.itlaa3 = function (text, time) {
-		status_dom_keys = status_dom_keys || templates.keys(webapp_status_ui);
+		status_dom_keys = status_dom_keys || Templates.keys(webapp_status_ui);
 		// TODO add .title support
 		var element = status_dom_keys.text;
 		if (text) {
@@ -545,6 +574,13 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	// hint for modules to minimize screen space usage
 	// TODO report percentage when toggling for animation
 	var minimal_views = [];
+	Webapp.apply_minimal_view = function () {
+		if (Webapp.is_minimal()) {
+			setdata(bod, 'minimal', 1);
+		} else {
+			popdata(bod, 'minimal', 1);
+		}
+	};
 	Webapp.get_minimal_views = function () {
 		return minimal_views.concat([]);
 	};
@@ -556,21 +592,48 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 		} else if (!minimal_views.includes(name)) {
 			minimal_views.push(name);
 		}
+		Webapp.apply_minimal_view();
+		on_scroll();
 	};
 	Webapp.remove_minimal_view = function (name) {
 		minimal_views.splice( minimal_views.indexOf(name), 1 );
+		Webapp.apply_minimal_view();
+		on_scroll();
 	};
 	Webapp.is_minimal = function () {
 		return view.is_active( minimal_views );
 	};
+	
+	// DOM Viewport settings #viewportsettings
+	// width=device-width,interactive-widget=resizes-content,user-scalable=no,initial-scale=1
+	var viewport_config = {};
+	function update_viewport() {
+		var str = [];
+		str.push( 'width='+(viewport_config.width || 'device-width') );
+		str.push( 'interactive-widget='+(viewport_config.resize_rule || 'resizes-content') );
+		str.push( 'user-scalable='+(viewport_config.scalable || 'no') );
+		str.push( 'initial-scale='+(viewport_config.scale || '1') );
+		if (viewport_config.fit)
+			str.push( 'viewport-fit='+(viewport_config.fit || 'contain') );
+		viewportsettings.content = str.join(',');
+	}
+	Webapp.viewport_width		= function (v) { viewport_config.width			= v; update_viewport(); };
+	Webapp.viewport_height		= function (v) { viewport_config.height			= v; update_viewport(); };
+	Webapp.viewport_resize_rule	= function (v) { viewport_config.resize_rule	= v; update_viewport(); };
+	Webapp.viewport_scalable	= function (v) { viewport_config.scalable		= v; update_viewport(); };
+	Webapp.viewport_scale		= function (v) { viewport_config.scale			= v; update_viewport(); };
+	Webapp.viewport_fit			= function (v) { viewport_config.fit			= v; update_viewport(); };
 
+	Hooks.set('restore', function (args) {
+		$.taxeer('webapp-on-scroll', function () {
+			on_scroll();
+		});
+	});
 	Hooks.set('viewready', function (args) {
-		if (Webapp.is_minimal()) {
-			setdata(bod, 'minimal', 1);
-		} else {
-			popdata(bod, 'minimal', 1);
-		}
-		on_scroll();
+		Webapp.apply_minimal_view();
+		$.taxeer('webapp-on-scroll', function () {
+			on_scroll();
+		});
 	});
 
 	// prevent default behavior from changing page on dropped file
@@ -604,7 +667,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	});
 
 	listener('resize', function () {
-		webapp.uponresize();
+		Webapp.uponresize();
 	});
 	listener('contextmenu', function (e) {
 		var yes = Hooks.rununtilconsumed('contextmenu', e);
@@ -665,7 +728,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 			Backstack.main(2);
 		}
 
-		$.taxeer('on_scroll', function () {
+		$.taxeer('webapp-on-scroll', function () {
 			on_scroll();
 		}, 10);
 

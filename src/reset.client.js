@@ -109,6 +109,34 @@ setvalue = function (obj, v) {
 scrollintoview = function (obj) {
 	obj && obj.scrollIntoView(1);
 },
+scroll_into_view_with_padding = function (e, padding) {
+	var rect = e.getBoundingClientRect();
+	var padt, padb, pads, pade;
+
+	padt = padb = padding || 0;
+	if (isarr(padding)) {
+		if (padding.length == 2) { // [v, h]
+			padt = padb = padding[0];
+			pads = pade = padding[1];
+		}
+		if (padding.length == 4) { // cw [t, e, b, s]
+			padt = padding[0];
+			pade = padding[1];
+			padb = padding[2];
+			pads = padding[3];
+		}
+	}
+	
+	var se = scrollingelement(), top;
+	
+	if (rect.y < padt) {
+		top = padt;
+	} else if (rect.y >= innerheight()-padb) {
+		top = innerheight()+padb; // extra to compensate for element height
+	}
+	// TODO horizontal
+	if (isnum(top)) scrollTo({ top: top, behavior: 'smooth' });
+},
 prevsibling = function (obj) {
 	return obj.previousElementSibling;
 },
@@ -126,6 +154,9 @@ setcss = function (obj, k, v) {
 		obj.style[k] = '';
 	else
 		obj.style[k] = v;
+},
+getcss = function (obj, k) {
+	return obj.style[k];
 },
 popdata = function (obj, k, v) {
 	if (obj) delete obj.dataset[k];

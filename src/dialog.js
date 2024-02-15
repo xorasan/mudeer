@@ -20,6 +20,18 @@ var Dialog, dialog;
 		get_uid: function () {
 			return current_uid;
 		},
+		set_message: function (m) {
+			var k = templates.keys(dialogui);
+
+			innertext(k.message, '');
+
+			if (isarr(m)) {
+				setdata(k.message, 'i18n', message || '');
+				translate.update(dialogui);
+			} else {
+				innertext(k.message, m);
+			}
+		},
 		show: function (args) {
 			args = args || {};
 			
@@ -56,6 +68,9 @@ var Dialog, dialog;
 			}
 			
 			Dialog.onshow && Dialog.onshow(name);
+
+			// TODO transition modules to use this method to (re)construct dialogs
+			Hooks.run('dialog-ready', args, k);
 			
 			Dialog.okay = function () {
 				var answer = input_element.value;
@@ -79,10 +94,8 @@ var Dialog, dialog;
 			} else {
 				input_element.hidden = 1;
 			}
-			innertext(k.message, '');
-			k.message.dataset.i18n = message || '';
-			
-			translate.update(dialogui);
+
+			this.set_message( message );
 		},
 	};
 	Hooks.set('backstackdialog', function (args) {

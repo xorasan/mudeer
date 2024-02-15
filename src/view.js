@@ -106,7 +106,7 @@ var View, view;
 			Hooks.run('back');
 		}, 0, 'iconarrowback');
 		View.run(name, uid);
-		Softkeys.showhints();
+//		Softkeys.showhints();
 		return 1; // stop propagation
 	});
 

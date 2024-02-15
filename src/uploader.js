@@ -1,5 +1,3 @@
-//+ mulhaq marfoo3 intahaa iltahaq infasal naqal intaxab
-//+ mashghool
 var raafi3, uploader, Uploader,
 RF3BADAA		= 10	,	// started conversion
 RF3XATAM		= 30	,	// conversion finished
@@ -20,7 +18,7 @@ RF3INTAHAA		= 90	;	// exited process
 		return [Math.round(sw*r), Math.round(sh*r), r];
 	},
 	oninput = function (file) { if (file) {
-		mfateeh.matn && ixtaf(mfateeh.matn);
+		mfateeh.text && ixtaf(mfateeh.text);
 		izhar(mfateeh.photo);
 		rawaa(RF3BADAA);
 		innertext(mfateeh.tafseel, 'loading...');
@@ -55,11 +53,11 @@ RF3INTAHAA		= 90	;	// exited process
 		mfateeh.preview.src = URL.createObjectURL(file);
 	}},
 	rawaa = function (nabaa) { // relay event
-		Hooks.run('XPO.raafi3', nabaa);
-		Hooks.run('XPO.uploader', nabaa);
+		Hooks.run('raafi3', nabaa);
+		Hooks.run('uploader', nabaa);
 	};
 	
-	uploader = Uploader = raafi3 = {
+	Uploader = uploader = raafi3 = {
 		hajam: 0, // override size
 		naqal: 0, // is converting the upload
 		mulhaq: 0, // is attached to elements
@@ -77,8 +75,8 @@ RF3INTAHAA		= 90	;	// exited process
 		iltahaq: function (m) { // attach
 			if (m) {
 				mfateeh = m;
-				mfateeh.rafa3soorah.oninput = function () {
-					raafi3.intaxab( mfateeh.rafa3soorah.files[0] );
+				mfateeh.upload_photo.oninput = function () {
+					raafi3.intaxab( mfateeh.upload_photo.files[0] );
 				};
 				raafi3.mulhaq = 1;
 				rawaa();
@@ -103,7 +101,7 @@ RF3INTAHAA		= 90	;	// exited process
 	Uploader.detach	= Uploader.infasal	;
 	Uploader.pick	= Uploader.intaxab	;
 
-	Hooks.set('XPO.restore', function () { // called on backstack changes
+	Hooks.set('restore', function () { // called on backstack changes
 	});
 
 })();

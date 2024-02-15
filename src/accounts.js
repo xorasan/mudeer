@@ -2,9 +2,35 @@ var Accounts;
 ;(function(){
 	'use strict';
 	
-	var accounts_list, module_name = 'accounts';
+	var accounts_list, module_name = 'accounts', cache = {}, fetching = {};
 	
 	Accounts = {
+		fetch: async function (uid) {
+			if (cache[uid]) return cache[uid];
+			
+			if (fetching[uid]) {
+				return new Promise(function (resolve) {
+					fetching[uid].push( resolve );
+				});
+			}
+			
+			var promise = Offline.fetch( module_name, 0, { filter: { uid } } );
+			fetching[uid] = fetching[uid] || [];
+			var accounts = await promise;
+			if (accounts && isarr(accounts) && accounts.length === 1) {
+				var o = accounts[0];
+				cache[o.uid] = o;
+				if (fetching[o.uid]) {
+					fetching[o.uid].forEach(function (p) {
+						p(o);
+					});
+					delete fetching[o.uid];
+				}
+				return o;
+			}
+
+			return 0;
+		},
 		search: function (str, callback) {
 			str = tolower(str);
 			var arr = [];

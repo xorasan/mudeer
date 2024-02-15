@@ -57,6 +57,66 @@ Rooms = rooms = {
 		
 		return v;
 	},
+	fill_connections: function (out) { // {}
+		out.connected = out.connected || [];
+		var conns = Callscreen.get_room_connections(out.uid); // connections are pre-exported
+		if (conns)
+		conns.forEach(function (o, i) {
+			out.connected.push( o );
+		});
+		return out;
+	},
+	query: async function (filter) { // by uid or link or filter, autodetects
+		var on_resolve, on_error, refined_filter = {};
+
+		var promise = new Promise(function (resolve, error) {
+			on_resolve = resolve;
+			on_error = error;
+		});
+
+		if (isstr(filter.uid)) {
+			var uid = filter.uid;
+			if (uid.startsWith('@')) {
+				refined_filter.link = uid.slice(1);
+			} else {
+				refined_filter.uid = uid;
+			}
+		} else if (isstr(filter.link)) {
+			refined_filter.link = filter.link;
+		}
+
+		var outcome = await MongoDB.query(Config.database.name, module_name, refined_filter);
+
+		for await (var o of outcome.rows) {
+			o.count = await Messages.get_count_in_room( o.uid );
+			Rooms.fill_connections(o);
+		}
+
+		on_resolve( outcome.rows );
+
+		return promise;
+	},
+	update_room_by_uid: async function (uid, account_uid) { // TODO make this truly async with errors
+		$.log( 'Rooms update_room_by_uid', uid, account_uid );
+		var room = await MongoDB.get(Config.database.name, module_name, { uid });
+		if (room) {
+			var outcome = await MongoDB.set(Config.database.name, module_name, {
+				uid: room.uid,
+				updated: get_time_now(),
+			});
+
+			$.log( 'updated room', room.uid, room.link );
+			// TODO improve eff
+			Polling.finish_all([account_uid]);
+		} else {
+			$.log( 'room not found by uid', uid );
+		}
+	},
+	export_room: function ({ uid, ruid, name, link, members, count, connected, created, updated }) {
+		var room = { uid, ruid, name, link, members, count, connected, created, updated };
+		Rooms.fill_connections( room );
+		return room;
+	},
 	members: function (uid, members) {
 		var v = rooms.maxba(uid, 'members');
 		if (!areobjectsequal(v, members) && members) {
@@ -124,53 +184,39 @@ Rooms = rooms = {
 		}, 50);
 	},
 };
-Network.intercept(module_name, function (response) {
+Network.intercept(module_name, async function (response) { // TODO sync pops
 	if (response.account) {
-		var arr = [], objs = [], limit = 100, maxba = rooms.maxba(), yes;
+		var yes, out = [];
 
-//		for (var i in maxba) {
-//			if (maxba[i].updated > response.time
-//			&& rooms.is_member(maxba[i], response.account.uid)) {
-//				objs[i] = {
-//					uid:		parseint(i),
-//					slow_mode:		maxba[i].slow_mode,
-//				};
-//				yes = 1;
-//			}
-//		}
-		arr = Object.values(objs);
-		MongoDB.query(Config.database.name, module_name, {
-//			members: new RegExp(' '+response.account.uid+':'),
+		var pops = await MongoDB.query(Config.database.name, 'pops', {
+			ltable: module_name,
 			$or: [ { updated: { $gte: response.time || 0 } }, { created: { $gte: response.time || 0 } } ]
-			// TODO limit
-		}, function (outcome) {
-			outcome.rows.forEach(function (o, i) {
-				var x = objs[o.uid] || {}, members = [], membersobj = {};
-				if (o.members)
-				o.members.split(' ').forEach(function (v) {
-					v = v.split(':');
-					var a = parseint(v[0]),
-						b = parseint(v[1]);
-					if (isnum(a) && isnum(b)) {
-						membersobj[ a ] = b;
-						members.push([ a, b ]);
-					}
-				});
-				rooms.members(o.uid, membersobj);
-				x.uid			= o.uid;
-				x.name			= o.name;
-				x.link			= o.link;
-				x.members		= members;
-				x.created		= o.created;
-				x.updated		= o.updated;
-				objs[o.uid] = x;
-			});
-			arr = Object.values(objs);
-			if (arr.length) response.sync(arr), yes = 1;
-			if (yes) response.consumed(); else response.finish();
 		});
 
-	} else if (yes) response.consumed(); else response.finish();
+		pops.rows.forEach(function ({ luid }) {
+			out.push({ uid: luid, remove: -1 }); // purged completely
+		});
+
+		var outcome = await MongoDB.query(Config.database.name, module_name, {
+			$or: [ { updated: { $gte: response.time || 0 } }, { created: { $gte: response.time || 0 } } ]
+			// TODO limit
+		});
+		
+		for await (var o of outcome.rows) {
+			o.count = await Messages.get_count_in_room( o.uid );
+			out.push( Rooms.export_room(o) );
+		}
+
+		if (out.length) {
+			response.sync(out);
+			yes = 1;
+		}
+		if (yes) {
+			response.consumed();
+		} else
+			response.finish();
+
+	} else response.finish();
 });
 Network.intercept('-rooms', function (response) {
 	if (response.account) {
@@ -217,7 +263,7 @@ Network.intercept('-rooms', function (response) {
 
 	} else if (yes) response.consumed(); else response.finish();
 });
-Network.sync(module_name, function (response) {
+Network.sync(module_name, async function (response) {
 	var value = response.value;
 	
 	if (!response.account) { response.finish(); return; } // not signed in
@@ -225,19 +271,39 @@ Network.sync(module_name, function (response) {
 	
 	if (isarr(value)) {
 		// TODO make a Database.only_props func to filter out unwanted props from client
-		var arr = [];
-		value.forEach(function ({ uid, name, link, members }) {
-			arr.push({ uid, name, link, members });
+		var arr = [], pops = [], out = [];
+		value.forEach(function (o) {
+			if (o.remove)
+				pops.push( o.uid );
+			else
+				arr.push( Rooms.export_room(o) );
 		});
-		MongoDB.set( Config.database.name, module_name, arr, function (result) {
-			var out = [];
-			result.rows.forEach(function ({ uid, ruid, name, link, members }) {
-				out.push({ uid, ruid, name, link, members });
-			});
-			response.sync(out)
-					.finish();
-		} );
-	}
+
+		var removed = await MongoDB.pop( Config.database.name, module_name, pops );
+
+		for await (const uid of removed.uids) {
+			// TODO delete all messages inside
+			$.log( 'removing all messages in ', uid );
+			var deleted_count = await Messages.remove_all_in_room( uid );
+			$.log( '...done', deleted_count );
+			out.push({ uid, remove: -1 }); // -1 truly purged, signal client to remove
+		}
+
+		var added = await MongoDB.set( Config.database.name, module_name, arr );
+
+		for await (var o of added.rows) {
+			o.count = await Messages.get_count_in_room( o.uid );
+			out.push( Rooms.export_room(o) );
+		}
+
+		if (out.length) {
+			Polling.finish(); // end all polls
+			response.sync(out);
+		}
+
+		response.finish();
+
+	} else response.finish();
 });
 Network.sync('-rooms', function (response) {
 	var value = response.value;
@@ -341,6 +407,29 @@ Network.sync('-rooms', function (response) {
 			});
 		});
 	} else response.finish();
+});
+
+Network.get('rooms', async function (response) {
+	if (!response.account) { response.finish(); return; } // not signed in
+
+	try {
+		if (response.value && response.value.filter) {
+			try {
+				var rooms = await Rooms.query( response.value.filter );
+				response.get( rooms );
+			} catch (e) {
+				$.log.e( e );
+				response.get( false );
+			}
+		} else {
+			response.get( false );
+		}
+		
+		response.finish();
+	} catch (e) {
+		response.get(false)
+				.finish();
+	}
 });
 Network.get('rooms', 'invite', function (response) {
 	var prof1 = response.value, prof0 = response.account.uid;

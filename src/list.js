@@ -88,8 +88,10 @@ var List, list;
 			this.element.hidden = 0;
 			this.element.parentElement.hidden = 0;
 		},
+		// triggers on_focus
 		uponrakkaz: function (v, active) { // active = visible & view is active
 			if (v && active) Softkeys.list.basic(this);
+			if (isfun(this.on_focus)) this.on_focus(v, active);
 		},
 		rakkaz: function (v, active) { // deprecated, use set_focus
 			if (this._prevent_focus) return;
@@ -334,6 +336,9 @@ var List, list;
 			this.intaxabsaamitan();
 			this.selected = old;
 			this.rakkaz();
+			if (isfun(this.on_deselection)) {
+				this.on_deselection();
+			}
 			return this;
 		},
 		/* TODO
@@ -517,6 +522,9 @@ var List, list;
 		get_item_element: function (uid) {
 			return this.get( isundef(uid) ? this.selected : uid );
 		},
+		get_item_element_by_uid: function (uid) {
+			return this.get( this.id2num(uid) );
+		},
 		get: function (id) {
 			return this.keys.items.children[id];
 		},
@@ -671,6 +679,7 @@ var List, list;
 	
 	proto.set_focus = proto.rakkaz;
 	proto.highlight = proto.baidaa;
+	proto.select_silently = proto.intaxabsaamitan;
 	proto.prevent_focus = function (yes) {
 		this._prevent_focus = yes;
 		return this;

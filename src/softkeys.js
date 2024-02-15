@@ -58,6 +58,8 @@ var Softkeys, softkeys, K, P;
 		var k = args.key || uid;
 		
 		if (callback) o.onclick = function (e) {
+			if (index[k]) index[k].blur(); // prevent focus
+
 			var key = e ? e.key : undefined;
 			callback(key, e);
 		};
@@ -191,19 +193,19 @@ var Softkeys, softkeys, K, P;
 			// update labels, icons etc
 			if (M) for (var k in M) updatekey(k);
 		},
-		showhints: function () {
+		showhints: function (time) {
 			delete softkeysui.dataset.hidden;
 			setdata(softkeysui, 'shown', 1);
 			if (!skhelp.hidden) {
 				skhelp.hidden = 1;
-				preferences.set(7, 1);
+				Preferences.set(7, 1);
 			}
 //			skhints.hidden = 0;
 			$.taxeer('softkeyshints', function () {
 				popdata(softkeysui, 'shown');
 				softkeysui.dataset.hidden = 1;
 //				skhints.hidden = 1;
-			}, 2500);
+			}, time || 2500);
 		},
 		/* remember one or more actions which you can recall later
 		 * you can also forget stored actions
@@ -414,6 +416,8 @@ var Softkeys, softkeys, K, P;
 			 * left/right should detect language direction
 			 * */
 			if (editmode) {
+				var event_type = e ? e.type : '';
+				
 				if (a.contentEditable == 'true') {
 					length = a.textContent.length;
 					selectionStart = getSelection().baseOffset;
@@ -436,9 +440,16 @@ var Softkeys, softkeys, K, P;
 
 					caught = focusnext(a), pd();
 				}
+				// these events are only triggered on keyup for now to prevent bugs
 				else
-				if (k == K.en &&  e.shiftKey && a.uponshiftenter) a.uponshiftenter(atstart, atend), pd();
-				else if (k == K.en && !e.shiftKey && a.uponenter     ) a.uponenter     (atstart, atend), pd();
+				if (k == K.en &&  e.shiftKey && a.uponshiftenter) {
+					if (event_type == 'keyup') a.uponshiftenter(atstart, atend);
+					pd();
+				}
+				else if (k == K.en && !e.shiftKey && a.uponenter) {
+					if (event_type == 'keyup') a.uponenter     (atstart, atend);
+					pd();
+				}
 			}
 			else if (a) {
 				if ( is_navigable( a )
@@ -513,6 +524,9 @@ var Softkeys, softkeys, K, P;
 		},
 	};
 	
+	Softkeys.get_main_height = function () {
+		return skmain.offsetHeight;
+	};
 	Softkeys.showhints();
 	Softkeys.M = function () {
 		return M;
@@ -548,16 +562,16 @@ var Softkeys, softkeys, K, P;
 		if (a && (a instanceof HTMLInputElement
 		|| a.contentEditable == 'true'
 		||	a instanceof HTMLTextAreaElement) && a.type != 'range') {
-			softkeys.showhints();
+			Softkeys.showhints();
 		} else {
-			softkeys.showhints();
+			Softkeys.showhints();
 			return 1;
 		}
 	});
 	Hooks.set('ready', function () {
-		skhints.onclick =
+//		skhints.onclick =
 		skdots.onclick = function () {
-			softkeys.showhints();
+			Softkeys.showhints();
 		};
 	});
 	Hooks.set('mousewheel', function (e) {
@@ -598,9 +612,9 @@ var Softkeys, softkeys, K, P;
 			}
 			
 			$.taxeer('softkeysminmax', function () {
-				if (yes === 1) webapp.taht3nsar('-'+(min-len));
-				else if (yes === 2) webapp.taht3nsar(len+' / '+max+' +'+(len-max));
-				else webapp.taht3nsar(len);
+				if (yes === 1) Webapp.taht3nsar('-'+(min-len));
+				else if (yes === 2) Webapp.taht3nsar(len+' / '+max+' +'+(len-max));
+				else Webapp.taht3nsar(len);
 			}, 50);
 			
 			$.taxeer('softkeysautoheight', function () {
@@ -608,14 +622,22 @@ var Softkeys, softkeys, K, P;
 			}, 100);
 		} else {
 		}
-		Hooks.rununtilconsumed('softkey', [(e.key||'').toLowerCase(), e || {}, e && e.type, 0]);
+		var key = (e.key||'').toLowerCase();
+
+		// TODO BUG this causes bugs when messages are loaded, voice recording starts imm
+		// but without it, many uponenters dont get triggered
+//		if (key == K.en) {
+//			Softkeys.press(e.key, e, e.type, 0);
+//		}
+
+		Hooks.rununtilconsumed('softkey', [key, e || {}, e && e.type, 0]);
 		preventdefault(e);
 	});
 	Hooks.set('keydown', function (e) {
 //		$.log( 'keydown', e.key, time.now() - lastkeytime );
 		if (time.now() - lastkeytime > 60 || lastkeytime === undefined || !PRODUCTION) {
 			// hook.softkey also first inside .press
-			e && softkeys.press(e.key, e, e.type, 0);
+			e && Softkeys.press(e.key, e, e.type, 0);
 			
 			lastkeytime = time.now();
 		} else {

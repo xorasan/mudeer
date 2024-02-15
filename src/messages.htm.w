@@ -1,6 +1,6 @@
 [view=messages] #messagesui .flex .messages
 	[id=list]
-	[id=baaq] .relative .flex .vertical .baaq .sticky
+	[id=baaq] .relative .flex .vertical .baaq .sticky @hidden
 		.flex .pad .vcenterkids .small
 			[id=photo] .photo .start .shrink
 			.flex .vertical .narrowline .pad
@@ -17,8 +17,8 @@
 		[id=photo] .centertext @hidden
 			img [id=preview] .preview
 			[id=tafseel] .small
-			input @type(file) @hidden [id=rafa3photo]
-		[id=matn] [focus=1]
+			input @type(file) @hidden [id=upload_photo]
+		[id=text] [focus=1]
 			[id=taxeer] .taxeer .absolute .pad .padv @hidden
 			textarea [id=messagebox] .messagebox @max(480)
 [sheet=messagephoto] .messages .centertext
@@ -29,13 +29,14 @@
 		textarea [id=messagebox] .messagebox @max(480)
 [template=messageitem] .messageitem .listitem .flex
 	[id=padder] .padt
-	[id=photo] .photo .absolute
+	[id=photo] .photo .absolute .bold .upper
 //	[id=hafr] .hafr .vcenterkids .absolute .right .bottom
 	.flex .start .vertical .shrink
-		.tag .pad .padv .matn .narrowline
-			span [id=matn] .vcenter
+		[id=name] .name .dim .small .pad .padt
+		.tag .pad .padv .text .narrowline
+			span [id=text] .vcenter
 			canvas [id=hafr] .hafr .vcenter @height(24px) @hidden @width(1px)
-		[id=waqtqabl] .small .narrowline .ixtaf .tawassa3 .pad .padv .tag
-	.small .dim .vcenter
-		.icon [icon=icondeleteforever] [id=havafstr] .inlineonly
-		[id=havafwaqt] [muxtasar=3] .inlineonly .vcenter
+	.flex .small .dim .vend
+		.icon [icon=icondeleteforever] [id=removestr] .inlineonly
+		[id=removetime] [muxtasar=3] .inlineonly .vcenter
+		[id=waqtqabl] .dim .narrowline .time .ixtaf .pad .padv

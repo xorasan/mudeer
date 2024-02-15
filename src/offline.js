@@ -34,12 +34,14 @@ var Offline, offline;
 						ixraaj[ uid ] = things[j].value;
 					}
 				}
+				// QUESTION why was this commented out
 				/*else if (things.remove) {
 					things = {
 						uid: things.uid,
 						remove: 1,
 					};
 				}*/
+				$.log( ixraaj || things );
 				Network.sync(m.name, m.need, ixraaj || things);
 			}
 		});
@@ -124,7 +126,7 @@ var Offline, offline;
 			get: {},
 		},
 		ready: false,
-		response: {
+		response: { // supports only one callback per name+need combo, module should fire hooks to others
 			add: function (name, need, cb) {
 				if (typeof need == 'function') cb = need, need = 0;
 				need = need || 'default';
@@ -239,6 +241,9 @@ var Offline, offline;
 			 * if time is provided, then it saves when online was fetched last
 			 * */
 			
+			// TODO add wait for first sync to happen and then deliver result
+			// add promise and return from network uniquely
+
 			var expired = 0;
 			if (time !== undefined) {
 				var store = maxaazin[name+need];
@@ -270,6 +275,73 @@ var Offline, offline;
 				cb(response.toNative());
 			});
 		},
+		fetch: async function (name, need, value, time) { // get but with promise
+			if (debug_offline) $.log.w('Offline.fetch', name, need);
+
+			need = need || 'default';
+			/*
+			 * it gets all first from Offline store, if nothing is found
+			 * then it tries online
+			 * if time is provided, then it saves when online was fetched last
+			 * */
+			
+			// TODO add wait for first sync to happen and then deliver result
+			// add promise and return from network uniquely
+
+			var on_resolve, on_error;
+
+			var expired = 0;
+			if (time !== undefined) {
+				var store = maxaazin[name+need];
+				if (store) {
+					var delay = store.delay || delaydefault;
+					if (delay !== -1) {
+						store.time = store.time || Time.now() - (delay*2);
+						if (time - store.time > delay) expired = 1;
+					}
+				}
+			}
+			
+			var filter_for_network = shallowcopy( value );
+			
+			async function fetch_from_server() {
+				try {
+					var response = await Network.fetch(name, need, filter_for_network);
+					on_resolve( response );
+				} catch (e) {
+					on_error( e );
+				}
+			}
+			
+			if (expired) {
+				fetch_from_server();
+			} else {
+				Offline.getall(name+need, value, function (response) {
+					if (response.length)
+						on_resolve( response.toNative() );
+					else {
+						fetch_from_server();
+					}
+				});
+			}
+
+			return new Promise(function (resolve, error) {
+				on_resolve = resolve;
+				on_error = error;
+			});
+		},
+		get_offline: async function (name, need, value) { // get from offline storage only
+			var on_resolve;
+
+			await Network.until_first_sync(name, need);
+
+			this.getforun(name, need, value, function (arr) {
+				on_resolve(arr)
+			});
+			return new Promise(function (resolve) {
+				on_resolve = resolve;
+			});
+		},
 		save: function (name, need, value) { // hifz/save from Network.sync[name][need] value
 			if (debug_offline) $.log.w( 'Offline save', name, need, value );
 			for (var uid in value) {
@@ -279,7 +351,7 @@ var Offline, offline;
 
 				val.pending = 0;
 				if (val.remove === -1) { // truly purged on both ends
-					kind = Offline.mundarij['remove'];
+					kind = Offline.mundarij.remove;
 					Offline.pop(name+need, val.uid);
 					val = val.uid;
 				} else {
@@ -492,6 +564,10 @@ var Offline, offline;
 			
 			var m = maxaazin[store];
 			if (m && isfun(m.tashkeel)) newobj = m.tashkeel(newobj);
+
+			// system props, needed for sync
+			newobj.ruid		= obj.ruid		;
+			newobj.remove	= obj.remove	;
 			
 			return newobj;
 		},
@@ -652,6 +728,7 @@ var Offline, offline;
 			};
 		},
 		_getallpending: function (store, callback) {
+			if (debug_offline) $.log.w('Offline._getallpending', store);
 			var unsavedStore	= db.transaction(unsavedname).objectStore(unsavedname),
 				bound			= IDBKeyRange.only( store ),
 				objects			= $.array();
@@ -741,7 +818,7 @@ var Offline, offline;
 			}
 		},
 		getall: function (store, options, callback) {
-//			$.log.s( 'Offline.getall', store.join(' ') );
+			if (debug_offline) $.log.w( 'Offline.getall', store, options );
 			
 			options = options || {};
 			
@@ -798,7 +875,7 @@ var Offline, offline;
 		 * objects is a $.array
 		 * */ 
 		set: function (store, arr, callback) {
-			if (debug_offline) $.log.w('Offline.set', store);
+			if (debug_offline >= 2) $.log.w('Offline.set', store);
 			if (!db) {
 				if (debug_offline) $.log.e('Offline db not created yet', db);
 				return;
@@ -865,7 +942,8 @@ var Offline, offline;
 				 * */
 				
 				// just saved on the server
-				if (obj.uid > 0 && obj.ruid < 0) {
+				if ((obj.uid > 0 || isstr(obj.uid)) && obj.ruid < 0) {
+					if (debug_offline) $.log.w( 'Offline delete pending', obj.ruid * -1 );
 					unsavedStore.delete( obj.ruid * -1 ).onsuccess = function () {
 						delete obj.ruid;
 						delete obj._store;

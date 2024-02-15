@@ -3,7 +3,8 @@ html, body, svg text
 
 if min-height = 600px
 	body
-		padding			0px 5px 50vh 5px
+		padding-right	8px
+		padding-left	8px
 
 if min-width = 320px
 	#softkeysui .left
@@ -14,7 +15,7 @@ if min-width = 320px
 		display			flex !important
 		flex-direction	row
 		align-items		center
-	#softkeysui .row2 button:hover .tooltip, #softkeysui[data-shown] .row2 button .tooltip
+	#softkeysui .row2 button:hover .tooltip, #softkeysui[data-shown] .row2 button .tooltip, #softkeysui .row2 [data-hawm="1"] .tooltip
 		display			flex
 //	#softkeysui[data-shown] .row2 button .tooltip label
 //		display			none

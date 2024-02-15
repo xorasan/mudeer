@@ -8,19 +8,22 @@
 		basic: function (LV) {
 			if (softkeys_list_debug) $.log.w('softkeys.list.basic', LV);
 			if (LV) {
-				softkeys.set(K.en, function (k, e) {
-					if (LV.element.dataset.focussed) {
-						LV.press(K.en);
-						e && e.preventDefault();
+				Softkeys.add({ n: 'Select',
+					k: K.en,
+					c: function (k, e) {
+						if (LV.element.dataset.focussed) {
+							LV.press(K.en);
+							e && e.preventDefault();
+						}
 					}
 				});
-				softkeys.set(K.up, function (k, e) {
+				Softkeys.set(K.up, function (k, e) {
 					if (LV.element.dataset.focussed) {
 						LV.up();
 						e && e.preventDefault();
 					}
 				});
-				softkeys.set(K.dn, function (k, e) {
+				Softkeys.set(K.dn, function (k, e) {
 					if (LV.element.dataset.focussed) {
 						LV.down();
 						e && e.preventDefault();
@@ -45,7 +48,7 @@
 					},
 				});
 			} else {
-				softkeys.talaf([K.en, K.up, K.dn, K.rt, K.lf]);
+				Softkeys.talaf([K.en, K.up, K.dn, K.rt, K.lf]);
 			}
 		},
 	};

@@ -10,15 +10,22 @@
 	input [i18n=search] .pad [id=search_members] @max(32)
 	[id=members]
 [template=roomitem] .roomitem .relative .flex
-	[id=photo] .photo
+	[id=photo] .photo .bold .upper .narrowletters
 	.flex .vertical .grow .pad .vcenter
 		[id=name] .medium .narrowline .narrowletters .padt
-		[id=message] .small .dim
-	.flex .vertical .pad .vcenter
-		[id=waqtqabl] .small .dim [muxtasar=1]
+		.flex
+			[id=message] .small
+			[id=updated] .small .dim .pad
+		.flex .vcenterkids
+			[id=count_box] .inlineflex .vcenterkids
+				.icon [icon=iconmessage]
+				[id=count] .small .dim .pad
+			[id=call_box] .inlineflex .vcenterkids
+				.icon [icon=iconcall]
+				[id=connected] .small .dim .pad
 [template=members_item] .members_item .flex .listitem .vcenter
 	[id=photo] .photo .vcenter
 	.flex .vertical .pad .vcenter
 		[id=name] .bold .narrowline .narrowletters .padt
-		[id=waqtqabl] .small .dim .narrowline
+		[id=updated] .small .dim .narrowline
 	[id=role_str] .small .tag .gap .pad .padv .vcenter

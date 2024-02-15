@@ -1,4 +1,7 @@
 /*
+ * intercession is used to add data from other modules in a request
+ * 
+ * 
  * it has 3 channels for communication with server
  * get		get something from the server immediately
  * 			
@@ -9,7 +12,12 @@
  * broadcast	listens for changes
  * 			returns on triggers like sync from you or others
  * 			always returns .time on success
+ *
+ * fetch	for unique requests using promises
+ * 			this too triggers intercessions
+ * 			it doesn't pile up with other requests
  * */
+// TODO make a frontend UI for this module; network.client.js
 var Network, network, sessions = sessions || 0;
 ;(function(){
 	'use strict';
@@ -275,6 +283,68 @@ var Network, network, sessions = sessions || 0;
 
 		pending_gets = {};
 	};
+	
+	// TODO make a way to group unique but same requests into a single request and resolve all promises at once
+	var unique_fetches = [];
+	async function fulfill_fetch(arr, intercession) {
+		var payload = {};
+
+		payload = Object.assign(payload, {
+			e$		:	BUILDNUMBER		, // build number
+		});
+
+		if (intercession) payload = Object.assign(payload, intercession);
+
+		payload.get = payload.get || {};
+
+		var name	= arr[0],
+			need	= arr[1],
+			value	= arr[2];
+
+		payload.get[name] = payload.get[name] || {};
+		payload.get[name][need] = value;
+		
+		var on_resolve, on_error;
+		var promise = new Promise(function (resolve, error) {
+			on_resolve = resolve;
+			on_error = error;
+		});
+		
+		var res = await fetch(address, {
+			method: 'POST',
+			body: new URLSearchParams( { json: JSON.stringify(payload) } ),
+		});
+
+		var response = {};
+		if (res.status != 200)
+			response.err = 1;
+		
+		has_disconnected(response);
+
+		try {
+			var response = await res.json();
+		} catch (e) {
+			response.get = 1;
+			response.error = e;
+		}
+		
+		if (has_build_expired(response)) {
+			on_error( new Error('build expired') );
+			return;
+		}
+
+		if (response.error) {
+			on_error( response.error );
+		} else {
+			var out;
+			if (response.get && response.get[name] && response.get[name][need]) {
+				out = response.get[name][need];
+			}
+			on_resolve( out );
+		}
+
+		return promise;
+	}
 
 	var intercession = {}; // intercession
 	var intercession_process = function (callback, channel) {
@@ -327,9 +397,11 @@ var Network, network, sessions = sessions || 0;
 			payload.sync[name][need] = value;
 		}
 
+		Network.is_syncing = 1;
 		error_log(payload);
 		$.fetch( address, 'json='+enc( JSON.stringify(payload) ), 'sync', progressfn, 30*1000 )
 		.then(function (res) {
+			Network.is_syncing = 0;
 			has_disconnected(res);
 			
 			var response = {};
@@ -376,6 +448,7 @@ var Network, network, sessions = sessions || 0;
 
 	Network = network = {
 		address: address,
+		unique_fetches: unique_fetches,
 		channels: {
 			get: {},
 			sync: {},
@@ -422,6 +495,8 @@ var Network, network, sessions = sessions || 0;
 			
 			need	= need		||	'default'	; // default
 			value	= value		||	0			;
+
+			if (debug_network) $.log.w('Network.get', name, need);
 			
 			pending_gets[ name+'.'+need ] = [name, need, value];
 			
@@ -430,6 +505,31 @@ var Network, network, sessions = sessions || 0;
 					fulfill_gets({}, objects);
 				}, 'get');
 			}, 100);
+		},
+		fetch: async function (name, need, value) { // returns unique promise
+			if (!name) return;
+			if (arguments.length === 2) value = need, need = 0;
+			
+			need	= need		||	'default'	; // default
+			value	= value		||	0			;
+
+			if (debug_network) $.log.w('Network.fetch', name, need);
+			
+			var on_resolve, on_error;
+
+			intercession_process(async function (objects) {
+				try {
+					var result = await fulfill_fetch([name, need, value], objects);
+					on_resolve(result);
+				} catch (e) {
+					on_error(e);
+				}
+			}, 'fetch');
+			
+			return new Promise(function (resolve, error) {
+				on_resolve = resolve;
+				on_error = error;
+			});
 		},
 		response: {
 			get: function (name, need, cb) {
@@ -464,6 +564,18 @@ var Network, network, sessions = sessions || 0;
 		},
 	};
 	
+	var until_first_sync_promises = [];
+	Network.until_first_sync = async function (name, need) {
+		if (debug_network) $.log.w( 'Network until first sync', name||'', need||'' );
+		return new Promise(function (resolve) {
+			var old_time = Preferences.get('@', 1);
+			if (old_time === null)
+				until_first_sync_promises.push( resolve );
+			else
+				resolve();
+		});
+	};
+	
 	/* TODO hook visibility to broadcast
 	 * 
 	 * hook sessionchange, start/stop broadcast
@@ -484,14 +596,26 @@ var Network, network, sessions = sessions || 0;
 	Hooks.set('ready', function () {
 		networkkeys = templates.keys(networkui);
 		
-		network.intercept('network', 'time', function (finish, channel) {
-			finish( preferences.get('@') );
+		Network.intercept('network', 'time', function (finish, channel) {
+			finish( Preferences.get('@', 1) );
 		});
-		network.response.intercept('network', 'time', function (response) {
-			if (response && cachedkey) preferences.set('@', response);
+		Network.response.intercept('network', 'time', function (response) {
+			if (response && cachedkey) {
+				var old_time = Preferences.get('@', 1);
+				if (old_time === null) {
+					if (debug_network) $.log.w( 'Network first sync done' );
+					$.taxeer('until_first_sync', function () {
+						until_first_sync_promises.forEach(function (resolve) {
+							resolve();
+						});
+						until_first_sync_promises = [];
+					}, 1000);
+				}
+				Preferences.set('@', response);
+			}
 		});
 		
-		offlinetime = preferences.get('@0', 1) || false; // offline since
+		offlinetime = Preferences.get('@0', 1) || false; // offline since
 		listener('online', function (e) {
 			setnetwork(1);
 		});

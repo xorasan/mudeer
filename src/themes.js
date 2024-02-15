@@ -1,6 +1,6 @@
 var Themes, themes;
 ;(function(){
-	var K, P, settingsuid, current = 0, contrast = 0;
+	var K, P, settingsuid, settings_contrast_uid, current = 0, contrast = 0, debug_themes = 0;
 	
 	var store = {
 		0: {
@@ -23,6 +23,7 @@ var Themes, themes;
 			secondaryl:	'#353535',
 			secondary:	'#333',
 			secondaryd:	'#252525',
+			secondaryxd:'#151515',
 			secondaryt:	'rgba(40,40,40,0.8)',
 
 			tertiaryl:	'#454545',
@@ -37,7 +38,9 @@ var Themes, themes;
 			accentd:	'#0284c0',
 			accentdt:	'rgba(4, 126, 205, 0.7)',
 
+			greend:		'#0b0',
 			green:		'#0c0',
+			greenl:		'#0d0',
 			yellow:		'#ca0',
 			redl:		'#f99',
 			red:		'#c00',
@@ -60,12 +63,13 @@ var Themes, themes;
 			primaryt:	'rgba(255,255,255,0.8)', // perfect transparent level
 			primaryxt:	'rgba(255,255,255,0.4)',
 
-			secondaryl:	'#e6e6e6',
+			secondaryl:	'#c6c6c6',
 			secondary:	'#d6d6d6',
-			secondaryd:	'#c6c6c6',
+			secondaryd:	'#e1e1e1',
+			secondaryxd:'#e5e5e5',
 			secondaryt:	'rgba(180,180,180,0.8)',
 
-			tertiaryl:	'#eee',
+			tertiaryl:	'#d9d9d9',
 			tertiary:	'#ddd',
 			tertiaryd:	'#ccc',
 			tertiaryt:	'rgba(204,204,204,0.8)',
@@ -77,7 +81,9 @@ var Themes, themes;
 			accentd:	'#004371',
 			accentdt:	'rgba(0, 37, 93, 0.7)',
 
+			greend:		'#0b0',
 			green:		'#0c0',
+			greenl:		'#0d0',
 			yellow:		'#ca0',
 			redl:		'#900',
 			red:		'#c00',
@@ -117,7 +123,9 @@ var Themes, themes;
 			accentd:	'#0284c0',
 			accentdt:	'rgba(4, 126, 205, 0.7)',
 
+			greend:		'#0b0',
 			green:		'#0c0',
+			greenl:		'#0d0',
 			yellow:		'#ca0',
 			redl:		'#f99',
 			red:		'#c00',
@@ -157,7 +165,9 @@ var Themes, themes;
 			accentd:	'#004371',
 			accentdt:	'rgba(0, 37, 93, 0.7)',
 
+			greend:		'#0b0',
 			green:		'#0c0',
+			greenl:		'#0d0',
 			yellow:		'#ca0',
 			redl:		'#900',
 			red:		'#c00',
@@ -166,19 +176,19 @@ var Themes, themes;
 	};
 
 	function set_theme_with_contrast(theme) {
-		if (contrast) { // high
-			if ( theme ) { // white
-				themes.set(3);
-			} else { // black
-				themes.set(2);
-			}
-		} else { // low
+//		if (contrast) { // high
+//			if ( theme ) { // white
+//				themes.set(3);
+//			} else { // black
+//				themes.set(2);
+//			}
+//		} else { // low
 			if ( theme ) { // white
 				themes.set(1);
 			} else { // black
 				themes.set(0);
 			}
-		}
+//		}
 	}
 
 	Themes = themes = {
@@ -237,13 +247,78 @@ var Themes, themes;
 			return false;
 		},
 		toggle: function () {
+			if (debug_themes) $.log.w( 'Themes toggle', current );
 			current = current ? 0 : 1;
 			set_theme_with_contrast(current);
+			Preferences.set(Themes.saveto, current);
 			settings.jaddad(settingsuid);
 			// TODO update settings entry
 		},
 	};
 	
+	function darken_hex_color(hexColor, threshold = 180, factor = 0.7) {
+		// Convert hex to RGB
+		const r = parseInt(hexColor.slice(1, 3), 16);
+		const g = parseInt(hexColor.slice(3, 5), 16);
+		const b = parseInt(hexColor.slice(5, 7), 16);
+	
+		// Calculate luminance
+		const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+	
+		// Darken if above threshold
+		if (luminance > threshold) {
+			const darkenedR = Math.round(r * factor);
+			const darkenedG = Math.round(g * factor);
+			const darkenedB = Math.round(b * factor);
+	
+			// Convert back to hex
+			const darkenedHex = `#${darkenedR.toString(16).padStart(2, '0')}${darkenedG.toString(16).padStart(2, '0')}${darkenedB.toString(16).padStart(2, '0')}`;
+	
+			return darkenedHex;
+		}
+	
+		// Return original color if below threshold
+		return hexColor;
+	}
+	Themes.darken_hex_color = darken_hex_color;
+
+	function brighten_hex_color(hexColor, threshold = 180, factor = 0.7) {
+		// Convert hex to RGB
+		const r = parseInt(hexColor.slice(1, 3), 16);
+		const g = parseInt(hexColor.slice(3, 5), 16);
+		const b = parseInt(hexColor.slice(5, 7), 16);
+	
+		// Calculate luminance
+		const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+	
+		// Darken if above threshold
+		if (luminance < threshold) {
+			const darkenedR = Math.round(r / factor);
+			const darkenedG = Math.round(g / factor);
+			const darkenedB = Math.round(b / factor);
+	
+			// Convert back to hex
+			const darkenedHex = `#${darkenedR.toString(16).padStart(2, '0')}${darkenedG.toString(16).padStart(2, '0')}${darkenedB.toString(16).padStart(2, '0')}`;
+	
+			return darkenedHex;
+		}
+	
+		// Return original color if below threshold
+		return hexColor;
+	}
+	Themes.brighten_hex_color = brighten_hex_color;
+
+	function generate_predictable_color(text = '') {
+		var hash = 0;
+		for (var i = 0; i < text.length; i++) {
+			hash = text.charCodeAt(i) + ((hash << 5) - hash);
+			hash &= hash; // fix for potential negative hash values
+		}
+
+		return '#' + ('00000' + (hash & 0xFFFFFF).toString(16)).slice(-6).toUpperCase();
+	}
+	Themes.generate_predictable_color = generate_predictable_color;
+
 	Hooks.set('ready', function () {
 		if (preferences) {
 			current = preferences.get(themes.saveto, 1) || 0;
@@ -261,14 +336,14 @@ var Themes, themes;
 			preferences.set(themes.saveto, preferences.get(themes.saveto, 1) ? 0 : 1);
 		}, 'icontheme');
 
-		settingsuid = settings.adaaf('contrast', function () {
-			var ishigh = preferences.get(themes.saveto_contrast, 1);
-			contrast = ishigh ? 1 : 0;
-			set_theme_with_contrast(current);
-			return [ ishigh ? 'high' : 'low' ];
-		}, function () {
-			preferences.set(themes.saveto_contrast, preferences.get(themes.saveto_contrast, 1) ? 0 : 1);
-		}, 'iconbrightness7');
+//		settings_contrast_uid = settings.adaaf('contrast', function () {
+//			var ishigh = preferences.get(themes.saveto_contrast, 1);
+//			contrast = ishigh ? 1 : 0;
+//			set_theme_with_contrast(current);
+//			return [ ishigh ? 'high' : 'low' ];
+//		}, function () {
+//			preferences.set(themes.saveto_contrast, preferences.get(themes.saveto_contrast, 1) ? 0 : 1);
+//		}, 'iconbrightness7');
 	});
 	Hooks.set('viewready', function (args) {
 		// TODO replace these everywhere with longer variables -_-

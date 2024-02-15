@@ -3,13 +3,13 @@
  * 		[ room
  * 
  * */
-var Rooms, rooms;
+var Rooms, rooms, roomslist;
 ;(function(){
-	var roomslist, keys, oldresults = [], photo, module_name = 'rooms',
-	waqtsaabiq = 0, mklmttaxeer = 3*60*1000,
+	var keys, oldresults = [], photo, module_name = 'rooms',
+	waqtsaabiq = 0, mklmttaxeer = 1*60*1000,
 	get_rooms_count = function () {
 		var l = roomslist.length();
-		if (view.is_active('rooms')) {
+		if (View.is_active('rooms')) {
 			roomslist.title( l ? (l+' '+translate('rooms'))
 							: translate('norooms') );
 //			roomslist.select();
@@ -87,7 +87,7 @@ var Rooms, rooms;
 			if (isnum(waqtsaabiq) && Time.now() - waqtsaabiq < mklmttaxeer) {
 			} else {
 				waqtsaabiq = Time.now();
-				Offline.get('rooms', 0, 0, Time.now());
+				Offline.get(module_name, 0, 0, Time.now());
 			}
 		},
 		fahras: function (results) {
@@ -96,7 +96,7 @@ var Rooms, rooms;
 				return b.updated - a.updated;
 			});
 			
-			roomslist.popall();
+//			roomslist.popall();
 			
 			results.forEach(function (item, i) {
 				roomslist.set(item);
@@ -105,9 +105,10 @@ var Rooms, rooms;
 			get_rooms_count();
 			oldresults = results;
 		},
-		open: function () { // open room
+		open: function (uid) { // open room
 			Hooks.run('sheet', {
 				n: create_room_sheet,
+				u: uid,
 			});
 		},
 		invite: function (profile) {
@@ -135,87 +136,153 @@ var Rooms, rooms;
 		},
 	};
 
-	Offline.create('rooms', 0, {
+	Offline.create(module_name, 0, {
 		delay: -1, // never get from server, server uses broadcast for that
-		mfateeh: ['kind'],
-		tashkeel: function (o) { // format objects
-			return { uid: o.uid, name: o.name, link: o.link, members: o.members, created: o.created, updated: o.updated };
+		mfateeh: ['kind', 'link'],
+		tashkeel: function ({ uid, name, link, members, created, updated }) { // format objects
+			return { uid, name, link, members, created, updated };
 		},
 	});
 
 	Hooks.set('ready', function () {
-		Network.intercept('rooms', function (intahaa) {
+		Network.intercept(module_name, function (intahaa) {
 			// receive rooms updates when signed in
 			intahaa( sessions.signedin() ? 1 : undefined );
 		});
-		Offline.response.get('rooms', function (response) {
-			$.log( 'Offline.response.get rooms', response );
+		Offline.response.get(module_name, function (response) {
+//			$.log( 'Offline.response.get rooms', response );
 			rooms.fahras( response );
 		});
-		Network.response.get('rooms', 'invite', function (response) {
+		Network.response.get(module_name, 'invite', function (response) {
 //			$.log( 'Offline.response.add rooms invite', response );
 			if (response) {
 				messages.apply_condition(response);
 			}
 		});
-		Offline.response.add('rooms', function (response) {
-			$.log( 'Offline.response.add rooms', response );
+		Offline.response.add(module_name, function (response) {
+//			$.log( 'Offline.response.add rooms', response );
 			if (response) {
 //				if (response.members) {
 //					roomslist.pop( response.uid );
 //					response.awwal = 1;
 					roomslist.set( response );
 //				}
-				if (view.is_active('rooms')) {
+				if (View.is_active('rooms')) {
 //					roomslist.select( parseint(roomslist.id2num(response.uid)) );
 					get_rooms_count();
 				}
-				messages.apply_condition(response);
+				Messages.apply_condition(response);
 //				messages.itlaqtaxeer(response);
 			}
 		});
-		Offline.response.remove('rooms', function (response) {
-			if (isnum(response)) roomslist.pop( response );
+		Offline.response.remove(module_name, function (response) {
+			if (isnum(response) || isstr(response)) roomslist.remove_by_uid( response );
 		});
 
-		keys = view.mfateeh('rooms');
+		keys = View.dom_keys(module_name);
 
-		roomslist = list( keys.list ).idprefix('rooms')
-						.listitem('roomitem');
+		roomslist = list( keys.list ).idprefix(module_name).listitem('roomitem');
 		
 		roomslist.afterset = function (item, clone, k) {
-			var condition = rooms.condition(item);
-			if (k) {
-				setdata(k.waqtqabl, 'time', item.created);
-				innertext(k.message, xlate(condition[2], '') );
+			ixtaf(k.count_box);
+			ixtaf(k.call_box);
+			if (item.count) {
+				izhar(k.count_box);
+				innertext(k.count, item.count);
 			}
-			var is_other = rooms.is_other(item.members);
-			if (is_other && clone) {
-				$.taxeer('members'+item.uid, function () {
-					innerhtml(k.photo, '');
-					Accounts.get([is_other[0]], function (results) {
-						results.forEach(function (o) {
-							innertext(k.message, xlate(condition[2], o.displayname||o.name) );
-						});
-					});
-				}, 50);
+			if (isarr(item.connected) && item.connected.length) {
+				izhar(k.call_box);
+				innertext(k.connected, item.connected.length);
 			}
+
+			// TODO efficiency, do only once
+			// stable color
+			var unique_color = Themes.generate_predictable_color(item.uid);
+			setcss(k.photo, 'background-color', Themes.darken_hex_color(unique_color, 130, .5) );
+			setcss(k.photo, 'color', Themes.brighten_hex_color(unique_color, 130, .7) );
+
+			var short_name = '';
+			if (item.name) {
+				short_name = item.name;
+			} else if (item.link) {
+				short_name = '@'+item.link;
+			}
+
+			innertext(k.photo, short_name.slice(0, 3));
+
+//			var condition = rooms.condition(item);
+//			if (k) {
+//				innertext(k.message, xlate(condition[2], '') );
+//			}
+//			var is_other = rooms.is_other(item.members);
+//			if (is_other && clone) {
+//				$.taxeer('members'+item.uid, function () {
+//					innerhtml(k.photo, '');
+//					Accounts.get([is_other[0]], function (results) {
+//						results.forEach(function (o) {
+//							innertext(k.message, xlate(condition[2], o.displayname||o.name) );
+//						});
+//					});
+//				}, 50);
+//			}
 		};
 		roomslist.beforeset = function (item) {
-			var ret = rooms.is_other(item.members);
-			if (ret) {
-				Accounts.get([ret[0]], function (results) {
-					results.forEach(function (o) {
-						item.title = o.displayname || o.name;
-					});
-				});
+			item.updated$time = item.updated || item.created;
+			if (item.link) {
+				item.message = '@'+item.link;
 			}
+//			var ret = rooms.is_other(item.members);
+//			if (ret) {
+//				Accounts.get([ret[0]], function (results) {
+//					results.forEach(function (o) {
+//						item.title = o.displayname || o.name;
+//					});
+//				});
+//			}
 			return item;
+		};
+		roomslist.on_selection = function (o) {
+			Softkeys.add({ n: 'Join Call',
+				k: 'c',
+				alt: 1,
+				i: 'iconcall',
+				c: function () {
+					Hooks.run('view', {
+						name: 'call_screen',
+						uid: o.link ? '@'+o.link : o.uid,
+					});
+					return 1;
+				}
+			});
+			Softkeys.add({ n: 'Edit Room',
+				k: 'e',
+				ctrl: 1,
+				i: 'iconedit',
+				c: function () {
+					Rooms.open(o.uid);
+					return 1;
+				}
+			});
+			Softkeys.add({ n: 'Delete Room',
+				k: 'delete',
+				alt: 1,
+				i: 'icondeleteforever',
+				c: function () {
+					Hooks.run('dialog', {
+						n: delete_room_dialog,
+						u: o.uid,
+						c: function () {
+							Offline.remove(module_name, { uid: o.uid });
+						},
+					});
+					return 1;
+				}
+			});
 		};
 		roomslist.onpress = function (o, key, uid) {
 			Hooks.run('view', {
 				name: 'messages',
-				uid: o.link || o.uid,
+				uid: o.link ? '@'+o.link : o.uid,
 			});
 //			messages.open(o);
 		};
@@ -233,38 +300,69 @@ var Rooms, rooms;
 //					innertext(m.list2, muhawwal(m.list.value, 1));
 //				};
 //				break;
-			case 'rooms':
+			case module_name:
 //				view.ishtaghal('muhawwal');
 //				break;
-				var m = messages.current();
-				if (m) {
-					view.ishtaghal('messages');
-				} else {
-					get_rooms_count();
-					
-					rooms.update();
-					
-					softkeys.list.basic(roomslist);
-					softkeys.add({ n: 'Create Room',
-						k: K.sl,
-						i: 'iconadd',
-						c: function () {
-							rooms.open();
-							return 1;
-						}
-					});
-					break;
-				}
+				get_rooms_count();
+				
+				rooms.update();
+				
+				Softkeys.list.basic(roomslist);
+				Softkeys.add({ n: 'Create Room',
+					k: K.sl,
+					i: 'iconadd',
+					c: function () {
+						Rooms.open();
+						return 1;
+					}
+				});
+				break;
 		}
 	});
 
+	async function get_room(uid) { if (uid) {
+		var filter = {};
+		if (uid.startsWith('@')) {
+			filter.link = uid.slice(1);
+		} else {
+			filter.uid = uid;
+		}
+		var arr = await Offline.fetch( module_name, 0, { filter } );
+		return arr[0];
+	} }
+	Rooms.get_room = get_room;
+
+	var delete_room_dialog = 'delete-room';
 	var create_room_sheet = 'setup-room';
-	var sheet_out = { }, sheet_list;
-	Hooks.set('sheet-ready', function (args, k) { if (args.name == create_room_sheet) {
+	var sheet_out = { }, sheet_list, setup_room_dom_keys;
+	Hooks.set('dialog-ready', async function (args, k) { if (args.name == delete_room_dialog) {
+		var room = await get_room(args.uid);
+		if (Dialog.get_name() == delete_room_dialog && Dialog.get_uid() == room.uid) {
+			var name = room.name || room.link;
+			Dialog.set_message( 'Do you want to delete '+(name ? '"'+name+'"' : 'this room')+'?' );
+		}
+	} });
+	Hooks.set('sheet-ready', async function (args, k) { if (args.name == create_room_sheet) {
+		$.log( args );
 		Sheet.set_title('Setup Room');
+		setup_room_dom_keys = k;
 		var out = sheet_out, l = sheet_list;
 		var suid = Sessions.uid(); // TODO CHECK
 		k.name.focus();
+
+		if (args.uid) {
+			var room = await get_room(args.uid);
+			if (Sheet.get_active() == create_room_sheet && setup_room_dom_keys && room) {
+				if (room.remove && room.uid === Sheet.get_active_uid()) {
+					Sheet.cancel();
+				} else {
+					setup_room_dom_keys.uid	.value	= room.uid;
+					setup_room_dom_keys.name.value	= room.name;
+					setup_room_dom_keys.link.value	= room.link;
+				}
+			}
+		}
+
 //		l = list( k.members ).idprefix('members')
 //					.listitem('members_item');
 //		l.onpress = function (o) {
@@ -294,6 +392,7 @@ var Rooms, rooms;
 //		k.search_members.onkeyup();
 	} });
 	Hooks.set('sheet-okay', function (args, k) { if (args.name == create_room_sheet) {
+		setup_room_dom_keys = 0;
 		Offline.add(module_name, {
 			uid:		k.uid.value || Offline.ruid(),
 			name:		k.name.value,

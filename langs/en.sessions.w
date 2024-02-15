@@ -1,8 +1,9 @@
 sessions			Sessions
-signin				Sign In
+signin				Log In
 signup				Join
 signout				Log Out
 signoutconfirm		Do you want to log out?
+name				Name
 username			Username
 password			Password
 displayname			Display Name

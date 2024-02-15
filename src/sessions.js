@@ -6,24 +6,47 @@ var Sessions, sessions,
 ;(function(){
 	'use strict';
 	// TODO fix keyboard shows up and softkeys bottom row gets hidden
-	var cache = {}, lastsearch, mfateeh, usnmavlble = {};
-	
+	var cache = {}, lastsearch, mfateeh, usnmavlble = {}, debug_sessions = 1;
+	var go_forward;
+	function setup_fields(mfateeh) {
+		mfateeh.username.uponenter = function () {
+			focusnext(mfateeh.username);
+		};
+		mfateeh.password.uponenter =
+		mfateeh.answer.uponenter = function () {
+			if (isfun(go_forward)) go_forward();
+		};
+	}
+	function reset_all_forms() {
+		var su = View.dom_keys('signup');
+		var si = View.dom_keys('signin');
+		
+		su.username.value = '';
+		si.username.value = '';
+
+		su.password.value = '';
+		si.password.value = '';
+
+		su.answer.value = '';
+		si.answer.value = '';
+	}
 	var jaddadkeys = function (parent) {
 		var current = parseint(parent.dataset.currentqadam || 0);
 		if (current === 0) {
-			softkeys.set(K.sr, function () {
+			Softkeys.set(K.sr, function () {
 				Hooks.run('back');
 			}, 0, 'iconarrowback');
 		} else {
-			softkeys.set(K.sr, function () {
-				sessions.shimaal(parent);
+			Softkeys.set(K.sr, function () {
+				Sessions.shimaal(parent);
 				return 1;
 			}, 0, 'iconarrowback');
 		}
-		softkeys.set(K.sl, function () {
-			sessions.yameen(parent);
+		go_forward = function () {
+			Sessions.yameen(parent);
 			return 1;
-		}, 0, 'icondone');
+		}
+		Softkeys.set(K.sl, go_forward, 0, 'icondone');
 	};
 	var setcaptcha = function () {
 		if (cache && mfateeh) {
@@ -34,7 +57,8 @@ var Sessions, sessions,
 	var smartfocus = function (parent) {
 		var current = parseint(parent.dataset.currentqadam || 0);
 		if (mfateeh) {
-			if (backstack.states.view === 'signup') {
+			var current_view = View.get();
+			if (current_view === 'signup') {
 				if (current === 0) {
 					mfateeh.username.focus();
 				}
@@ -45,7 +69,7 @@ var Sessions, sessions,
 					mfateeh.answer.focus();
 				}
 			}
-			if (backstack.states.view === 'signin') {
+			if (current_view === 'signin') {
 				if (current === 0) {
 					mfateeh.username.focus();
 				}
@@ -68,8 +92,8 @@ var Sessions, sessions,
 		}
 	};
 	var usernamexataa = function (xataa, username, proceed) {
-		if (backstack.states.view === 'signup') {
-			var m = view.mfateeh('signup');
+		if ( View.is_active('signup') ) {
+			var m = View.mfateeh('signup');
 			if (username) {
 				innertext(m.usernamerefined, username);
 			}
@@ -77,28 +101,28 @@ var Sessions, sessions,
 			if (proceed) {
 				m.aqdaam.dataset.currentqadam =
 								xataa === 'usernameavailable' ? 1 : 0;
-				sessions.jaddad(m.aqdaam);
+				Sessions.jaddad(m.aqdaam);
 			}
 			smartfocus(m.aqdaam);
 		}
 	};
 	var passwordxataa = function (xataa) {
-		if (backstack.states.view === 'signin') {
-			var m = view.mfateeh('signin');
+		if ( View.is_active('signin') ) {
+			var m = View.dom_keys('signin');
 			m.aqdaam.dataset.currentqadam = 0;
-			sessions.jaddad( m.aqdaam );
+			Sessions.jaddad( m.aqdaam );
 			m.password.focus();
 			innertext(m.passstatus, xlate(xataa))
 		}
 	};
 	var answerxataa = function (xataa) {
-		if (['signin', 'signup'].includes(backstack.states.view)) {
-			var m = view.mfateeh(backstack.states.view);
-			sessions.jaddad( m.aqdaam );
-			sessions.getcaptcha();
+		if ( View.is_active(['signin', 'signup']) ) {
+			var m = View.dom_keys( View.get() );
+			Sessions.jaddad( m.aqdaam );
+			Sessions.getcaptcha();
 			m.answer.focus();
 			innertext(m.answerstatus, xlate(xataa));
-			if (backstack.states.view == 'signin') {
+			if ( View.is_active('signin') ) {
 				m.aqdaam.dataset.currentqadam = 1;
 			} else {
 				m.aqdaam.dataset.currentqadam = 2;
@@ -128,9 +152,9 @@ var Sessions, sessions,
 				keep_open: 1,
 				callback: function () {
 					Hooks.run('dialog', {
-						m: 'signoutconfirm',
+						m: xlate('signoutconfirm'),
 						c: function () {
-							sessions.signout();
+							Sessions.signout();
 						},
 					});
 				}
@@ -167,13 +191,15 @@ var Sessions, sessions,
 			return element;
 		},
 		yameen: function (parent) {
+			if (debug_sessions) $.log.w( 'Sessions yameen' );
 			var current = parseint(parent.dataset.currentqadam || 0), yes;
 			if (mfateeh) {
 				var user = generate_alias(mfateeh.username.value);
 				var pass = mfateeh.password.value.trim();
 				var answer = mfateeh.answer.value;
 				var hash = mfateeh.hash.value;
-				if (backstack.states.view === 'signup') {
+				var current_view = View.get()
+				if (current_view === 'signup') {
 					yes = 1;
 					if (current == 0) {
 						if (usernamevalid(user)) sessions.usernameexists(user);
@@ -200,7 +226,7 @@ var Sessions, sessions,
 						}
 					}
 				}
-				if (backstack.states.view === 'signin') {
+				if (current_view === 'signin') {
 					yes = 1;
 					if (current == 0) {
 						if (user.length >= USERNAMEMIN && user.length <= USERNAMEMAX)
@@ -242,7 +268,7 @@ var Sessions, sessions,
 			var current = parseint(parent.dataset.currentqadam || 0);
 			if (current > 0) {
 				parent.dataset.currentqadam = --current;
-				sessions.jaddad(parent);
+				Sessions.jaddad(parent);
 				smartfocus(parent);
 			}
 		},
@@ -250,8 +276,8 @@ var Sessions, sessions,
 			return templates.keys( mfateeh.aqdaam.childNodes[v] );
 		},
 		setqadam: function (v) {
-			currentqadam = v;
-			return templates.keys( sessions.jaddad() );
+			setdata( View.dom_keys('signup').aqdaam, 'currentqadam', 0 );
+			setdata( View.dom_keys('signin').aqdaam, 'currentqadam', 0 );
 		},
 		signedin: function () { // return session key
 			return preferences.get(1);
@@ -430,10 +456,15 @@ var Sessions, sessions,
 				preferences.pop( 21	);
 
 				cache = {};
+				Sessions.setqadam(0);
 				
 				Webapp.status( xlate('loggedout') );
 				Hooks.run('sessionchange', 0);
-//				Hooks.run('view', 'main');
+
+				if (Backstack.darajah)
+					Backstack.back();
+				else
+					Hooks.run('view', 'main');
 			});
 		},
 		usernameexists: function (user, temp) {
@@ -491,7 +522,7 @@ var Sessions, sessions,
 			if (response.join) {
 				usnmavlble['_'+response.username] = response.exists;
 				usernamexataa(response.exists, response.username, response.proceed);
-				webapp.dimmer();
+				Webapp.dimmer();
 			}
 		});
 		Network.response.get('sessions', 'captcha', function (response) {
@@ -527,7 +558,12 @@ var Sessions, sessions,
 					Hooks.run('sessionchange', response.key);
 					update_sidebar();
 					Webapp.status( xlate('loggedin') );
-					Hooks.run('view', 'main');
+					reset_all_forms();
+					
+					if (Backstack.darajah)
+						Backstack.back();
+					else
+						Hooks.run('view', 'main');
 				}
 			}
 		});
@@ -574,9 +610,11 @@ var Sessions, sessions,
 		}
 		if (args.name == 'signin') {
 			Webapp.header([['signin'], '', 'iconpersonadd']);
-			mfateeh = view.mfateeh('signin');
+			mfateeh = View.mfateeh('signin');
 			if (mfateeh.aqdaam.dataset.currentqadam === undefined)
 				mfateeh.aqdaam.dataset.currentqadam = 0;
+
+			setup_fields(mfateeh);
 			sessions.jaddad( mfateeh.aqdaam );
 			sessions.getcaptcha();
 			smartfocus( mfateeh.aqdaam );
@@ -584,9 +622,11 @@ var Sessions, sessions,
 		}
 		if (args.name == 'signup') {
 			Webapp.header([['signup'], '', 'iconpersonadd']);
-			mfateeh = view.mfateeh('signup');
+			mfateeh = View.mfateeh('signup');
 			if (mfateeh.aqdaam.dataset.currentqadam === undefined)
 				mfateeh.aqdaam.dataset.currentqadam = 0;
+
+			setup_fields(mfateeh);
 			sessions.jaddad( mfateeh.aqdaam );
 			sessions.getcaptcha();
 			smartfocus( mfateeh.aqdaam );

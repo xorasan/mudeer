@@ -271,7 +271,9 @@ MSJLINTAHAA		= 90	;	// exited recording
 				if (haalah === -2) setdata(mfateeh.haalah, 'sawtmas3oob');
 				else if (haalah === -1) setdata(mfateeh.haalah, 'sawtmasool');
 				else
-				navigator.permissions.query({name:'microphone'}).then(function(result) {
+				navigator.permissions.query({
+					name:'microphone'
+				}).then(function(result) {
 					var react = function (s) {
 						if (s == 'granted') musajjal.isjal();
 						else if (s == 'denied') musajjal.isjal(-2);
@@ -292,6 +294,9 @@ MSJLINTAHAA		= 90	;	// exited recording
 //						sampleSize: 8,
 						channelCount: 1,
 					},
+					noiseSuppression: true,
+					echoCancellation: true,
+					autoGainControl: false,
 					video: false,
 				}).then(function (stream) {
 					medrec = new MediaRecorder(stream, {

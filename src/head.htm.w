@@ -2,7 +2,7 @@
 
 head
 	meta @charset(utf-8)
-	meta @name(viewport) @content(width=device-width,user-scalable=no,initial-scale=1)
+	meta @name(viewport) #viewportsettings @content(width=device-width,interactive-widget=resizes-content,user-scalable=no,initial-scale=1)
 	meta @name(theme-color) @content(transparent) #themecolor
 	meta @name(background-color) @content(transparent)
 	link @rel(manifest) @href(JAZAR/manifest.json)

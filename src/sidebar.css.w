@@ -4,7 +4,7 @@
 	border			0
 	border-right	1px solid @tertiaryd
 	border-bottom	1px solid @tertiaryd
-	min-width		260px
+	width			260px
 	min-height		calc(100vh - 70px)
 	top				0
 	left			0
