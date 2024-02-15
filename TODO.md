@@ -57,8 +57,8 @@ This is an incomplete progress list of features & known bugs.
 * [ ] Backstack [Discussion](Philosophy/Backstack.md)
 	* [x] Home > View > Sheet > Dialog, that's the ceiling by default, can be extended using history
 	* [ ] History
-		* [*] Recreate the stack when `Webapp` fires the `ready` hook
-		* [*] Offer modules a way to react to stack changes and break the default 4 ceiling
+		* [x] Recreate the stack when `Webapp` fires the `ready` hook
+		* [x] Offer modules a way to react to stack changes and break the default 4 ceiling
 		* [ ] Using `Softkeys`, holding the back button should trigger a history list
 		* [ ] Show hint that history list is available when there's more than 3ish items
 
