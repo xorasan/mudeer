@@ -62,9 +62,12 @@
 .account_sheet .heading
 	margin				0 -15px
 
-.account_item .icon svg
+.account_item .photo svg
 	width		64px
 	height		64px
+.account_item .owner svg
+	width		16px
+	height		16px
 .account_item .name
 .account_item .displayname
 .account_item .created

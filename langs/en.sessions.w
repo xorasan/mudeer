@@ -12,7 +12,7 @@ fetchingcaptcha		Fetching Human Validation Question...
 answer				Answer
 usernamedetails		Your username will be:
 usernametip			Keep it between 3 and 24 characters, alphabets & numbers are allowed
-passwordtip			Keep it between 8 and 64 characters, hard to guess yet easy to remember
+passwordtip			Keep it between 8 and 2048 characters, hard to guess yet easy to remember
 checkingusername	Verifying Username...
 usernameover		Too long, pick a shorter one
 usernameunder		Too short, add a few characters

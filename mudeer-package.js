@@ -42,14 +42,17 @@ var do_package = function (args) {
 	var no_deps = (args.keys.nodeps || args.keys.n);
 	var released = (args.keys.released || args.keys.r);
 	var filter_function;
-	if (no_deps) { // exclude the deps folder
-		filter_function = function (path, stat) {
+	filter_function = function (path, stat) {
+		if (no_deps) { // exclude the deps folder
 			if (path.startsWith('./deps')) {
 				return false;
 			}
-			return true;
-		};
-	}
+		}
+		if (path.startsWith('./media')) { // TODO make this dynamically specifiable in package.w
+			return false;
+		}
+		return true;
+	};
 
 	// TODO print total size and files at the end
 	tar.c(

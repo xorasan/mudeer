@@ -86,7 +86,7 @@ var Hooks, hooks;
 		// runs handlers until one of them returns anything that evals to true
 		// useful for cascading events like taps
 		// returns false if no handler returned true-like value
-		rununtilconsumed: function (hook, extras) {
+		rununtilconsumed: function (hook, extras) { // use .until instead if u want a promise
 			var args = getargs(1, arguments);
 			
 			var handlers_first = Hooks._registry_first[hook];
@@ -96,6 +96,24 @@ var Hooks, hooks;
 				for (var i in handlers) {
 					if (typeof handlers[i] === 'function') {
 						var returnedvalue = handlers[i].apply(handlers[i], args);
+						if (returnedvalue) {
+							return returnedvalue;
+						}
+					}
+				}
+			}
+			return false;
+		},
+		until: async function (hook, extras) { // uses promises
+			var args = getargs(1, arguments);
+			
+			var handlers_first = Hooks._registry_first[hook];
+			var handlers = Hooks._registry[hook];
+			if (handlers_first instanceof Array || handlers instanceof Array) {
+				handlers = ( handlers_first || [] ).concat( handlers || [] );
+				for (var i in handlers) {
+					if (typeof handlers[i] === 'function') {
+						var returnedvalue = await handlers[i].apply(handlers[i], args);
 						if (returnedvalue) {
 							return returnedvalue;
 						}

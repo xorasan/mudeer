@@ -62,6 +62,7 @@ s
 	text-decoration-color		@text
 a
 	vertical-align		middle
+	color				@accent
 	text-decoration		underline @accent
 a:active
 	color				@tertiary

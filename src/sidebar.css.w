@@ -43,7 +43,7 @@ if min-width = 1024px
 		padding-left	260px
 		padding-right	90px
 	body
-		max-width		750px
+		max-width		720px
 		margin-left		max(260px, 25%)
 		margin-right	max(90px, 25%)
 	#pagermowjoodah

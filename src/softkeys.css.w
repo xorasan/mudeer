@@ -8,7 +8,7 @@
 	background		linear-gradient(0deg, @primary 5%, @primaryt 15%, transparent)
 #softkeysui[data-hidden]
 	background		linear-gradient(0deg, @primaryt 0%, transparent)
-	opacity			0.85
+//	opacity			0.85
 #softkeys_backstack
 	right			16px
 	bottom			66px
@@ -27,7 +27,7 @@
 	letter-spacing	-1px
 	border-radius	4px
 	border			0
-	background		@primary
+	background		@primaryt
 	color			@textl
 	height			26px
 	overflow		hidden

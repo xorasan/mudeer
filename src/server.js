@@ -58,7 +58,7 @@ var Server, SocketIO;
 
 			var app = express();
 
-			app.use(fileupload());
+			app.use( fileupload() );
 			app.disable('x-powered-by');
 
 			// this helps parse the POST data both json and url-encoded

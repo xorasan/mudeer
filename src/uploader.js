@@ -6,7 +6,7 @@ RF3INTAHAA		= 90	;	// exited process
 ;(function(){
 	'use strict';
 	
-	var mfateeh, quality = 0.25, oldsize,
+	var mfateeh, quality = 0.4, oldsize,
 	sizeinkb = function (v) {
 		return parsefloat(v/1024, 1)+'kB';
 	},
@@ -21,7 +21,7 @@ RF3INTAHAA		= 90	;	// exited process
 		mfateeh.text && ixtaf(mfateeh.text);
 		izhar(mfateeh.photo);
 		rawaa(RF3BADAA);
-		innertext(mfateeh.tafseel, 'loading...');
+		innertext(mfateeh.tafseel, 'Loading...');
 		mfateeh.preview.onload = function () {
 			var sw		= mfateeh.preview.naturalWidth		,
 				sh		= mfateeh.preview.naturalHeight		,
@@ -32,11 +32,11 @@ RF3INTAHAA		= 90	;	// exited process
 			
 			var oldsize = '<i>'+sizeinkb(file.size)+'</i> <b>'+sw+'x'+sh+'</b>';
 			
-			innerhtml(mfateeh.tafseel, 'converting... from '+oldsize);
+			innerhtml(mfateeh.tafseel, 'Converting... from '+oldsize);
 			ctx.drawImage(mfateeh.preview, 0, 0);
 			pica().resize(cnvs, cnvs2, {}, function (err) { $.log( err ); })
 			.then(function (c) {
-				c.convertToBlob({ type: 'image/jpeg', quality: 0.25 })
+				c.convertToBlob({ type: 'image/jpeg', quality })
 				.then(function (b) {
 					URL.revokeObjectURL(mfateeh.preview.src);
 					raafi3.marfoo3 = b;
@@ -62,12 +62,13 @@ RF3INTAHAA		= 90	;	// exited process
 		naqal: 0, // is converting the upload
 		mulhaq: 0, // is attached to elements
 		marfoo3: 0, // blob to upload
+		size_in_kb: sizeinkb,
 		mashghool: function () {
 			return raafi3.naqal || raafi3.marfoo3;
 		},
 		intahaa: function () { // stop
-			raafi3.marfoo3 = 0;
-			if (raafi3.mulhaq) {
+			Uploader.marfoo3 = 0;
+			if (Uploader.mulhaq) {
 				
 			}
 			rawaa(RF3INTAHAA);
@@ -76,26 +77,27 @@ RF3INTAHAA		= 90	;	// exited process
 			if (m) {
 				mfateeh = m;
 				mfateeh.upload_photo.oninput = function () {
-					raafi3.intaxab( mfateeh.upload_photo.files[0] );
+					Uploader.intaxab( mfateeh.upload_photo.files[0] );
 				};
-				raafi3.mulhaq = 1;
+				Uploader.mulhaq = 1;
 				rawaa();
 			}
 		},
 		infasal: function () { // detach
-			if (raafi3.mulhaq) {
+			if (Uploader.mulhaq) {
 				mfateeh = 0;
-				raafi3.mulhaq = 0;
-				raafi3.intahaa();
+				Uploader.mulhaq = 0;
+				Uploader.intahaa();
 				rawaa();
 			}
 		},
 		intaxab: function (file) { // pick
 			markooz && markooz().blur();
-			if (raafi3.mulhaq) oninput(file);
+			if (Uploader.mulhaq) oninput(file);
 		},
 	};
 
+	Uploader.busy	= Uploader.mashghool;
 	Uploader.stop	= Uploader.intahaa	;
 	Uploader.attach	= Uploader.iltahaq	;
 	Uploader.detach	= Uploader.infasal	;

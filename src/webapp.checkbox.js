@@ -1,59 +1,63 @@
-//+ jaddad fahras setvalue
-var checkbox;
+//icons checkbox checkboxoutlineblank
+var Checkbox;
 ;(function(){
-	checkbox = {
-		jaddad: function (clone) {
-			if (clone.dataset.XPO.checked === '1')
-				clone.dataset.XPO.checked = '0',
+	var checked_str = 'checked'
+	Checkbox = {
+		update: function (clone) {
+			if (getdata(clone, checked_str) === '1') {
+				setdata(clone, checked_str, 0);
 				clone.value = 0;
-			else
-				clone.dataset.XPO.checked = '1',
+			} else {
+				setdata(clone, checked_str, 1);
 				clone.value = 1;
-
-			templates.set(clone, {
-				XPO.icon: clone.dataset.XPO.checked === '1' ?
-							'XPO.iconcheckbox' : 'XPO.iconcheckboxoutlineblank'
+			}
+			Templates.set(clone, {
+				icon$icon: getdata(clone, checked_str) === '1' ?
+							'iconcheckbox' : 'iconcheckboxoutlineblank'
 			});
 		},
-		fahras: function (parent) {
+		index: function (parent) {
 			/*
 			 * indexing in the whole document is buggy because it'll replace
 			 * elements in templates and that makes the onclick functions not work
 			 * */
 			if (!parent) return;
 
-			var elements = parent.querySelectorAll('[data-XPO.checkbox]');
+			var elements = parent.querySelectorAll('[data-checkbox]');
 			for (var i in elements) {
 				var element = elements[i];
-				if ( hasownprop(elements, i) &&
-					element.dataset.XPO.checkbox !== undefined ) {
-					var clone = templates.get('XPO.checkbox');
+				if ( hasownprop(elements, i) && element.dataset.checkbox !== undefined ) {
+					var clone = Templates.get('checkbox');
 					
-					clone.dataset.XPO.id = element.dataset.XPO.id;
-					clone.dataset.XPO.checked = element.dataset.XPO.checked !== undefined ? 0 : 1;
+					clone.dataset.id = element.dataset.id;
+					setdata( clone, checked_str, element.dataset.checked !== undefined ? 0 : 1 );
 					
-					var mfateeh = templates.keys(clone);
-					mfateeh.XPO.label.dataset.XPO.i18n = element.dataset.XPO.i18n;
+					var mfateeh = Templates.keys(clone);
+					setdata( mfateeh.label, 'i18n', getdata(element, 'i18n') );
 					
 					element.replaceWith( clone );
 					
-					checkbox.jaddad(clone);
+					Checkbox.update(clone);
 
 					clone.onclick = function () {
-						checkbox.jaddad(clone);
+						Checkbox.update(clone);
 					};
 
-					clone.setvalue = function (value) {
-						clone.dataset.XPO.checked = value ? 0 : 1;
-						checkbox.jaddad(clone);
+					clone.setvalue =
+					clone.set_value = function (value) {
+						clone.dataset.checked = value ? 0 : 1;
+						Checkbox.update(clone);
+					};
+					clone.set_label = function (value) {
+						innertext(mfateeh.label, value);
 					};
 				}
 			}
 		},
 	};
 
-	Hooks.set('XPO.widgets', function (parent) {
-		if (parent) checkbox.fahras(parent);
+	Hooks.set('widgets', function (parent) {
+		if (parent) Checkbox.index(parent);
 	});
 
 })();

@@ -1,32 +1,46 @@
-//+ mulhaq la3ib sajil tasjeel il3ab inqata3 intahaa iltahaq infasal itlaqsawt isjal
-//+ mashghool muddah
-var musajjal, recorder, Recorder,
+var musajjal, recorder, Recorder, debug_recorder = 0,
 MSJLXATAM		= 10	,	// playback ended
 MSJLBADAA		= 30	,	// started recording
 MSJLTASJEEL		= 60	,	// got recorded blob
 MSJLINTAHAA		= 90	;	// exited recording
 ;(function(){
 	'use strict';
-	
-	var sawt, medrec, waqtibtidaa, mfateeh, audctx, cnvctx,
-	kbps = 12*1000, livesize = 0,
+	var stop_softkey = { n: 'Stop',
+			k: 's',
+			alt: 1,
+			c: function () {
+				Recorder.stop();
+			},
+			i: 'iconstop',
+		},
+		pause_softkey = { n: 'Pause',
+			k: 'p',
+			alt: 1,
+			c: function () {
+				Recorder.pause();
+			},
+			i: 'iconpause',
+		};
+
+	var sawt, media_recorder, initial_time, mfateeh, audctx, cnvctx,
+	kbps = 12*1000, livesize = 0, module_name = 'recorder', module_title = 'Recorder',
 	mimetype = 'audio/webm;codecs="opus"',
 	audanlzr, dataarr, buflen,
 	bigx = 0, drawto, portion,
 	draw = function () {
-		if (musajjal.mulhaq) {
+		if (Recorder.attached) {
 			var w = mfateeh.hafr.width;
 			var h = mfateeh.hafr.height;
 		
-			if (musajjal.sajil) {
+			if (Recorder.recording) {
 				clearTimeout(drawto);
 				drawto = setTimeout(draw, 200);
 			}
 			
-			if (waqtibtidaa) {
-				var t = Math.round((time.now()-waqtibtidaa)/1000);
+			if (initial_time) {
+				var t = Math.round((Time.now()-initial_time)/1000);
 				innertext(mfateeh.awqaat, '() '+t+'s --- '+parsefloat(livesize/1024, 1)+'kB');
-				if (t >= 60) musajjal.itlaqsawt();
+				if (t >= 60) Recorder.itlaqsawt();
 			}
 		
 			audanlzr.getByteTimeDomainData(dataarr);
@@ -65,6 +79,7 @@ MSJLINTAHAA		= 90	;	// exited recording
 	},
 	visualize = function (stream) {
 		if (!audctx) audctx = new AudioContext();
+		if (!mfateeh.hafr) $.log.w(module_name, 'graph element not found');
 		bigx = 0;
 		attribute(mfateeh.hafr, 'width', (mfateeh.hafr.parentElement.offsetWidth-5)+'px');
 		var w = mfateeh.hafr.width;
@@ -85,22 +100,22 @@ MSJLINTAHAA		= 90	;	// exited recording
 		draw();
 	},
 	jaddadsawt = function () {
-		musajjal.muddah = 0;
-		musajjal.hajam = 0;
+		Recorder.duration = 0;
+		Recorder.file_size = 0;
 		if (sawt) {
 			if (!sawt.paused) sawt.pause();
 			sawt.remove();
 		}
-		if (musajjal.mulhaq) {
-			setcss(mfateeh.irtiqaa, 'width');
+		if (Recorder.attached) {
+			setcss(mfateeh.irtiqaa, 'l');
 			innertext(mfateeh.awqaat, '');
 		}
 		sawt = new Audio();
 		sawt.ontimeupdate = function () {
-			waqtissawt();
+			do_playback_time();
 		};
 		sawt.onended = function () {
-			musajjal.intahaa();
+			Recorder.stop();
 		};
 		sawt.onplay = function () {
 			// TODO
@@ -109,182 +124,207 @@ MSJLINTAHAA		= 90	;	// exited recording
 			// TODO
 		};
 	},
-	waqtissawt = function () {
-		if (musajjal.mulhaq) {
-			var t = musajjal.muddah || sawt.duration;
-			var hajam = musajjal.tasjeel ? musajjal.tasjeel.size : musajjal.hajam;
-			if (musajjal.sajil) {
+	do_playback_time = function () {
+		if (Recorder.attached) {
+			var t = Recorder.duration || sawt.duration;
+			var file_size = Recorder.recorded_blob ? Recorder.recorded_blob.size : Recorder.file_size;
+			if (Recorder.recording) {
 			} else
 			if (isnum(t)) {
 				var str = (sawt.paused ? '||' : '>>')
 						+' '+Math.round(sawt.currentTime)+' / '+Math.round(t)+'s';
-				if (hajam) str += ' --- '+Math.round(hajam/1024)+'kB';
+				if (file_size) str += ' --- '+Math.round(file_size/1024)+'kB';
 				innertext(mfateeh.awqaat, str);
 				var w = sawt.currentTime/t *100;
-				if (w < 101) setcss(mfateeh.irtiqaa, 'width', w+'%');
+				if (w < 101) setcss(mfateeh.irtiqaa, 'left', w+'%');
 			}
 		}
 	},
 	pausebtn = function () {
-		softkeys.set('5', function () {
-			musajjal.inqata3();
-		}, '5', 'iconpause');
+		Softkeys.add(pause_softkey);
 	},
 	stopbtn = function () {
-		softkeys.set('8', function () {
-			musajjal.intahaa();
-		}, '8', 'iconstop');
+		Softkeys.add(stop_softkey);
 	},
 	rewindbtn = function () {
-		softkeys.set('4', function () {
-			musajjal.irja3();
-		}, '4', 'iconfastrewind');
+		Softkeys.add({ n: 'Rewind',
+			k: 'r',
+			alt: 1,
+			c: function () {
+				Recorder.irja3();
+			},
+			i: 'iconfastrewind',
+		});
 	},
 	forwardbtn = function () {
-		softkeys.set('6', function () {
-			musajjal.id3am();
-		}, '6', 'iconfastforward');
+		Softkeys.add({ n: 'Forward',
+			k: 'f',
+			alt: 1,
+			c: function () {
+				Recorder.id3am();
+			},
+			i: 'iconfastforward',
+		});
 	},
-	rawaa = function (nabaa) { // relay event
+	relay_event = function (nabaa) { // relay event
 		Hooks.run('musajjal', nabaa);
 		Hooks.run('recorder', nabaa);
 	};
 	
+	function apply_mode() {
+		// Recording
+		if (Recorder.recording)
+		// Paused Recording
+		if (Recorder.recording)
+		// Has Recording Blob
+		// Playing
+		// Paused Playback
+		// Hidden
+		// 
+	}
+	
 	recorder = Recorder = musajjal = {
-		muddah: 0, // override duration
-		hajam: 0, // override size
-		mulhaq: 0, // is attached to elements
-		la3ib: 0, // is playing
-		sajil: 0, // is recording
-		tasjeel: 0, // recording blob
-		mashghool: function () {
-			return /*musajjal.la3ib || */musajjal.sajil || musajjal.tasjeel;
+		duration: 0, // override duration
+		file_size: 0, // override size
+		attached: 0, // is attached to elements
+		playing: 0, // is playing
+		recording: 0, // is recording
+		recorded_blob: 0, // recording blob
+		busy: function () {
+			return /*Recorder.playing || */Recorder.recording || Recorder.recorded_blob;
 		},
-		il3ab: function (xitaab) { // play
-			if (musajjal.sajil) {
-				webapp.itlaa3('cannot play this while recording...');
+		play: async function (address) { // play
+			if (debug_recorder) $.log.w(module_title, 'play', address);
+			if (Recorder.recording) {
+				Webapp.itlaa3('cannot play this while recording...');
 			} else
-			if (musajjal.mulhaq) {
-				if (xitaab) {
-					rawaa(MSJLXATAM);
-					sawt.src = xitaab;
-					sawthafr.axavmuddah(xitaab, function (muddah, hajam) {
-						musajjal.muddah = muddah;
-						musajjal.hajam = hajam;
-						sawt.currentTime = 0;
-						sawt.play();
-					});
+			if (Recorder.attached) {
+				izhar(mfateeh.sawt);
+
+				if (address) {
+					relay_event(MSJLXATAM);
+					sawt.src = address;
+					var { duration, size } = await sawthafr.get_duration(address);
+					Recorder.duration = duration;
+					Recorder.file_size = size;
+					sawt.currentTime = 0;
+					sawt.play();
 				} else {
 					sawt.play();
 				}
 				pausebtn();
 				stopbtn();
-				musajjal.la3ib = 1;
-				rawaa();
+				setdata(mfateeh.sawt, 'playing', 1);
+				Recorder.playing = 1;
+				relay_event();
 			}
 		},
-		inqata3: function (lysil3ab) { // pause
-			if (musajjal.sajil) {
-				musajjal.itlaqsawt(2);
+		pause: function (dont_play) { // pause
+			if (Recorder.recording) {
+				Recorder.itlaqsawt(2);
 			}
-			if (musajjal.mulhaq && sawt) {
+			if (Recorder.attached && sawt) {
 				if (sawt.ended) sawt.currentTime = 0;
 				if (sawt.paused) {
-					if (!lysil3ab) musajjal.il3ab();
+					if (!dont_play) Recorder.play();
 				}
 				else {
 					sawt.pause();
-					musajjal.la3ib = 0;
-					rawaa();
+					popdata(mfateeh.sawt, 'playing');
+					Recorder.playing = 0;
+					relay_event();
 				}
 			}
 		},
-		intahaa: function () { // stop
-			if (musajjal.mulhaq && sawt) {
+		stop: function () { // stop
+			if (Recorder.attached && sawt) {
+				ixtaf(mfateeh.sawt);
 				sawt.currentTime = 0;
 				if (sawt.paused) {
-					if (!musajjal.tasjeel) {
+					if (!Recorder.recorded_blob) {
 						jaddadsawt();
-						softkeys.havaf('5');
-						softkeys.havaf('8');
-						rawaa(MSJLXATAM);
+						Softkeys.remove(pause_softkey);
+						Softkeys.remove(stop_softkey );
+						relay_event(MSJLXATAM);
 					}
 				}
 			}
-			musajjal.inqata3(1);
-			rawaa();
+			Recorder.pause(1);
+			relay_event();
 		},
-		iltahaq: function (m) { // attach
+		attach: function (m) { // attach
 			if (m) {
 				mfateeh = m;
 				ixtaf(mfateeh.hafr);
-				musajjal.mulhaq = 1;
-				rawaa();
+				Recorder.attached = 1;
+				relay_event();
 			}
 		},
 		infasal: function () { // detach
-			if (musajjal.mulhaq) {
+			if (Recorder.attached) {
 				mfateeh = 0;
 				cnvctx = 0;
-				musajjal.mulhaq = 0;
-				musajjal.intahaa();
+				Recorder.attached = 0;
+				Recorder.stop();
 				jaddadsawt();
-				rawaa();
+				relay_event();
 			}
 		},
 		itlaqsawt: function (sinf) {
-			if (medrec) {
-				waqtibtidaa = (time.now()-waqtibtidaa)/1000;
-				medrec.stop();
-				medrec = 0;
-				musajjal.sajil = 0;
-				if (musajjal.mulhaq) {
-					waqtissawt();
+			if (media_recorder) {
+				initial_time = (time.now()-initial_time)/1000;
+				media_recorder.stop();
+				media_recorder = 0;
+				popdata(mfateeh.sawt, 'recording');
+				Recorder.recording = 0;
+				if (Recorder.attached) {
+					do_playback_time();
 //					popdata(mfateeh.waqt, 'time');
 					stopbtn();
 					pausebtn();
 				}
 			}
 			if (sinf === 2) {
-				waqtibtidaa = 0;
-				if (musajjal.mulhaq) {
-					softkeys.havaf('5');
-					softkeys.havaf('8');
+				initial_time = 0;
+				if (Recorder.attached) {
+					Softkeys.remove(pause_softkey);
+					Softkeys.remove(stop_softkey );
 					mfateeh.matn && izhar(mfateeh.matn);
 				}
 				jaddadsawt();
-				if (musajjal.tasjeel) {
+				if (Recorder.recorded_blob) {
 					ixtaf(mfateeh.hafr);
-					musajjal.tasjeel = 0;
-					rawaa(MSJLINTAHAA);
+					Recorder.recorded_blob = 0;
+					relay_event(MSJLINTAHAA);
 				}
 			}
-			rawaa();
+			relay_event();
 		},
-		isjal: function (haalah) {
+		isjal: function (state) {
 			markooz && markooz().blur();
-			if (musajjal.mulhaq) {
+			if (Recorder.attached) {
 				izhar(mfateeh.sawt);
 				mfateeh.matn && ixtaf(mfateeh.matn);
 			}
-			if (!('require' in window) && haalah) {
-				if (haalah === -2) setdata(mfateeh.haalah, 'sawtmas3oob');
-				else if (haalah === -1) setdata(mfateeh.haalah, 'sawtmasool');
-				else
-				navigator.permissions.query({
-					name:'microphone'
-				}).then(function(result) {
-					var react = function (s) {
-						if (s == 'granted') musajjal.isjal();
-						else if (s == 'denied') musajjal.isjal(-2);
-						else if (s == 'prompt') musajjal.isjal(-1);
-					};
-					/*result.onchange = function() {
-						// will trigger recording always on perm change :(
+			if (!('require' in window) && state && mfateeh.state) {
+				if (state === -2) setdata(mfateeh.state, 'sawtmas3oob');
+				else if (state === -1) setdata(mfateeh.state, 'sawtmasool');
+				else {
+					navigator.permissions.query({
+						name: 'microphone'
+					}).then(function(result) {
+						var react = function (s) {
+							if (s == 'granted') Recorder.isjal();
+							else if (s == 'denied') Recorder.isjal(-2);
+							else if (s == 'prompt') Recorder.isjal(-1);
+						};
+						/*result.onchange = function() {
+							// will trigger recording always on perm change :(
+							react(result.state);
+						};*/
 						react(result.state);
-					};*/
-					react(result.state);
-				});
+					});
+				}
 			}
 			else {
 				jaddadsawt();
@@ -299,54 +339,56 @@ MSJLINTAHAA		= 90	;	// exited recording
 					autoGainControl: false,
 					video: false,
 				}).then(function (stream) {
-					medrec = new MediaRecorder(stream, {
+					media_recorder = new MediaRecorder(stream, {
 						mimeType: mimetype,
 						bitsPerSecond: kbps,
 					});
 					visualize(stream);
 					var ajzaa = [];
-					listener(medrec, 'dataavailable', function(e) {
+					listener(media_recorder, 'dataavailable', function(e) {
 						if (e.data.size > 0) {
 							ajzaa.push(e.data);
 							livesize += e.data.size;
 						}
 					});
-					listener(medrec, 'stop', function () {
-						if (musajjal.mulhaq) {
-							musajjal.tasjeel = new Blob(ajzaa, { type: mimetype });
-							fixwebm(musajjal.tasjeel, waqtibtidaa, function (fixedblob) {
-								musajjal.sajil = 0;
-								musajjal.tasjeel = fixedblob;
-								musajjal.il3ab( URL.createObjectURL(musajjal.tasjeel) );
-								rawaa(MSJLTASJEEL);
+					listener(media_recorder, 'stop', function () {
+						if (Recorder.attached) {
+							Recorder.recorded_blob = new Blob(ajzaa, { type: mimetype });
+							fixwebm(Recorder.recorded_blob, initial_time, function (fixedblob) {
+								popdata(mfateeh.sawt, 'recording');
+								Recorder.recording = 0;
+								Recorder.recorded_blob = fixedblob;
+								Recorder.play( URL.createObjectURL(Recorder.recorded_blob) );
+								relay_event(MSJLTASJEEL);
 							}, { logger: 0 });
 						}
 						audctx.close();
 						audctx = 0;
 					});
-					waqtissawt();
-					waqtibtidaa = time.now();
+					do_playback_time();
+					initial_time = time.now();
 					izhar(mfateeh.hafr);
 					livesize = 0;
-					medrec.start(2000);
-					musajjal.sajil = 1;
+					media_recorder.start(2000);
+					setdata(mfateeh.sawt, 'recording', 1);
+					Recorder.recording = 1;
 					draw();
-					rawaa(MSJLBADAA);
+					relay_event(MSJLBADAA);
 				});
 			}
 		},
 	};
 	
-	recorder.play = recorder.il3ab;
-	recorder.pause = recorder.inqata3;
-	recorder.stop = recorder.intahaa;
-	recorder.attach = recorder.iltahaq;
-	recorder.detach = recorder.infasal;
-	recorder.remove = recorder.itlaqsawt; // ? @TODO verify
-	recorder.record = recorder.isjal;
+	Recorder.il3ab   = Recorder.play;
+	Recorder.inqata3 = Recorder.pause;
+	Recorder.intahaa = Recorder.stop;
+	Recorder.iltahaq = Recorder.attach;
+	Recorder.detach  = Recorder.infasal;
+	Recorder.remove  = Recorder.itlaqsawt; // ? @TODO verify
+	Recorder.record  = Recorder.isjal;
 	
 	Hooks.set('restore', function () { // called on backstack changes
-		musajjal.itlaqsawt(2);
+		Recorder.itlaqsawt(2);
 	});
 
 })();

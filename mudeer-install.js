@@ -7,7 +7,7 @@
  * */
 global.$ = require(__dirname+'/kernel.js');
 $.path = __dirname; // this is the mudeer root directory
-var Cli, Files, Weld,
+var Cli, Files, Weld, echo,
 	dummyargs = { one: [], two: [], raw: [], keys: {}, };
 var kernelpreset = [
 	'shims', 'log', 'taxeer', 'regexp', 'mod-concat', 'modules', 'array', 'queue', 'fetch'
@@ -254,15 +254,28 @@ var importdeps = function (conf, pathprefix) {
 		// empty the directory
 		var nodemods = Files.get.folder(pathprefix+'deps');
 		for (var i in nodemods) {
-			Files.pop.file(pathprefix+'deps/'+nodemods[i]);
+			Files.remove_recursive(pathprefix+'deps/'+nodemods[i], 0, 1);
 		}
 
 		Files.set.folder(pathprefix+'deps');
 		
+		echo( ' ^bright^'+conf.deps.length+' dependencies~~' );
+
+		var previous_deps = Files.get.folder(pathprefix+'deps');
+
 		for (var i in conf.deps) {
 			var modname = conf.deps[i];
 			
-			Files.set.symlink(nmodulesroot+modname, pathprefix+'deps/'+modname);
+			if (conf.copy_deps) {
+				if (previous_deps.includes(modname)) {
+					if (vrb) echo( '   '+modname+' ^dim^already copied, skipping~~ ' );
+				} else {
+					echo( '   '+modname+' ^dim^copying~~' );
+					Files.copy_recursive( nmodulesroot+modname, pathprefix+'deps/'+modname );
+				}
+			} else {
+				Files.set.symlink( nmodulesroot+modname, pathprefix+'deps/'+modname );
+			}
 		}
 	}
 };
@@ -273,9 +286,45 @@ var do_install = function () {
 	} catch (e) {
 		Cli.echo(' '+process.cwd()+' ');
 		Cli.echo(' config.w not found, try ^bright^mudeer-create~~ ');
+
+		configw = false
+	}
+	if (configw === false) {
+		// check for a release file and do an install on all includes
+		var releasew = false, releasefile = 'release.w';
+		if (releasefile && releasefile.length) {
+			try {
+				releasew = Files.get.file(releasefile);
+				releasew = releasew.toString();
+				releasew = Weld.parse( releasew );
+				releasew = Weld.config.parse( releasew );
+				Cli.echo(' but found a ^bright^'+releasefile+'~~ file ');
+			} catch (e) {
+				Cli.echo(' ^bright^'+releasefile+'~~ not found ');
+				return;
+			}
+		}
+		
+		if (releasew) {
+			if (releasew.include instanceof Array) {
+				releasew.include.forEach(function (o) {
+					try {
+						process.chdir( o );
+						Cli.echo(' '+process.cwd()+' ');
+						
+						do_install();
+						
+						process.chdir( '..' );
+					} catch (e) {
+						Cli.echo(' ~red~^bright^ '+target_path+'~~ not found ');
+						return;
+					}
+				});
+			}
+		}
+		
 		return;
 	}
-	if (configw === false) return;
 	
 	var pathprefix = './', conf = configw.toString();
 	
@@ -347,9 +396,8 @@ var do_install = function () {
 	/* src/linked */
 	conf.src		&& importsrc(conf, pathprefix);
 
-	if (conf.kind == 'server') {
-		conf.deps		&& importdeps(conf, pathprefix+'pub/');
-	}
+	// this used to be limited to server only before 29apr2024, see if this breaks any projects
+	conf.deps		&& importdeps(conf, pathprefix+'pub/');
 
 	if (conf.kind == 'client') {
 		/* langs/linked */
@@ -365,6 +413,9 @@ $.preload( [ 'files', 'hooks', 'cli' ], function() {
 	Hooks		= $('hooks')			,
 	Files		= $('files')			,
 	Weld		= require('./weld')		;
+	
+	echo = Cli.echo;
+	
 	Hooks.set(Cli.events.answer, function (options) { do_install(options); });
 	Hooks.set(Cli.events.init, function (options) { do_install(options); });
 	Hooks.set(Cli.events.command, function (options) { do_install(options); });

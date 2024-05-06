@@ -8,12 +8,12 @@
 //	font-weight		normal
 .roomitem
 	min-height		60px
-	border-radius	12px
-.roomitem:hover
-	background		@secondaryxd
-.roomitem[data-selected]
-	background		@secondaryl
-	border-color	@accent
+.roomitem .message_str
+	max-width		50vw
+	overflow		hidden
+	white-space		nowrap
+.roomitem .updated
+	min-width		fit-content
 .roomitem .members
 	margin			0 auto
 	margin-top		3px
@@ -43,21 +43,6 @@ if min-width = 600px
 [dir=rtl] .roomitem .details
 	left				0
 	right				64px
-.roomitem .photo, .members_item .photo
-	width				60px
-	height				60px
-	border-radius		8px
-	margin				4px 0 0 4px
-	background-color	@secondaryt
-	overflow			hidden
-.roomitem .photo
-	top					5px
-	left				2px
-	z-index				50
-	padding-top			12px
-	text-align			center
-	font-size			140%
-	min-width			60px
 .members_item
 	min-height			40px
 .members_item .photo

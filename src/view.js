@@ -1,4 +1,4 @@
-var View, view;
+var View, view, debug_view = 0;
 ;(function(){
 	var index = {};
 	View = view = {
@@ -15,13 +15,21 @@ var View, view;
 				return this.zaahir(name);
 			}
 		},
+		is_active_fully: function (name, uid) { // at proper level, with no sheets or dialogs
+			// <= 1 because any view can run as the home view
+			var yes = this.is_active(name) && Backstack.darajah <= 1;
+			if (!isundef(uid)) {
+				yes = this.get_uid() == uid;
+			}
+			return yes;
+		},
 		mfateeh: function (name) { // dom_keys
 			var element = index[name];
 			if (element) return templates.keys(element);
 
 			return false;
 		},
-		ishtaghal: function (name, uid) { // run, deprecated
+		run: async function (name, uid) {
 			var level	= backstack.level			,
 				exists	= View.get_element(name)	;
 
@@ -30,13 +38,30 @@ var View, view;
 			} else {
 				var element	= view.get(name)			,
 					keys	= templates.keys(element)	;
-				Hooks.run('viewready', { // TODO rename to view-ready
+				var out = {
 					name: name,
 					uid: uid,
 					element: element,
 					keys: keys,
 					level: level,
-				});
+				};
+
+				if (debug_view) $.log.w('View ready', name, uid);
+				Hooks.run('viewready', out); // TODO rename to view-ready
+				Hooks.run('view-ready', out);
+
+				if (View.is_active_fully(name, uid)) {
+					if (debug_view) $.log.w('View before-init', name, uid);
+					await Hooks.until('view-before-init', out);
+				}
+				if (View.is_active_fully(name, uid)) {
+					if (debug_view) $.log.w('View init', name, uid);
+					await Hooks.until('view-init', out); // view-init users should assume async behavior
+				}
+				if (View.is_active_fully(name, uid)) {
+					if (debug_view) $.log.w('View loaded', name, uid);
+					await Hooks.until('view-loaded', out);
+				}
 			}
 		},
 		get_element: function (name) { // get dom element of a view
@@ -88,7 +113,7 @@ var View, view;
 	};
 	
 	View.get		= View.axav;
-	View.run		= View.ishtaghal;
+	View.ishtaghal	= View.run;
 	View.dom_keys	= View.mfateeh;
 
 	Hooks.set('backstackview', function (args) {
@@ -96,8 +121,8 @@ var View, view;
 		if (isstr(args)) {
 			name = args;
 		} else if (args) {
-			name = args.name;
-			uid = args.uid;
+			name = args.name || args.n;
+			uid = args.uid || args.u;
 		}
 		Webapp.dimmer();
 		Softkeys.clear();

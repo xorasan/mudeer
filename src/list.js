@@ -44,7 +44,9 @@ var List, list;
 			this._scroll_on_focus = yes;
 			return this;
 		},
-		moveup: function (uid) {
+		moveup: function (uid, fake) {
+			if (!fake && this.reverse) return this.movedown(uid, 1);
+
 			uid = uid || (this.axavmuntaxab()||{}).uid;
 			var clone = this.get( this.id2num(uid) );
 			if (clone) {
@@ -62,7 +64,9 @@ var List, list;
 				}
 			}
 		},
-		movedown: function (uid) {
+		movedown: function (uid, fake) {
+			if (!fake && this.reverse) return this.moveup(uid, 1);
+
 			uid = uid || (this.axavmuntaxab()||{}).uid;
 			var clone = this.get( this.id2num(uid) );
 			if (clone) {
@@ -94,7 +98,10 @@ var List, list;
 			if (isfun(this.on_focus)) this.on_focus(v, active);
 		},
 		rakkaz: function (v, active) { // deprecated, use set_focus
-			if (this._prevent_focus) return;
+			var o = this.get_item_object();
+			var prevent_focus = 0;
+			if (o) prevent_focus = o._prevent_focus;
+			if (this._prevent_focus || prevent_focus) return;
 
 			var yes;
 			this.murakkaz = !!v;
@@ -106,7 +113,9 @@ var List, list;
 		 * improve this navigation to account for mufarraqaat
 		 * detect if the next item is a mufarraq, skip it.
 		 * */
-		first: function (select) {
+		first: function (select, fake) {
+			if (!fake && this.reverse) return this.last(select, 1);
+
 //			$.log( 'first', this.idprefix_raw, select );
 			this.selected = select === undefined ? -1 : select;
 			var item = this.get(++this.selected);
@@ -120,7 +129,9 @@ var List, list;
 			this.intaxabscroll( this.intaxabsaamitan() );
 			return this;
 		},
-		last: function () {
+		last: function (select, fake) {
+			if (!fake && this.reverse) return this.first(select, 1);
+
 //			$.log( 'last', this.idprefix_raw );
 			this.selected = this.length();
 			var item = this.get(--this.selected);
@@ -148,6 +159,7 @@ var List, list;
 			translate.update();
 		},
 		left: function (e, fake) {
+			if (!fake && this.reverse) return this.right(e, 1);
 			if (!fake && direction() === 'rtl') return this.right(e, 1);
 
 			var delta = this.gridnum ? 1 : 10;
@@ -167,7 +179,11 @@ var List, list;
 			}
 			return this;
 		},
-		up: function (e) {
+		up: function (e, fake) {
+			if (!fake && this.reverse) return this.down(e, 1);
+			
+			if (e) preventdefault(e);
+			
 			this.selectedold = this.selected;
 			var delta = this.gridnum ? this.gridnum : 1;
 			this.selected -= delta;
@@ -181,16 +197,42 @@ var List, list;
 			}
 			if (this.selected < 0) {
 				var yes;
-				if (this.uponpaststart)
-					yes = this.uponpaststart(this.selectedold);
+				if (this.reverse) {
+					if (this.uponpastend)
+						yes = this.uponpastend(this.selectedold);
+				} else {
+					if (this.uponpaststart)
+						yes = this.uponpaststart(this.selectedold);
+				}
 
 				if (yes) {
 					this.selected = 0;
-					this.intaxabscroll( this.intaxabsaamitan() );
+//					this.intaxabscroll(
+						this.intaxabsaamitan()
+//					);
 				}
 				else this.last();
 			} else {
-				this.intaxabscroll( this.intaxabsaamitan() );
+//				this.intaxabscroll(
+					this.intaxabsaamitan()
+//				);
+			}
+			item = this.get(this.selected);
+			if (item) { // TODO only scroll if too close to edge
+				if (this.reverse) {
+					scroll_by(0, item.offsetHeight);
+				} else {
+					scroll_by(0, -item.offsetHeight);
+				}
+			}
+			return this;
+		},
+		calc_selection: function () {
+			var i = 0;
+			var selected_item = this.keys.items.querySelector('[data-selected]');
+			if (selected_item) {
+				while ( (selected_item = selected_item.previousElementSibling) != null ) ++i;
+				this.selected = i;
 			}
 			return this;
 		},
@@ -199,7 +241,11 @@ var List, list;
 				return this.uponlength();
 			return this.keys.items.children.length;
 		},
-		down: function (e) {
+		down: function (e, fake) {
+			if (!fake && this.reverse) return this.up(e, 1);
+
+			if (e) preventdefault(e);
+			
 			this.selectedold = this.selected;
 			var delta = this.gridnum ? this.gridnum : 1;
 			this.selected += delta;
@@ -214,20 +260,38 @@ var List, list;
 			if (this.selected > this.length()-1) {
 				this.selected = this.length()-1;
 				var yes;
-				if (this.uponpastend)
-					yes = this.uponpastend(this.selectedold);
+				if (this.reverse) {
+					if (this.uponpaststart)
+						yes = this.uponpaststart(this.selectedold);
+				} else {
+					if (this.uponpastend)
+						yes = this.uponpastend(this.selectedold);
+				}
 
 				if (yes) {
 					this.selected = this.length()-1;
-					this.intaxabscroll( this.intaxabsaamitan() );
+//					this.intaxabscroll(
+						this.intaxabsaamitan()
+//					);
 				}
 				else this.first(this.gridnum ? this.selected - this.length()-1 : -1);
 			} else {
-				this.intaxabscroll( this.intaxabsaamitan() );
+//				this.intaxabscroll(
+					this.intaxabsaamitan()
+//				);
+			}
+			item = this.get(this.selected);
+			if (item) { // TODO only scroll if too close to edge
+				if (this.reverse) {
+					scroll_by(0, -item.offsetHeight);
+				} else {
+					scroll_by(0, item.offsetHeight);
+				}
 			}
 			return this;
 		},
-		right: function (e, fake) {
+		right: function (e, fake) { // fake prevents max stack errs
+			if (!fake && this.reverse) return this.left(e, 1);
 			if (!fake && direction() === 'rtl') return this.left(e, 1);
 
 			var delta = this.gridnum ? 1 : 10;
@@ -301,10 +365,18 @@ var List, list;
 				selected = this.get( this.selected );
 			}
 			if (this.filmakaan) {
-				if (selected) scrollintoview(selected);
+				if (selected) {
+					scrollintoview(selected);
+				}
 			} else {
-				if (this.selected === 0) webapp.scrollto();
-				else if (selected) webapp.scrollto(selected);
+				if (this.selected === 0) {
+					if (!this.reverse) {
+						Webapp.scrollto(); // scroll to top
+					}
+				}
+				else if (selected) {
+					Webapp.scrollto(selected);
+				}
 			}
 		},
 		intaxabsaamitan: function (id) { // select silently
@@ -358,6 +430,7 @@ var List, list;
 			}
 		},
 		set: function (o, id) { // deprecate the second argument
+			// TODO move previously inserted item when a new .before is detected
 			/* IMPORTANT
 			 * id would actually change the html#id
 			 * so avoid it unless you know what you're doing
@@ -398,8 +471,8 @@ var List, list;
 				}
 			}
 			
-			if (LV.beforeset) o = LV.beforeset(o, o.uid); // TODO deprecate
-			if (LV.before_set) o = LV.before_set(o, o.uid); // new & approved
+			if (LV.beforeset) o = LV.beforeset(o, o.uid, listitem); // TODO deprecate
+			if (LV.before_set) o = LV.before_set(o, o.uid, listitem); // new & approved
 			
 			if (o.ruid) {
 				LV.adapter.pop(o.ruid);
@@ -429,8 +502,6 @@ var List, list;
 				}, o);
 				
 				clone = templates.get(listitem, parent, o.before || o.awwal, o.id_dom || o.uid)(o2);
-				delete o.before;
-				delete o.awwal;
 				clone.dataset.listitem = 1;
 				
 				// 1 = topmost heading, 2 = subheading, hints for .sticky
@@ -442,9 +513,17 @@ var List, list;
 				
 				templates.set( clone, o, listitem );
 				
+				if (o.before) { // this allows resorting
+					parent.insertBefore(clone, o.before);
+				}
+				
 				if (selected) clone.dataset.selected = 1;
 				if (baidaa) clone.dataset.baidaa = 1;
 			}
+
+			delete o.before;
+			delete o.awwal;
+
 
 			if (clone) {
 				if (o.mu3allaq) setdata(clone, 'mu3allaq', 1);
@@ -466,9 +545,9 @@ var List, list;
 
 			LV._katabmowdoo3();
 
-			LV.afterset && LV.afterset( o, clone, templates.keys(clone) ); // TODO deprecate
-			LV.ba3dihi && LV.ba3dihi( o, clone, templates.keys(clone) ); // TODO deprecate
-			LV.after_set && LV.after_set( o, clone, templates.keys(clone) );
+			LV.afterset && LV.afterset( o, clone, templates.keys(clone), listitem ); // TODO deprecate
+			LV.ba3dihi && LV.ba3dihi( o, clone, templates.keys(clone), listitem ); // TODO deprecate
+			LV.after_set && LV.after_set( o, clone, templates.keys(clone), listitem );
 			LV.uponadaaf && LV.uponadaaf( LV.length() );
 
 			return clone;
@@ -519,8 +598,11 @@ var List, list;
 			}
 			return false;
 		},
-		get_item_element: function (uid) {
-			return this.get( isundef(uid) ? this.selected : uid );
+		get_item_object: function (num) {
+			return this.adapter.get( this.num2id( isundef(num) ? this.selected : num ) );
+		},
+		get_item_element: function (num) {
+			return this.get( isundef(num) ? this.selected : num );
 		},
 		get_item_element_by_uid: function (uid) {
 			return this.get( this.id2num(uid) );
@@ -539,14 +621,17 @@ var List, list;
 			}
 			if (element) {
 				uid = element.dataset.uid;
+				
+				var prev_selected = parseint( LV.id2num( uid ) );
+				
 				LV.adapter.pop( uid );
 
 				element.remove();
 				
 				if (LV.selected) {
-					if (LV.selected == LV.length())
+					if (LV.selected == LV.length()) // if selected item was the last one
 					    LV.selected = LV.length()-1;
-					else
+					else if (LV.selected == prev_selected) // if deleted item was selected
 					    LV.selected = LV.selected-1;
 				}
 
@@ -575,6 +660,10 @@ var List, list;
 				if (item) {
 					(this.element.dataset.focussed || force) &&
 					this.onpress && this.onpress( item, key, this.selected );
+
+					for (var opl in this.on_press_listeners) {
+						this.on_press_listeners[opl]( item, key, this.selected );
+					}
 				}
 			}
 			
@@ -677,12 +766,22 @@ var List, list;
 		},
 	};
 	
+	proto.set_reversed = function (yes) {
+		this.reverse = yes ? 1 : 0;
+	};
+	proto.id_prefix = proto.idprefix;
+	proto.list_item = proto.listitem;
 	proto.set_focus = proto.rakkaz;
 	proto.highlight = proto.baidaa;
 	proto.select_silently = proto.intaxabsaamitan;
 	proto.prevent_focus = function (yes) {
 		this._prevent_focus = yes;
 		return this;
+	};
+	proto.on_press_listeners = {};
+	proto.listen_on_press = function (callback, name) {
+		var count = Object.keys( this.on_press_listeners ).length;
+		this.on_press_listeners[ name || count ] = callback;
 	};
 	
 	List = list = function (element) { // TODO deprecate list
@@ -713,7 +812,7 @@ var List, list;
 			LV.beforepress && LV.beforepress(i, e, uid);
 			LV.intaxabsaamitan( uid ); // select without trig event
 			var yes = LV.selected == uid && LV.element.dataset.focussed == 1;
-			LV.selected = uid;
+			LV.selected = parseint(uid);
 			LV.rakkaz(1, 1);
 			
 			if (yes) LV.press(K.en);

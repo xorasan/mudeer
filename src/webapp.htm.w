@@ -28,7 +28,7 @@ img #eqonahui .fixed .top .right .z200 @src(JAZAR/e.png)
 	.text [id=text]
 #taht3nsar .fixed @hidden .flex
 	.text
-button [template=checkbox] .checkbox .flex .row
+button @type(button) [template=checkbox] .checkbox .flex .row
 	.center
 		.icon [id=icon]
 		label [id=label]

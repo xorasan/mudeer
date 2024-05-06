@@ -262,10 +262,15 @@ var Time, time;
 			var at = translate('@');
 			var c = translate(','); // unicode commas
 
-			var months	= ( ( time.now() - datetime ) / time.month	);
-			var days	= ( ( time.now() - datetime ) / time.day	);
+			var months	= ( ( Time.now() - datetime ) / time.month	);
+			var days	= ( ( Time.now() - datetime ) / time.day	);
+			var hours	= ( ( Time.now() - datetime ) / time.hour	);
 			
-			if (days <= 1) {
+			if (hours <= 2) {
+				text += time.fuzzytime( datetime );
+			} else if (hours <= 6) {
+				text = time.formatdate( new Date(datetime), (is24 ? 'HH:mm' : 'hh:mma') );
+			} else if (days <= 1) {
 				if (dataset && dataset.muxtasar == '3')
 					text += time.fuzzytime( datetime, 1 );
 				else if (dataset && dataset.muxtasar == '2')
@@ -354,7 +359,10 @@ var Time, time;
 		return '%{'+time._uid+'}';
 	};
 	time.formatdate = function (date, format) {
+		date = date || 0;
 		format = format || 'MM/DD/YYYY h:mma';
+		
+		if (isnum(date)) date = new Date(date);
 		
 		time._uid = 0;
 		time._replacements = [];
@@ -417,6 +425,7 @@ var Time, time;
 
 		return  datetimestring;
 	};
+	time.format = time.formatdate; // NEW 2024
 
 	time.start = function (parent) {
 		started = 1;

@@ -9,6 +9,7 @@ var MongoDB;
 ;(function () {
 	'use strict';
 	const { MongoClient, ObjectId } = require('./deps/mongodb');
+	// TODO if default user pass, exit with error
 	const uri = process.env.DEWAAN_MONGO_URI || 'mongodb://localhost/';
 	const client = new MongoClient( uri );
 	var db, tbl_pops = 'pops', debug_mongodb = 0;
@@ -38,6 +39,8 @@ var MongoDB;
 	 * .uid is always translated to ._id since all mudeer modules use .uid
 	 * doc.uid is used to find a match
 	 * .created autofilled if not set, only on insert
+	 * this returns the same doc object that was provided with uid/ruid updated, no shallow copy is made
+	 * it doesn't fill missing props, use get or query with $in for that
 	 * */
 	async function upsert(db, collection_name, doc, cb) {
 		if (debug_mongodb) $.log( ' upsert... ', collection_name );
@@ -118,17 +121,29 @@ var MongoDB;
 	async function find_many_as_array(db, collection_name, filter, cb) {
 		if (debug_mongodb) $.log( ' find_many_as_array... ', collection_name, JSON.stringify(filter) );
 
-		var out_docs, out_error;
+		var out_docs, out_error, aggregate, sort, limit, skip;
 		filter = filter || {};
 		// convert uid to _id
-		if (filter.uid) {
-			filter._id = filter.uid;
-			delete filter.uid;
-		}
+		if (filter.uid) { filter._id = filter.uid; delete filter.uid; }
+
+		if (filter.$sort || filter.$limit || filter.$skip) { aggregate = 1; } // has to be first
+		
+		limit = filter.$limit; delete filter.$limit;
+		sort  = filter.$sort ; delete filter.$sort ;
+		skip  = filter.$skip ; delete filter.$skip ;
 
 		try {
 			const collection = use_db( db ).collection( collection_name );
-			out_docs = await collection.find( filter ).toArray();
+			if (aggregate) {
+				var filter_array = [ { $match: filter } ];
+				if (sort) filter_array.push( { $sort: sort } );
+				if (skip) filter_array.push( { $skip: skip } );
+				if (limit) filter_array.push( { $limit: limit } );
+				out_docs = await collection.aggregate( filter_array ).toArray();
+			} else {
+				out_docs = await collection.find( filter ).toArray();
+			}
+
 			// convert _id to uid
 			out_docs = out_docs.map(function (o) {
 				o.uid = o._id;
@@ -140,6 +155,7 @@ var MongoDB;
 			$.log.e(' Error during find_many_as_array:', error);
 		} finally {
 			var out = { rows: out_docs };
+			if (debug_mongodb) out.filter = filter;
 			if (out_error) out.err = out_error;
 			if (isfun(cb)) { cb( out ); }
 			return out;

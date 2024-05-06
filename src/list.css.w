@@ -13,6 +13,8 @@
 //	background		linear-gradient(45deg, @secondaryt 10%, transparent 50%)
 	color			@textd
 	text-shadow		0px 1px @secondary
+	backdrop-filter	blur(8px)
+	border-radius	6px
 [dir=rtl] .list .a3laa
 	background		linear-gradient(45deg, transparent 50%, @secondaryt 90%)
 [data-freeflow].list .item, [data-freeflow].list .listitem
@@ -173,3 +175,16 @@
 	box-shadow			0 0 12px 0px @primaryl
 	pointer-events		none
 	transition			opacity .2s ease-in
+
+
+.soft_item
+	border-radius	12px
+.soft_item:hover
+	background		@secondaryxd
+.soft_item[data-selected]
+	background		@secondaryl
+	box-shadow		0 0 0 2px @secondaryd inset
+	border-color	@accent
+
+
+

@@ -126,6 +126,31 @@ parsefloat = function (v, n) {
 	if (n) v = parseFloat(v).toFixed(n);
 	return parseFloat(v);
 },
+parsestring = function (v, m) { // forces v to be a string, maximum
+	if (isstr(v)) {}
+	else if (isnum(v)) v = String(v);
+	else v = '';
+	if (isnum(m)) v = v.substr(0, m);
+	return v;
+},
+is_truthy = function (v) { return [true , 'true' , '1', 1, 'y', 'yes'].includes(v) || !!v; },
+is_falsy  = function (v) { return [false, 'false', '0', 0, 'n', 'no' ].includes(v) || !v; },
+to_bool = function (v) { return is_truthy(v) ? true : false; },
+to_bool_num = function (v) { return is_truthy(v) ? 1 : 0; },
+to_str_or_num = function (v) {
+	if (isundef(v)) return;
+	else if (isnum(v) || isstr(v)) return v;
+	else return parsestring(v);
+},
+to_num = function (v) { // forces v to be an integer or float or undefined
+	if (isundef(v)) return;
+	else if (isnum(v) || isstr(v)) {
+		v = Number(v);
+		if (isnan(v)) return;
+		return v;
+	}
+	return;
+},
 intify = function (arr) {
 	for (var i = 0; i < arr.length; ++i) {
 		arr[i] = parseint(arr[i]);

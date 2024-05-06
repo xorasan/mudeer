@@ -11,7 +11,7 @@
 		span .dot
 		span .dot
 	button [template=skbutton]
-		.icon [id=icon]
+		.icon [id=real_icon]
 		span .inline .tooltip
 			label [id=name] @hidden
 			.key .pad .tag .dim .smallcaps [id=key] @hidden

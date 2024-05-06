@@ -136,7 +136,7 @@ var Web;
 					var path = public_path,
 						file = path+'index.html';
 
-					if (req.url.startsWith('/m3') || req.url.startsWith('/qss')) {
+					if (req.url.startsWith('/media') || req.url.startsWith('/qss')) {
 						var file = process.cwd()+req.url;
 
 						/* 

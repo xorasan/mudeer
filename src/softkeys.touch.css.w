@@ -7,10 +7,11 @@ if min-width = 321px
 		letter-spacing	-1px
 		border-radius	0
 		border			0
-		background		@primary
+		background		@primaryt
 		color			@textl
 		overflow		hidden
 		min-height		42px
+		backdrop-filter	blur(6px)
 	#softkeysui .row1 button
 		height			64px
 		background		@primaryt
@@ -78,7 +79,7 @@ if min-width = 321px
 		display			none
 	#softkeysui .row2
 		display			flex !important
-		background		@primary
+		background		@primaryt
 		border-top		1px solid @tertiary
 		border-left		1px solid @tertiary
 		border-bottom	1px solid @tertiary

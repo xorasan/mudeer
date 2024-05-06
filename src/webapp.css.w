@@ -114,6 +114,8 @@ if min-height = 600px
 	font-family		monospace
 .centertext
 	text-align		center
+.justifytext
+	text-align		justify
 .start
 	text-align		start
 	align-self		flex-start
@@ -155,6 +157,10 @@ if min-height = 600px
 	padding-top		5px
 .padb
 	padding-bottom	5px
+.padr
+	padding-right	5px
+.padl
+	padding-left	5px
 .gap
 	margin-left		5px
 	margin-right	5px

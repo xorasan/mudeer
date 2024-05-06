@@ -29,7 +29,7 @@ var datepicker = datepicker || 0;
 			}
 			taht3nsar.hidden = 0;
 			if (taht) {
-				var pos = getposition(taht);
+				var pos = get_bounds(taht);
 				setcss(taht3nsar, 'top', (pos[1]-20)+'px');
 				if (taht.dir == 'rtl') {
 					setcss(taht3nsar, 'right');
@@ -76,13 +76,14 @@ var datepicker = datepicker || 0;
 			dialog.hide();
 			Webapp.blur();
 		}
-		if (level === 2) sheet.hide(), Webapp.blur();
-		if (level === 1) view.get('main'), Webapp.blur();
-		if (level === 0)
-			Webapp.status( translate('exiting') ),
-			$.taxeer('exit', function () {
-				Webapp.exit();
-			});
+		if (level === 2) Sheet.hide(), Webapp.blur();
+		if (level === 1) View.get('main'), Webapp.blur();
+		if (level === 0) {
+//			Webapp.status( translate('exiting') );
+//			$.taxeer('exit', function () {
+//				Webapp.exit();
+//			});
+		}
 	});
 	Hooks.set('restore', function (level) {
 		if (level === 3) Webapp.dimmer(600);

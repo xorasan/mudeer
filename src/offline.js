@@ -1,6 +1,7 @@
 /*
  * TODO make Offline.list to add Offline functionality to lists
  * this will include auto saving changes to the list adapter to Offline stores
+ * TODO add a way to salvage data from previous builds
  * */
 var Offline, offline;
 ;(function(){
@@ -10,7 +11,7 @@ var Offline, offline;
 		exclusions	= [unsavedname],
 		delaydefault = 30*1000,
 		gcallback,
-		debug_offline = 1;
+		debug_offline = 0;
 
 	var ajraa = function (callback) {
 		// get pending items from all offline stores
@@ -291,7 +292,7 @@ var Offline, offline;
 			var on_resolve, on_error;
 
 			var expired = 0;
-			if (time !== undefined) {
+			if (!isundef(time)) {
 				var store = maxaazin[name+need];
 				if (store) {
 					var delay = store.delay || delaydefault;
@@ -307,6 +308,8 @@ var Offline, offline;
 			async function fetch_from_server() {
 				try {
 					var response = await Network.fetch(name, need, filter_for_network);
+					// TODO possibility to save with .order: -1 for compat with recycler
+					
 					on_resolve( response );
 				} catch (e) {
 					on_error( e );
@@ -333,7 +336,8 @@ var Offline, offline;
 		get_offline: async function (name, need, value) { // get from offline storage only
 			var on_resolve;
 
-			await Network.until_first_sync(name, need);
+			if (get_global_object().Network)
+				await Network.until_first_sync(name, need);
 
 			this.getforun(name, need, value, function (arr) {
 				on_resolve(arr)
@@ -500,6 +504,10 @@ var Offline, offline;
 			}
 		},
 		count: function (store, callback) {
+			var on_resolve;
+			var promise = new Promise(function (resolve) {
+				on_resolve = resolve;
+			});
 			var i = 0;
 			db.transaction(store).objectStore(store).openCursor().onsuccess = function (event) {
 				var cursor = event.target.result;
@@ -509,8 +517,10 @@ var Offline, offline;
 				} else {
 					// do another .getall with no limit
 					typeof callback === 'function' && callback(i);
+					on_resolve(i);
 				}
 			};
+			return promise;
 		},
 		filteredcount: function (store, bound, direction, callback) {
 //			$.log.s( 'filteredcount', store, bound, direction );
@@ -585,15 +595,17 @@ var Offline, offline;
 				bound			= null,
 				direction		= 'prev',
 				extra			= {
-						pages: false,
-						count: false,
-						limit: options.limit,
-					};
+					pages: false,
+					count: false,
+					limit: options.limit,
+				};
 			
 			// this will fuckup Offline lists' page counts, test this
 			if (extra.limit === undefined || extra.limit === true) {
 				extra.limit = true;
 			}
+			
+			if (options.reversed) direction = 'next';
 
 			options.key = [];
 			options.only = [];
@@ -615,8 +627,7 @@ var Offline, offline;
 				} 
 			}
 			
-			if ( Object.keys(filters).length <= 1
-			||	options.key.length <= 1 ) {
+			if ( Object.keys(filters).length <= 1 || options.key.length <= 1 ) {
 				options.key = Object.keys(filters)[0];
 				options.only = Object.values(filters)[0];
 				// if only is empty, unset the key
@@ -640,6 +651,8 @@ var Offline, offline;
 				if (page) page = page - 1;
 				var startat = page * extra.limit;
 			}
+			if (isnum(options.start)) startat = options.start;
+			if (isnum(options.start) && isnum(options.end)) extra.limit = options.end-options.start;
 
 			objectStore.openCursor(bound, direction).onsuccess = function (event) {
 				var cursor = event.target.result;
@@ -776,7 +789,7 @@ var Offline, offline;
 				}
 			};
 		},
-		getallpending: function (store, callback) {
+		getallpending: async function (store, callback) {
 //			$.log.s( 'Offline.getall', store.join(' ') );
 			
 			/*
@@ -787,6 +800,20 @@ var Offline, offline;
 			 * 		classitem:		$.array
 			 * 		attendanceitem:	$.array
 			 * */
+			
+			var on_fulfill, on_error;
+			var promise = new Promise(function (f, e) {
+				on_fulfill = f;
+				on_error = e;
+			});
+			
+			function final_callback(types) {
+				if (isfun(callback)) {
+					callback(types);
+				}
+				
+				on_fulfill(types);
+			}
 			
 			if (store instanceof Array) {
 				var types	= {},
@@ -810,15 +837,28 @@ var Offline, offline;
 				
 				q.run(function () {
 					if (total === 0) types = false;
-					typeof callback === 'function' && callback(types);
+					final_callback(types);
 				});
 				
 			} else {
-				Offline._getallpending(store, callback);
+				Offline._getallpending(store, final_callback);
 			}
+			
+			return promise;
 		},
-		getall: function (store, options, callback) {
+		getall: async function (store, options, callback) {
 			if (debug_offline) $.log.w( 'Offline.getall', store, options );
+			
+			if (!Offline.ready) {
+				if (isfun(callback)) callback($.array());
+				return $.array();
+			}
+			
+			var on_resolve, on_error;
+			var promise = new Promise(function (resolve, error) {
+				on_resolve = resolve;
+				on_error = error;
+			});
 			
 			options = options || {};
 			
@@ -865,11 +905,17 @@ var Offline, offline;
 				q.run(function () {
 					if (total === 0) types = false;
 					typeof callback === 'function' && callback(types);
+					on_resolve(types);
 				});
 				
 			} else {
-				Offline._getall(store, options, callback);
+				Offline._getall(store, options, function (objects, extra, unsaved) {
+					typeof callback === 'function' && callback(objects, extra, unsaved);
+					on_resolve(objects, extra, unsaved);
+				});
 			}
+
+			return promise;
 		},
 		/*
 		 * objects is a $.array
@@ -1043,6 +1089,7 @@ var Offline, offline;
 		},
 		recreate: function (callback) {
 			db && db.close && db.close();
+			Offline.ready = 0;
 			var request = indexedDB.deleteDatabase(database);
 			request.onsuccess = function () {
 				Offline.init(callback);

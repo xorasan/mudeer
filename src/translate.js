@@ -6,9 +6,9 @@ var translate, taraajim = taraajim || {}, xlate;
 	var
 	languages = Object.keys(taraajim),
 	uglynames = {
-		en: 'XPO.en',
-		ar: 'XPO.ar',
-		ur: 'XPO.ur',
+		en: 'en',
+		ar: 'ar',
+		ur: 'ur',
 	},
 	defaultlang = 'en',
 	donumbers = function (translation) {
@@ -30,7 +30,7 @@ var translate, taraajim = taraajim || {}, xlate;
 		}
 	},
 	dodirection = function (parent, selector) {
-		if (selector === undefined) selector = '[data-XPO.dir]';
+		if (selector === undefined) selector = '[data-dir]';
 
 		var items = (parent||document).querySelectorAll(selector);
 		for (var i in items) {
@@ -47,14 +47,14 @@ var translate, taraajim = taraajim || {}, xlate;
 							this.dir = dir === 1 ? 'rtl' : 'ltr';
 						});
 					} else {
-						if (e.dataset.XPO.dir === 'XPO.rtl') { // force rtl
+						if (e.dataset.dir === 'rtl') { // force rtl
 							dir = 'rtl';
-						} else if (e.dataset.XPO.dir === 'XPO.ltr') { // force ltr
+						} else if (e.dataset.dir === 'ltr') { // force ltr
 							dir = 'ltr';
 						} else {
 							dir = translate.direction(e.innerText);
 						}
-						if (e.dataset.XPO.dir == 'XPO.parent') { // apply to parent
+						if (e.dataset.dir == 'parent') { // apply to parent
 							e.parentElement.dir = dir === 1 ? 'rtl' : 'ltr';
 						} else {
 							e.dir = dir === 1 ? 'rtl' : 'ltr';
@@ -106,7 +106,7 @@ var translate, taraajim = taraajim || {}, xlate;
 			document.body.dir = 'ltr';
 		}
 		
-		Hooks && Hooks.run('XPO.translateupdate');
+		Hooks && Hooks.run('translateupdate');
 		translate.set(language);
 		
 		translate.update();
@@ -115,13 +115,13 @@ var translate, taraajim = taraajim || {}, xlate;
 		return donumbers(str);
 	};
 	translate.update = function (parent) {
-		var items = (parent||document).querySelectorAll('[data-XPO.i18n]');
+		var items = (parent||document).querySelectorAll('[data-i18n]');
 		for (var i in items) {
 			if (items.hasOwnProperty(i)) {
 				var e = items[i];
 				if (e) {
 					var dataset = e.dataset;
-					var i18n = dataset.XPO.i18n;
+					var i18n = dataset.i18n;
 					if (i18n !== '') {
 						var translation = translate(i18n);
 						
@@ -155,10 +155,10 @@ var translate, taraajim = taraajim || {}, xlate;
 		return 2;
 	};
 
-	Hooks.set('XPO.ready', function () {
+	Hooks.set('ready', function () {
 		translate.change( translate.get() );
 		
-		settings.adaaf('XPO.language', function () {
+		settings.adaaf('language', function () {
 			var language = translate.get();
 			if (language) return translate( uglynames[language]||'' );
 		}, function () {
@@ -170,7 +170,7 @@ var translate, taraajim = taraajim || {}, xlate;
 				index = 0;
 
 			translate.change(languages[index]);
-		}, 'XPO.icontranslate');
+		}, 'icontranslate');
 	});
 	
 	xlate = translate;

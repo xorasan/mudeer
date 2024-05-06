@@ -1,8 +1,12 @@
-// TODO coming back to the same room from a sheet shouldn't reload the messages
-var Messages, messages, messages_list;
+var Messages, messages, messages_list, messages_recycler;
 ;(function(){
-	var mfateeh, oldresults = [], current, last_message, module_name = 'messages',
+	var mfateeh, oldresults = [], current, last_message,
+	module_name = 'messages', module_title = 'Messages', module_icon = 'iconmessage',
 	needs_to_apply, haadirsawt, debug_messages = 1,
+	// SETTINGS
+	focus_msg_field_suid, focus_msg_field = 'focus_msg_field',
+	autoplay_next_msg_suid, autoplay_next_msg = 'autoplay_next_msg',
+
 	text2seconds = function (text) { // secs
 		var c = text.length;
 		return Math.ceil( c / 10 ) || 1;
@@ -15,7 +19,9 @@ var Messages, messages, messages_list;
 			izhar(mfateeh.text);
 			ixtaf(mfateeh.photo);
 			if (ismessages) {
-				mfateeh.messagebox.focus();
+				if (Preferences.get(focus_msg_field, 1)) {
+					mfateeh.messagebox.focus();
+				}
 				isfun(mfateeh.messagebox.oninput) && mfateeh.messagebox.oninput();
 			}
 		}
@@ -31,7 +37,7 @@ var Messages, messages, messages_list;
 		}
 	},
 	nazzaf = function (text) {
-		return (text || '').trim().replace(/[\n]{3,}/g, '\n\n');;
+		return (text || '').trim().replace(/[\n]{3,}/g, '\n\n');
 	},
 	domembers = function () {
 		/*$.taxeer('members'+current.uid, function () {
@@ -50,7 +56,7 @@ var Messages, messages, messages_list;
 			});
 		}, 50);*/
 	},
-	rejectbtn = function () { if ( View.is_active(module_name) ) {
+	rejectbtn = function () { if ( is_view_level() ) {
 		softkeys.set(K.sl, function () {
 			var m = {
 				uid: current.uid,
@@ -66,7 +72,7 @@ var Messages, messages, messages_list;
 			messages.itlaq();
 		}, 0, 'iconclose');
 	}},
-	unblockbtn = function () { if ( View.is_active(module_name) ) {
+	unblockbtn = function () { if ( is_view_level() ) {
 		softkeys.set(K.sl, function () {
 			var m = {
 				uid: current.uid,
@@ -82,8 +88,8 @@ var Messages, messages, messages_list;
 			messages.itlaq();
 		}, 0, 'iconpersonadd');
 	}},
-	blockbtn = function () { if ( View.is_active(module_name) ) {
-		softkeys.set('7', function () { Hooks.run('dialog', {
+	blockbtn = function () { if ( is_view_level() ) {
+		Softkeys.set('7', function () { Hooks.run('dialog', {
 			m: 'asa3ab',
 			c: function () {
 				var m = {
@@ -101,7 +107,7 @@ var Messages, messages, messages_list;
 			}
 		}); }, '7', 'iconblock');
 	}},
-	invitebtn = function () { if ( View.is_active(module_name) ) {
+	invitebtn = function () { if ( is_view_level() ) {
 		var uxr = rooms.is_other(current.members);
 		softkeys.set(K.sl, function () {
 			rooms.invite(uxr[0]);
@@ -110,32 +116,64 @@ var Messages, messages, messages_list;
 			}, 0, 'iconhourglassempty');
 		}, 0, 'iconpersonadd');
 	}},
-	sendbtn = function (sinf) { if ( View.is_active(module_name) ) {
+	sendbtn_object = { k: K.en },
+	sendbtn = function (sinf) { if ( is_view_level() ) {
 		var icon = 'iconkeyboardvoice', name = 'Voice';
 		if (sinf === -2) icon = 'iconhourglassempty', name = 'Converting...';
 		else if (sinf === -1) icon = 'iconpause', name = 'Pause';
 		else if ([1, 2, 3].includes(sinf)) icon = 'iconsend', name = 'Send';
-		Softkeys.add({ k: K.en,
-			n: name,
-			c: function () {
-				if (sinf === 1)
-					mfateeh.messagebox.uponenter();
-				else if (sinf === -2) { // busy
+
+		if (sendbtn_object && sendbtn_object.uid) {
+			Softkeys.remove('0-0-0-enter');
+			Softkeys.remove( sendbtn_object );
+		}
+
+		if (!isundef(sinf)) {
+			sendbtn_object.shift = 1;
+			sendbtn_object.n = name;
+			sendbtn_object.i = icon;
+			sendbtn_object.c = function () {
+				if (sinf === 1) {
+					mfateeh.messagebox.uponshiftenter();
+				} else if (sinf === -2) { // busy
 				} else if (sinf === -1) { // pause
 					Recorder.pause();
 				} else if (sinf === 2) {
 					if (Recorder.tasjeel)
-						Network.upload( 'messages', 'sawt', current.uid, Recorder.tasjeel );
+						Network.upload( module_name, 'audio', current.uid, Recorder.tasjeel );
 				} else if (sinf === 3) {
 					if (Uploader.marfoo3)
-						Network.upload( 'messages', 'photo', current.uid, Uploader.marfoo3 );
-				} else
-					Recorder.isjal(1);
-			},
-			i: icon,
-		});
-	}},
-	auxbtn = function (sinf) { if ( View.is_active(module_name) ) {
+						Network.upload( module_name, 'photo', current.uid, Uploader.marfoo3 );
+				} else {
+					Recorder.record();
+				}
+			};
+			Softkeys.add( sendbtn_object );
+		} else if (sendbtn_object && sendbtn_object.uid) {
+			sendbtn_object.shift = 0;
+		}
+
+		var item = messages_list.get_item_object();
+		if (item && isnum(item.kind) && messages_list.murakkaz) {
+			if (item.kind === 0) {
+				name = 'Read More';
+				icon = 'iconmessage';
+			} else if (item.kind === 1) {
+				name = 'Play Message';
+				icon = 'iconplayarrow';
+			} else if (item.kind === 2) {
+				name = 'View Photo';
+				icon = 'iconphoto';
+			}
+			sendbtn_object.n = name;
+			sendbtn_object.i = icon;
+			sendbtn_object.c = function () {
+				messages_list.onpress(item, K.en, item.uid);
+			};
+			Softkeys.add( sendbtn_object );
+		}
+	} },
+	auxbtn = function (sinf) { if ( is_view_level() ) {
 		var icon = 'iconphoto', name = 'Photo';
 		if ([2, 3].includes(sinf)) icon = 'icondeleteforever', name = 'Delete';
 		else if (sinf === 4) icon = 'icondownload', name = 'Download';
@@ -157,7 +195,7 @@ var Messages, messages, messages_list;
 			i: icon,
 		});
 	}},
-	acceptbtn = function () { if ( View.is_active(module_name) ) {
+	acceptbtn = function () { if ( is_view_level() ) {
 		Softkeys.add({ k: K.en,
 			n: 'Done',
 			c: function () {
@@ -185,25 +223,67 @@ var Messages, messages, messages_list;
 		},
 		i: 'icondeleteforever',
 	},
-	removebtn = function () { if ( View.is_active(module_name) ) {
-		if (messages_list.murakkaz) {
-			Softkeys.add(removebtn_object);
-		} else if (removebtn_object && removebtn_object.uid) {
-			Softkeys.remove(removebtn_object.uid);
+	removebtn = async function () { if ( is_view_level() ) {
+		var item = messages_list.get_item_object(), do_show;
+		if (item) {
+			if (item.remove > 1) do_show = 1; // to allow cancelling removal
+			if (item.owner == Sessions.get_account_uid()) do_show = 1;
 		}
-	}};
+
+		if (!do_show) {
+			var access = await has_access( module_name, 'remove' );
+			if (access) {
+				do_show = 1; // add
+			}
+		}
+
+		if ( is_view_level() ) {
+			if (messages_list.murakkaz && do_show) {
+				Softkeys.add(removebtn_object);
+			} else if (removebtn_object && removebtn_object.uid) {
+				Softkeys.remove(removebtn_object.uid);
+			}
+		}
+	} };
 	
+	function set_sidebar_and_header(subtitle) {
+		if (View.is_active(module_name)) {
+			if (get_global_object().Sidebar) Sidebar.choose(module_name);
+		}
+	}
+	function update_sidebar() { if (get_global_object().Sidebar) {
+		var luid;
+		if (current) {
+			if (current.link) luid = '@'+current.link;
+			else luid = current.uid;
+		}
+		Sidebar.set({
+			uid: module_name,
+			luid, 
+			title: module_title,
+			subtitle: current ? current.name : '',
+			icon: module_icon,
+		});
+		if (View.is_active(module_name)) {
+			Sidebar.show_item(module_name);
+		} else {
+			Sidebar.hide_item(module_name);
+		}
+	} }
+
+	function is_view_level() { return Backstack.darajah == 1 && View.is_active(module_name); };
+	var view_photo_sheet = 'messagephoto', prev_msgbox_height = 0;
+
 	Messages = messages = {
+		update_room_count: function (item) { if (item && current) {
+			if (item.uid == current.uid) {
+				messages_recycler.set_count( item.count || 0 );
+			}
+		} },
 		iftahphoto: function (item) {
 			item && Hooks.run('sheet', {
-				n: 'messagephoto',
-				t: 'messagephoto',
-				c: function () { // on yes/callback aka pressing K.sl
-					
-				},
-				i: function (k) { // on init
-					k.preview.src = Network.xitaab+item.xitaab;
-				},
+				n: view_photo_sheet,
+				u: item.uid,
 			});
 		},
 		current: function (remove) {
@@ -257,6 +337,19 @@ var Messages, messages, messages_list;
 		fetch: async function () {
 			if (debug_messages) $.log.w( 'Messages fetch' );
 			if (current) {
+//				var position = Backstack.get_scroll_position();
+//				if (isnum(position)) { scroll_to(0, position); }
+				await messages_recycler.count();
+				await messages_recycler.render();
+				// NOTE recycler checks in a postcept whether results should be added to list in case room changed
+//				if (View.is_active(module_name)) {
+//					if (isnum(position)) {
+//						$.log( 'messages, scroll_to', position );
+//						scroll_to(0, position);
+//					}
+//				}
+				
+				return;
 				var msgs = await Offline.fetch( module_name, 0, { filter: { room: current.uid } } );
 				if ( View.is_active(module_name) ) {
 					Messages.update_list( msgs, 1 );
@@ -282,8 +375,8 @@ var Messages, messages, messages_list;
 			
 			oldresults = results;
 			
-			if (do_scroll && View.is_active(module_name) )
-				messages_list.last();
+//			if (do_scroll && is_view_level() )
+//				messages_list.last();
 		},
 		iftah: function (item, an3ash) { // open messages
 			if (item) {
@@ -420,27 +513,38 @@ var Messages, messages, messages_list;
 //					blockbtn();
 
 					mfateeh.katabmessage.onclick = function () {
-						if (!Recorder.mashghool()) mfateeh.messagebox.focus();
+						if (!Recorder.busy()) mfateeh.messagebox.focus();
 					};
 					mfateeh.messagebox.onfocus = function () {
-						if (!Recorder.mashghool()) messages_list.deselect();
+						if (!Recorder.busy()) messages_list.deselect();
+						mfateeh.messagebox.oninput();
 					};
 					mfateeh.messagebox.oninput = function () {
-						if (!Recorder.mashghool() && !Uploader.mashghool()) {
-							setcss(messagesui, 'paddingBottom',
-									(mfateeh.messagebox.offsetHeight+Softkeys.get_main_height())+'px');
-							sendbtn( nazzaf(mfateeh.messagebox.value).length ? 1 : 0 );
+						if (!Recorder.busy() && !Uploader.busy()) {
+							var new_msgbox_height = mfateeh.messagebox.offsetHeight+Softkeys.get_main_height();
+							setcss(messagesui, 'paddingBottom', new_msgbox_height+'px');
+							
+							if (new_msgbox_height != prev_msgbox_height)
+								scroll_by(0, new_msgbox_height - prev_msgbox_height);
+							
+							prev_msgbox_height = new_msgbox_height;
+							if (messages_list.murakkaz) {
+								sendbtn();
+							} else {
+								Softkeys.remove('0-0-0-enter');
+								sendbtn( nazzaf(mfateeh.messagebox.value).length ? 1 : 0 );
+							}
 						}
 					};
-					mfateeh.messagebox.uponenter = function () {
-						if (!Recorder.mashghool()) {
+					mfateeh.messagebox.uponshiftenter = function () {
+						if (!Recorder.busy()) {
 							var text = nazzaf(mfateeh.messagebox.value);
 							if (text.length) {
 								messages.irsal(text);
-								sendbtn();
+								sendbtn(0);
 								mfateeh.messagebox.focus();
 							}
-							else Recorder.isjal(1);
+//							else Recorder.record(1);
 							
 							scrollintoview(mfateeh.messagebox);
 						}
@@ -450,12 +554,14 @@ var Messages, messages, messages_list;
 
 					if (needs_to_apply) {
 						mfateeh.messagebox.oninput();
-						mfateeh.messagebox.focus();
-						messages_list.popall();
-						messages.fetch();
+						if (Preferences.get(focus_msg_field, 1)) {
+							mfateeh.messagebox.focus();
+						}
+						messages_recycler.remove_all();
+						Messages.fetch();
 					} else {
 						// TODO figure out a better way to scroll
-						if ( View.is_active(module_name) ) {
+						if ( is_view_level() ) {
 							messages_list.last();
 //							messages_list.intaxabscroll( messages_list.get() );
 
@@ -470,33 +576,35 @@ var Messages, messages, messages_list;
 			}
 			needs_to_apply = 0;
 		},
-		irsal: function (text) {
+		irsal: async function (text) {
 			var t = (current.taxeer||0) - time.now();
 			if (t < 0 || isundef(current.taxeer)) {
 				text = nazzaf(text);
 				if (isstr(text) && text.length) {
 					messages_list.message();
 					var item;
-					if (last_message && !Network.is_syncing) {
-						item = last_message;
-						item.text += '\n'+text;
-					} else {
+//					if (last_message && !Network.is_syncing) {
+//						item = last_message;
+//						item.text += '\n'+text;
+//					} else {
 						item = {
 							uid: Offline.ruid(),
 							text: text,
 							room: current.uid,
 						};
 						last_message = shallowcopy(item);
-					}
+//					}
 					Offline.add(module_name, shallowcopy(last_message));
-					item.owner = sessions.uid();
-					item.created = time.now();
+					item.owner = Sessions.uid();
+					item.created = Time.now();
 					item.mu3allaq = 1; // TODO WHAT'S THIS
-					messages_list.set(item);
-					if ( View.is_active(module_name) ) {
-						messages_list.last();
-					}
+					messages_recycler.set([ item ]);
+//					if ( is_view_level() ) {
+//						messages_list.last();
+//					}
 					mfateeh.messagebox.value = '';
+					Softkeys.autoheight( mfateeh.messagebox );
+					mfateeh.messagebox.oninput();
 				}
 			} else {
 				messages.itlaqtaxeer(current);
@@ -504,12 +612,10 @@ var Messages, messages, messages_list;
 		},
 	};
 	
-	function update_softkeys() {
-		if (mfateeh) {
-			mfateeh.messagebox.oninput();
-			removebtn();
-		}
-	}
+	function update_softkeys() { if (mfateeh && View.is_active(module_name)) {
+		mfateeh.messagebox.oninput();
+		removebtn();
+	} }
 
 	Offline.create(module_name, '', {
 		mfateeh: ['room'],
@@ -535,15 +641,15 @@ var Messages, messages, messages_list;
 			}
 		}
 	});
-	Hooks.set('recorder', function (nabaa) {
-		if (view.is_active('messages')) {
-			if (nabaa === MSJLXATAM) {
-				var e = mfateeh.list.querySelector('[data-la3ib]');
-				if (e) {
-					popdata(e, 'la3ib');
-					var ns = nextsibling(e);
-					if (ns) {
-						var o = messages_list.adapter.get( getdata(ns, 'uid') );
+	Hooks.set('recorder', function (nabaa) { if (View.is_active_fully(module_name)) {
+		if (nabaa === MSJLXATAM) { // playback ended
+			var e = mfateeh.list.querySelector('[data-playing]');
+			if (e) {
+				popdata(e, 'playing');
+				if ( Preferences.get(autoplay_next_msg, 1) ) {
+					var ps = prevsibling(e);
+					if (ps) {
+						var o = messages_list.adapter.get( getdata(ps, 'uid') );
 						if (o && o.kind === 1) {
 							messages_list.select( messages_list.id2num(o.uid) );
 							messages_list.press(K.en);
@@ -551,27 +657,44 @@ var Messages, messages, messages_list;
 					}
 				}
 			}
-			if (nabaa === MSJLBADAA) {
-				sendbtn(-1);
-				auxbtn(1);
-			}
-			if (nabaa === MSJLTASJEEL) {
-				sendbtn(2); // send voice
-				auxbtn(2);
-			}
-			if (nabaa === MSJLINTAHAA) {
-				auxbtn();
-				sendbtn();
-				$.taxeer('messagebox', function () {
-					if (Recorder.mulhaq) mfateeh.messagebox.focus();
-				}, 10); // avoid 'enter' adding a linebreak
-			}
 		}
-	});
-	Hooks.set('ready', function () {
-		Network.intercept(module_name, function (intahaa) {
+		if (nabaa === MSJLBADAA) {
+			sendbtn(-1);
+			auxbtn(1);
+		}
+		if (nabaa === MSJLTASJEEL) {
+			sendbtn(2); // send voice
+			auxbtn(2);
+		}
+		if (nabaa === MSJLINTAHAA) {
+			auxbtn();
+			sendbtn();
+			$.taxeer('messagebox', function () {
+				if (Recorder.attached) mfateeh.messagebox.focus();
+			}, 10); // avoid 'enter' adding a linebreak
+		}
+	} });
+	Hooks.set('ready', async function () {
+		update_sidebar();
+
+		focus_msg_field_suid = Settings.adaaf('Message Field', function () {
+			var yes = Preferences.get(focus_msg_field, 1);
+			current = yes ? 1 : 0;
+			return [ yes ? 'Always Focus' : 'On Demand' ];
+		}, function () {
+			Preferences.set(focus_msg_field, Preferences.get(focus_msg_field, 1) ? 0 : 1);
+		}, module_icon);
+		autoplay_next_msg_suid = Settings.adaaf('Voice Message Playback', function () {
+			var yes = Preferences.get(autoplay_next_msg, 1);
+			current = yes ? 1 : 0;
+			return [ yes ? 'Autoplay Next' : 'One & Done' ];
+		}, function () {
+			Preferences.set(autoplay_next_msg, Preferences.get(autoplay_next_msg, 1) ? 0 : 1);
+		}, module_icon);
+
+		Network.intercept(module_name, function (finish) {
 			// receive messages updates when signed in
-			intahaa( sessions.signedin() ? 1 : undefined );
+			finish( sessions.signedin() ? 1 : undefined );
 		});
 		Network.response.upload(module_name, 'photo', function (response) {
 //			$.log( 'Network.response.upload messages.photo', response );
@@ -605,53 +728,114 @@ var Messages, messages, messages_list;
 							last_message = 0;
 						}
 					}
-					messages_list.set( response );
+					messages_recycler.set([ response ]);
 					// TODO scroll into view?
-					if ( View.is_active(module_name) ) {
+					if ( is_view_level() ) {
 						messages_list.last();
 					}
 				}
 			}
 		});
-		Offline.response.remove(module_name, function (response) {
+		Offline.response.remove(module_name, function (response) { // TODO
+			// TODO this will work if u add a batch process to pop deleted messages from the server
 //			$.log( 'Offline.response.remove messages', response );
 			var o = messages_list.adapter.get(response);
 			if (o) {
 				o.text = 'this msg was deleted';
 				messages_list.set(o);
-				$.taxeer('messagesremove'+response, function () {
-					messages_list.pop(response);
+				$.taxeer('messagesremove'+o.uid, function () {
+					messages_recycler.remove_by_uid(o.uid);
 				}, 3000);
 			}
 		});
 
 		mfateeh = View.dom_keys(module_name);
 		
+		mfateeh.messagebox.on_focus_prev = function () {
+			if (mfateeh.messagebox.value.trim().length == 0) {
+				focusprev(mfateeh.messagebox);
+			}
+		};
+		
 		resize();
+
+		create_access( module_name, 'send', 'Send Messages' );
 
 		messages_list = List( mfateeh.list ).idprefix(module_name).listitem('messageitem')
 //						.prevent_focus(1)
 						;
+		
+		messages_recycler = Recycler( messages_list, module_name );
+		messages_recycler.set_reversed( 1 );
+		messages_recycler.add_view( module_name );
+		messages_recycler.set_phrase( 'next', 'Older' );
+		messages_recycler.set_phrase( 'prev', 'Newer' );
+		messages_recycler.add_intercept(async function (need, payload) {
+			if (current && current.uid) {
+				payload.room = current.uid;
+				return 1;
+			} else {
+				return 0;
+			}
+		});
+		messages_recycler.add_postcept(async function (need, payload) {
+			if (current) {
+				return payload.room == current.uid;
+			}
+			else return 0;
+		});
 		
 		messages_list.on_focus =
 		messages_list.on_selection =
 		messages_list.on_deselection = function () {
 			update_softkeys();
 		};
-		messages_list.uponpaststart = function () { this.first(); return 1; };
-		messages_list.beforeset = function (item) {
+		messages_list.uponpaststart = function () {
+			this.first(); return 1;
+		};
+		messages_list.before_set = function (item) {
+			if (['next', 'prev'].includes(item.uid)) return item;
+			
+			item.size_str = 'ixtaf';
 			var t = item.removetaxeer, s = 'ixtaf';
-			if (item.remove || !isundef(t)) s = 'izhar';
-			if (item.remove > 1) item.text = 'this msg was deleted', s = 'ixtaf';
-			item.removestr = s;
+			if (item.remove || !isundef(t)) s = 'will remove ';
+			if (item.remove > 1) {
+				var msg_name = 'msg';
+				if (item.kind == 1) msg_name = 'voice msg';
+				if (item.kind == 2) msg_name = 'photo';
+				item.text = 'this '+msg_name+' was deleted';
+				s = 'ixtaf';
+			} else {
+				if (item.size) {
+					item.size_str = item.size+'kB';
+				}
+			}
+			
+			item.removestr = s; // the countdown to removal
 			
 			if (item.kind === 1 && !item.muntahaa) {
 				item.text = '...';
 			}
 			
+			if (item.text) {
+				item.text_preview = item.text.slice(0, 480);
+				if (item.text.length > 480) {
+					item.text_preview += '...';
+				}
+			}
+			
 			return item;
 		};
-		messages_list.afterset = function (item, clone, k) {
+		messages_list.after_set = function (item, clone, k) {
+			if (['next', 'prev'].includes(item.uid)) return;
+
+			if (item.text && item.text.length > 480) {
+				innertext(k.more_str, 'Tap for more');
+				izhar(k.more_str);
+			} else {
+				ixtaf(k.more_str);
+			}
+			
 			var t = item.removetaxeer;
 			if (item.remove || isundef(t)) {
 				popdata(k.removetime, 'time');
@@ -672,113 +856,76 @@ var Messages, messages, messages_list;
 				popdata(clone, 'mahvoof');
 			}
 			
-			if (item.kind === 1 && !item.muntahaa) {
-				var src = Network.xitaab+item.xitaab;
-				izhar(k.hafr);
-				sawthafr.drawaudio(k.hafr, src, 0, 6).then(function (audbuf, filtered, size) {
-					var dur = audbuf.duration;
-					if (isnum(dur)) {
-						dur = Math.round(dur);
-						innerhtml(k.text, '<b>'+dur+'s</b> <small>'+Math.round(size/1024)+'kB'+'</small>');
-						item.muntahaa = 2;
-					}
-				});
-				item.text = undefined;
-				item.muntahaa = 1;
-			}
-			if (item.kind === 2) {
-				izhar(k.hafr);
-				var img = createelement('img', 'preview2');
-				k.hafr.replaceWith( img );
-				k.hafr = img;
-				setdata(k.hafr, 'id', 'hafr');
-				k.hafr.src = Network.xitaab+item.xitaab;
-			}
+			if (item.kind) setdata(clone, 'kind', item.kind);
 			
-			var ps = prevsibling(clone), yes = 1, margin = 0;
-			if (ps) {
-				var pskeys = templates.keys(ps);
-				var previtem = messages_list.adapter.get( getdata(ps, 'uid') );
-				if (previtem) {
-					if (item.owner === previtem.owner) yes = 0;
-					if (!pskeys.padder.hidden) margin = 1;
+			innerhtml( k.text_preview, Markdown.render( item.text_preview ) );
+			var all_links = k.text_preview.querySelectorAll('a');
+			all_links.forEach(function (e) {
+				e.onclick = function () {
+					// TODO internal vs external links
+					return false;
+				};
+			});
+			
+			if (item.kind === 1) {
+				if (item.remove > 1) {
+					ixtaf(k.hafr);
+				} else {
+					izhar(k.hafr);
+					if (!item.muntahaa) { // BUG rethink this for Recycler on_out, on_in
+						var src = location.protocol+'//'+location.host+'/'+item.address;
+						sawthafr.drawaudio(k.hafr, src, 0, 3).then(function (audbuf, filtered, size) {
+							var dur = audbuf.duration;
+							if (isnum(dur)) {
+								dur = Math.round(dur);
+								innerhtml(k.text_preview,
+									'<b>'+dur+'s</b> <small>'+Math.round(size/1024)+'kB'+'</small>');
+								item.muntahaa = 2;
+							}
+						});
+						item.text = undefined;
+						item.muntahaa = 1;
+					}
 				}
 			}
-			setdata(k.waqtqabl, 'time', item.created);
-			if (margin && yes) setdata(clone, 'margin', 1);
-			else popdata(clone, 'margin');
-			if (clone && yes) {
-				k.padder.hidden = 0;
-				setdata(clone, 'hasphoto', 1);
-				// stable color
-				var unique_color = Themes.generate_predictable_color(item.owner);
-				setcss(k.photo, 'background-color', Themes.darken_hex_color(unique_color, 130, .5) );
-				setcss(k.photo, 'color', Themes.brighten_hex_color(unique_color, 130, .7) );
-
-				$.taxeer('messagesphoto'+item.uid, async function () {
-					setcss(k.photo, 'opacity', 1);
-					setcss(k.photo, 'height');
-					var account = await Accounts.fetch(item.owner);
-					if (account) {
-						var account_name = '';
-						if (account.displayname)
-							account_name = account.displayname;
-						else if (account.name)
-							account_name = '@'+account.name;
-
-						innertext(k.name, account_name);
-						innertext(k.photo, account.name.slice(0, 3));
-						
-						$.taxeer('scroll-message-into-view', function () { if ( View.is_active(module_name) ) {
-							// TODO figure out a better way to scroll
-							var last_element = messages_list.get_item_element( messages_list.selected );
-							if (last_element) {
-								scroll_into_view_with_padding( last_element, [Webapp.get_tall_screen_height(), 0, 200, 0] );
-							}
-						} });
-					}
-//					Accounts.get([item.owner], function (results) {
-//						results.forEach(function (o) {
-//							photo = setshakl(o, k.photo);
-//							photo.zoomlevel = .25;
-//							photo.panned.y = 25;
-////							photo.mowdoo3( o.username.substr(0, 6) );
-//							photo.jaddad();
-//						});
-//					});
-				}, 50);
-			} else {
-				k.padder.hidden = 1;
-				k.name.hidden = 1;
-				popdata(clone, 'hasphoto');
-				setcss(k.photo, 'height', 0);
-				setcss(k.photo, 'opacity', 0);
+			if (item.kind === 2) {
+				if (item.remove > 1) {
+					ixtaf(k.hafr);
+					k.hafr.parentElement.classList.add('pad', 'padv');
+					setcss(k.hafr, 'background-image', '');
+				} else {
+					izhar(k.hafr);
+					k.hafr.parentElement.classList.remove('pad', 'padv');
+					var img = createelement('div', 'preview2');
+					k.hafr.replaceWith( img );
+					k.hafr = img;
+					setdata(k.hafr, 'id', 'hafr');
+					
+					var src = location.protocol+'//'+location.host+'/'+item.address;
+					setcss(k.hafr, 'background-image', 'url('+src+')');
+				}
 			}
+
+			// the photo padder code was here
+			
+			setdata(k.waqtqabl, 'time', item.created);
 		};
 		messages_list.onpress = function (item, key, uid) {
 			if (item && key === K.en) {
 				if (item.kind === 0) {
-					haadirsawt && haadirsawt.intahaa();
-					haadirsawt = sawtkaatib.minhuroof(item.text);
-					var rb = mfateeh.messagebox;
-					rb.value = '';
-					var str = '';
-					haadirsawt.uponsawt = function (v) {
-						str += v;
-						if (v == ' ') {
-							setcss(rb, 'height', 0);
-							if (rb.scrollHeight > rb.offsetHeight)
-								setcss(rb, 'height', rb.scrollHeight+3+'px');
-						}
-						rb.value = str;
-					};
+					if (item.text && item.text.length > 480) {
+						Hooks.run('view', {
+							name: 'message',
+							uid: item.uid,
+						});
+					}
 				}
-				if (item.kind === 1) {
-					Recorder.il3ab(Network.xitaab+item.xitaab)
+				if (item.kind === 1 && !item.remove) {
+					Recorder.play(Network.make_address(item.address));
 					var clone = messages_list.get( messages_list.id2num( item.uid ) );
-					if (clone) setdata(clone, 'la3ib', 1);
+					if (clone) setdata(clone, 'playing', 1);
 				}
-				if (item.kind === 2) {
+				if (item.kind === 2 && !item.remove) {
 					messages.iftahphoto(item);
 				}
 			}
@@ -805,6 +952,10 @@ var Messages, messages, messages_list;
 			return 1;
 		};
 	});
+	async function get_message(uid) {
+		var message = await Offline.fetch( module_name, 0, { filter: { uid } } );
+		return message[0];
+	}
 	async function get_room_and_setup_view() {
 		var uid = View.get_uid();
 		if (uid) { // fetch room
@@ -816,12 +967,15 @@ var Messages, messages, messages_list;
 
 			if ( View.is_active(module_name) ) {
 				Messages.itlaq();
+				update_sidebar();
 			}
 		} else {
 			// QUESTION TODO idk offer a way back to rooms list or home?
 		}
 	}
-	Hooks.set('viewready', function (args) {
+	Hooks.set('view-init', async function (args) {
+		update_sidebar();
+
 		switch (args.name) {
 			case 'messages':
 				if (args.uid) {
@@ -833,18 +987,130 @@ var Messages, messages, messages_list;
 							needs_to_apply = args.uid !== current.uid;
 					}
 
-					get_room_and_setup_view();
+					await get_room_and_setup_view();
 
-					Recorder.iltahaq(mfateeh);
-					Recorder.intahaa();
+					Recorder.attach(mfateeh);
+					Recorder.stop();
 					Uploader.attach(mfateeh);
 					Uploader.stop();
+					
+					set_sidebar_and_header();
+				}
+				break;
+			case 'message':
+				if (args.uid) {
+					Webapp.header(['Full Message', 'Loading...', 'iconmessage']);
+					var keys = View.dom_keys(args.name);
+					innerhtml(keys.list, '');
+					var msg = await get_message(args.uid), account_name = '';
+					if (msg) {
+						var account = await Accounts.fetch(msg.owner);
+						if (account) {
+							account_name = Accounts.get_name(account);
+						}
+					}
+					if ( View.is_active_fully(args.name) ) {
+						if ( msg ) {
+							Webapp.header(['Full Message', account_name, 'iconmessage']);
+							innerhtml(keys.list, Markdown.render(msg.text));
+						} else {
+							Webapp.header(['Message Not Found', '', 'iconmessage']);
+							innerhtml(keys.list, '');
+						}
+					}
 				}
 				break;
 			default:
-				Recorder.infasal();
-				Uploader.detach();
+				if (!View.is_active_fully(module_name)) {
+					Recorder.infasal();
+					Uploader.detach();
+				}
 				break;
 		}
 	});
+	Hooks.set('recycler-insert-done', async function ({ name, need }) { if (name == module_name) {
+		var elements = await messages_recycler.get_elements(), ps;
+		elements.reverse();
+		elements.forEach(function (element) {
+			var yes = 1, margin = 0, k = templates.keys(element);
+			var item = messages_list.adapter.get( getdata(element, 'uid') );
+			if (ps) {
+				var pskeys = templates.keys(ps);
+				var previtem = messages_list.adapter.get( getdata(ps, 'uid') );
+				if (previtem && !['next', 'prev'].includes(previtem.uid)) {
+					if (item.owner === previtem.owner) yes = 0;
+					if (!pskeys.padder.hidden) margin = 1;
+				}
+			}
+			if (margin && yes) setdata(element, 'margin', 1);
+			else popdata(element, 'margin');
+
+			if (yes) {
+				k.padder.hidden = 0;
+				setdata(element, 'hasphoto', 1);
+				// stable color
+				var unique_color = Themes.generate_predictable_color(item.owner);
+				setcss(k.photo, 'background-color', Themes.darken_hex_color(unique_color, 130, .5) );
+				setcss(k.photo, 'color', Themes.brighten_hex_color(unique_color, 130, .7) );
+
+				$.taxeer('messagesphoto'+item.uid, async function () {
+					setcss(k.photo, 'opacity', 1);
+					setcss(k.photo, 'height');
+					var account = await Accounts.fetch(item.owner);
+					if (account) {
+						var account_name = Accounts.get_name(account);
+
+						innertext(k.name, account_name);
+						innertext( k.short_name, account.name.slice(0, 3)+'\n'+account.name.slice(3, 6) );
+						
+//						$.taxeer('scroll-message-into-view', function () { if ( is_view_level() ) {
+//							// TODO figure out a better way to scroll
+//							var last_element = messages_list.get_item_element( messages_list.selected );
+//							if (last_element) {
+//								scroll_into_view_with_padding( last_element, [Webapp.get_tall_screen_height(), 0, 200, 0] );
+//							}
+//						} });
+					}
+//					Accounts.get([item.owner], function (results) {
+//						results.forEach(function (o) {
+//							photo = setshakl(o, k.photo);
+//							photo.zoomlevel = .25;
+//							photo.panned.y = 25;
+////							photo.mowdoo3( o.username.substr(0, 6) );
+//							photo.jaddad();
+//						});
+//					});
+				}, 50);
+			} else {
+				k.padder.hidden = 1;
+				k.name.hidden = 1;
+				popdata(element, 'hasphoto');
+				setcss(k.photo, 'height', 0);
+				setcss(k.photo, 'opacity', 0);
+			}
+			ps = element;
+		});
+	} });
+	Hooks.set(sheet_ready, async function (args, k) { if (args.name == view_photo_sheet) {
+		Sheet.set_title('Photo Message');
+		var suid = Sessions.uid(); // TODO CHECK
+
+		if (args.uid) {
+			var message = await get_message(args.uid);
+			if (Sheet.get_active() == view_photo_sheet && message) {
+				if (message.uid === Sheet.get_active_uid() && Backstack.darajah == 2) {
+					k.preview.src = location.protocol+'//'+location.host+'/'+message.address;
+					Softkeys.add({ n: 'Downlaod',
+						k: K.sl,
+						i: 'iconfiledownload',
+						c: function () {
+							tahmeel(args.uid+'.jpg', k.preview.src, false, false);
+						},
+					});
+				}
+			}
+		}
+	} });
+
 })();
+

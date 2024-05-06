@@ -17,17 +17,17 @@
  * 			this too triggers intercessions
  * 			it doesn't pile up with other requests
  * */
-// TODO make a frontend UI for this module; network.client.js
 var Network, network, sessions = sessions || 0;
 ;(function(){
 	'use strict';
 	var 
 //		address = 'http://localhost:'+Config.port+'/',
 		address = location.protocol + '//' + location.host + location.pathname,
-		buildexpired = false, offlinetime,
-		networkkeys, debug_network = 1;
-	
-	var error_log = function (v) { $.log( v ); };
+		buildexpired = false, offlinetime, module_name = 'network', module_title = 'Network',
+		networkkeys, debug_network = 0;
+	// TODO make a better address with ROOT support
+
+	var error_log = function (v) { $.log.w( v ); };
 	var has_disconnected = function (res) {
 		// only mark online when really getting an ok result from server
 		if (!res.err)
@@ -187,21 +187,29 @@ var Network, network, sessions = sessions || 0;
 		if ($.fetchchannels.broadcast
 		&&	$.fetchchannels.broadcast.active) return;
 
+		if (broadcast_state == 2) { // recovered from error
+			broadcast_state = 1;
+		}
+
 		payload = payload || {};
 
 		payload = Object.assign(payload, {
-			broadcast	:	1				, // synced before
+			broadcast		:	1			, // synced before
 			e$				:	BUILDNUMBER	, // build number
 		});
 
 		if (intercession) payload = Object.assign(payload, intercession);
 
-		error_log(payload);
+		update_broadcast_internals();
+
+		$.log.w( module_title, 'Broadcast', payload );
 		$.fetch( address, 'json='+enc( JSON.stringify(payload) ), 'broadcast', progressfn, 3*60*1000 )
 		.then(function (res) {
 			if (res.err) {
 				// don't mark offline, this channel is designed to timeout! :)
-				broadcast_delay = 4 * 15 * 1000; // 60s
+				broadcast_delay = 1 * 15 * 1000; // 15s
+				broadcast_state = 2; // error
+				update_broadcast_internals();
 			} else {
 				has_disconnected(res);
 				var response = {};
@@ -229,6 +237,7 @@ var Network, network, sessions = sessions || 0;
 	var broadcast_start = function () {
 		$.taxeer('broadcast_start', function () {
 			broadcast_state = 1;
+			update_broadcast_internals();
 			intercession_process(function (objects) {
 				broadcast_process({}, objects);
 			}, 'broadcast');
@@ -237,7 +246,18 @@ var Network, network, sessions = sessions || 0;
 	var broadcast_finish = function () {
 		broadcast_state = 0;
 		$.fetchcancel('broadcast');
+		update_broadcast_internals();
 	};
+	var update_broadcast_internals = function () { if (Network.set_internal) {
+		var state = 'Asleep';
+		if (broadcast_state) {
+			if (broadcast_state == 2)
+				state = 'Error, will try again in '+( broadcast_delay/1000 )+'s...';
+			else
+				state = 'Listening after a delay of '+( broadcast_delay/1000 )+'s...';
+		}
+		Network.set_internal({ uid: 'broadcast', name: 'Broadcast', state });
+	} };
 
 	var pending_gets = {}; // pending requests
 	var fulfill_gets = function (payload, intercession) { // flush pending get requests
@@ -263,10 +283,11 @@ var Network, network, sessions = sessions || 0;
 			payload.get[name][need] = value;
 		}
 		
-		error_log(payload);
+		$.log.w( module_title, 'Get', payload );
 		$.fetch( address, 'json='+enc( JSON.stringify(payload) ), 'get', progressfn, 30*1000 )
 		.then(function (res) {
 			has_disconnected(res);
+			update_get_internals();
 			
 			var response = {};
 			try {
@@ -283,6 +304,14 @@ var Network, network, sessions = sessions || 0;
 
 		pending_gets = {};
 	};
+	var update_get_internals = function () { if (Network.set_internal) {
+		var state = 'Done';
+		var total = Object.keys(pending_gets).length;
+		if (total) {
+			state = total+' pending...';
+		}
+		Network.set_internal({ uid: 'get', name: 'Get', state });
+	} };
 	
 	// TODO make a way to group unique but same requests into a single request and resolve all promises at once
 	var unique_fetches = [];
@@ -310,6 +339,7 @@ var Network, network, sessions = sessions || 0;
 			on_error = error;
 		});
 		
+		$.log.w( module_title, 'Fetch', payload.get );
 		var res = await fetch(address, {
 			method: 'POST',
 			body: new URLSearchParams( { json: JSON.stringify(payload) } ),
@@ -375,6 +405,8 @@ var Network, network, sessions = sessions || 0;
 
 	var synced = {};
 	var sync_process = function (payload, intercession) {
+		update_sync_internals();
+		
 		if (Object.keys(synced).length === 0) return;
 	
 		payload = payload || {};
@@ -398,11 +430,15 @@ var Network, network, sessions = sessions || 0;
 		}
 
 		Network.is_syncing = 1;
+		
+		update_sync_internals();
+
 		error_log(payload);
 		$.fetch( address, 'json='+enc( JSON.stringify(payload) ), 'sync', progressfn, 30*1000 )
 		.then(function (res) {
 			Network.is_syncing = 0;
 			has_disconnected(res);
+			update_sync_internals();
 			
 			var response = {};
 			try {
@@ -419,6 +455,19 @@ var Network, network, sessions = sessions || 0;
 
 		synced = {};
 	};
+	var update_sync_internals = function () { if (Network.set_internal) {
+		var state = 'Done';
+		var total = Object.keys(synced).length;
+		if (total) {
+			if (Network.is_syncing) {
+				state = 'Syncing... ';
+			} else {
+				state = '';
+			}
+			state += total+' modules have objects pending...';
+		}
+		Network.set_internal({ uid: 'sync', name: 'Sync', state });
+	} };
 
 	var upload = function (name, need, value, payload_raw, intercession) {
 		var payload = {};
@@ -448,6 +497,9 @@ var Network, network, sessions = sessions || 0;
 
 	Network = network = {
 		address: address,
+		make_address: function (relative_path) {
+			return location.protocol + '//' + location.host + '/' + relative_path;
+		},
 		unique_fetches: unique_fetches,
 		channels: {
 			get: {},
@@ -499,6 +551,8 @@ var Network, network, sessions = sessions || 0;
 			if (debug_network) $.log.w('Network.get', name, need);
 			
 			pending_gets[ name+'.'+need ] = [name, need, value];
+			
+			update_get_internals();
 			
 			$.taxeer('networkfulfill', function () {
 				intercession_process(function (objects) {
@@ -564,6 +618,13 @@ var Network, network, sessions = sessions || 0;
 		},
 	};
 	
+	Network.update_internals = function () {
+		update_get_internals();
+		update_sync_internals();
+		update_broadcast_internals();
+//		update_fetch_internals();
+	};
+	
 	var until_first_sync_promises = [];
 	Network.until_first_sync = async function (name, need) {
 		if (debug_network) $.log.w( 'Network until first sync', name||'', need||'' );
@@ -595,6 +656,13 @@ var Network, network, sessions = sessions || 0;
 	});
 	Hooks.set('ready', function () {
 		networkkeys = templates.keys(networkui);
+		
+		$.taxeer(module_name, function () {
+			update_get_internals();
+			update_sync_internals();
+			update_broadcast_internals();
+//			update_fetch_internals();
+		});
 		
 		Network.intercept('network', 'time', function (finish, channel) {
 			finish( Preferences.get('@', 1) );

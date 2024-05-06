@@ -36,3 +36,23 @@
 //	width			min-content
 	margin			0 auto
 //	pointer-events	none
+
+.profile_photo .photo
+	width				60px
+	height				60px
+	border-radius		8px
+	margin				4px 0 0 4px
+	background-color	@secondaryt
+	overflow			hidden
+.profile_photo .photo
+	top					5px
+	left				2px
+	z-index				50
+	text-align			center
+	font-size			140%
+	min-width			60px
+.profile_photo .photo .short_name
+	width				100%
+	text-align			center
+	align-self			center
+	line-height			.8

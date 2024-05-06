@@ -3,7 +3,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	Offline = Offline || 0,
 	pager = pager || 0,
 	Pager = Pager || 0,
-	checkbox = checkbox || 0,
+	Checkbox = Checkbox || 0,
 	preferences = preferences || 0,
 	translate = translate || 0,
 	// deprecate rakkazawwal
@@ -464,10 +464,15 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 			
 			$.taxeer('webapp-on-scroll', function () {
 				on_scroll();
-			});
+			}, 10);
 		},
 	};
 
+	var tall_screen_support = 1;
+	Webapp.tall_screen = function (yes) {
+		tall_screen_support = yes;
+		on_scroll();
+	};
 	Webapp.get_tall_screen_height = function () {
 		return tallscreenpadding.offsetHeight;
 	};
@@ -476,19 +481,29 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	};
 	var previous_tall_height;
 	function on_scroll() {
+		if (!tall_screen_support) {
+			ixtaf(tallheaderui, tallscreenpadding);
+			izhar(headerui);
+			tallheaderui.style.opacity = '';
+			headerui.style.opacity = '';
+			return;
+		}
+		
 		var height = tallscreenpadding.offsetHeight * .75;
 		var percent = doc.scrollingElement.scrollTop / height;
+		var force_hide = 0;
 
 		if (previous_tall_height != innerheight()) {
-			if (innerheight() < 600)
-				percent = 1;
-			else
+			if (innerheight() < 600) {
 				percent = 0;
+				force_hide = 1;
+			} else
+				percent = doc.scrollingElement.scrollTop / height;
 		}
 
 		previous_tall_height = innerheight();
 		
-		if (percent > 1 || Webapp.is_minimal()) {
+		if (percent > 1 || Webapp.is_minimal() || force_hide) {
 			percent = 1;
 			ixtaf(tallheaderui);
 		} else {
@@ -653,6 +668,24 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 		return false;
 	});
 	// NOTE: ondrop events WILL NOT WORK if you do not "preventDefault" in the ondragover event!
+	listener('paste', function (e) {
+		var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+//		$.log('paste', JSON.stringify(items)); // might give you mime types
+		for (var index in items) {
+			var item = items[index];
+			if (item.kind === 'file') {
+				var blob = item.getAsFile();
+				if (!Uploader.busy()) {
+					Uploader.pick(blob);
+				}
+//				var reader = new FileReader();
+//				reader.onload = function (event) {
+//					$.log('paste item', event.target.result); // data url!
+//				}; 
+//				reader.readAsDataURL(blob);
+			}
+		}
+	});
 	listener('drop', function (e) {
 		popdata(bod, 'tahweem');
 		preventdefault(e);

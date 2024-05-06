@@ -1,24 +1,35 @@
 //+ 
 var sound = sound || {};
 var Sound = Sound || sound;
-var sawthafr, audio_graph;
+var sawthafr, audio_graph, debug_sound_graph = 0;
 ;(function(){
 	'use strict';
 	
 	// Set up audio context
-	var audioContext;
+	var audioContext, module_title = 'Sound Graph';
 
 	audio_graph = sawthafr = {
-		axavmuddah: function (url, cb) {
-			fetch(url).then(function(a) {
-				a.body.getReader().read().then(function (v) {
-					var rawsize = v.value.buffer.byteLength;
-					if (!audioContext) audioContext = new AudioContext();
-					audioContext.decodeAudioData(v.value.buffer).then(function (audioBuffer) {
-						if (isfun(cb)) cb(audioBuffer.duration, rawsize);
-					});
+		get_duration: async function (url, cb) {
+			if (debug_sound_graph) $.log.w(module_title, 'get_duration', url);
+
+			var resolve;
+			var promise = new Promise(function (r) {
+				resolve = r;
+			});
+
+			var a = await fetch(url);
+			var v = await a.body.getReader().read();
+			var rawsize = v.value.buffer.byteLength;
+			if (!audioContext) audioContext = new AudioContext();
+			audioContext.decodeAudioData(v.value.buffer).then(function (audioBuffer) {
+				if (isfun(cb)) cb(audioBuffer.duration, rawsize);
+				resolve({
+					duration: audioBuffer.duration,
+					size: rawsize,
 				});
 			});
+
+			return promise;
 		},
 		/**
 		 * Retrieves audio from an external source, the initializes the drawing function
@@ -170,6 +181,8 @@ var sawthafr, audio_graph;
 			ctx.stroke();
 		},
 	};
+	
+	sawthafr.axavmuddah = sawthafr.get_duration;
 	
 	sound.graph = sawthafr;
 })();

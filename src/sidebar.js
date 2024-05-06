@@ -96,7 +96,7 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 	});
 	Hooks.set('ready', function () {
 		sidebar_list = List( templates.keys(sidebarui).list ).idprefix('sdbr')
-						.listitem('sidebar_item');
+						.listitem('sidebar_item').title('Sidebar');
 
 		sidebar_list.after_set = function (o, c, k) {
 			if (Templates.has_property(o, 'count'))

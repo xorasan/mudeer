@@ -259,4 +259,7 @@ Weld = {
 		return weld;
 	},
 };
+
+Weld.decode_config = Weld.parse_config;
+
 })();

@@ -16,9 +16,18 @@ var Backstack, backstack;
 		var level = 0;
 		if (s.dialog) level = 3;
 		else if (s.sheet) level = 2;
-		else if (s.view) level = 1;
+		else if (s.view) {
+			var view_name = s.view.name;
+			var view_uid = s.view.uid;
+
+			if (Webapp.is_home_view(view_name) && !view_uid) {
+				level = 0;
+			} else {
+				level = 1;
+			}
+		}
 		else level = 0;
-		backstack.darajah = level;
+		Backstack.darajah = level;
 		return level;
 	},
 	savefocus = function () { // save focus on each level, restore automatically
@@ -41,7 +50,7 @@ var Backstack, backstack;
 	 * the backstack event is fired on all changes
 	 * */
 	Backstack = backstack = {
-		storage: storage,
+		storage,
 		darajah: 0,
 		states: {
 			dialog	:	0, // searches, dialogs, menus
@@ -49,6 +58,7 @@ var Backstack, backstack;
 			view	:	0, // lists, editors, renderuis, ...
 			main	:	0, // main, ...
 		},
+		do_level,
 		set: function (key, value) {
 			storage[backstack.darajah][key] = value;
 		},

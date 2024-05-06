@@ -7,6 +7,10 @@ var Sessions, sessions,
 	tbl_wqti = 'temporary',
 	hashalgo	= new require('./deps/easy-pbkdf2').EasyPbkdf2();
 
+;(function(){
+
+var module_name = 'sessions';
+	
 Sessions = sessions = {
 	usernameisvalid: function (username) {
 		var result = {
@@ -26,14 +30,6 @@ Sessions = sessions = {
 		}
 		return result;
 	},
-	usernameexists: function (username, cb) {
-		if (!isstr(username)) { $.log.e(' usernameexists expects username as string '); return; }
-		if (!isfun(cb)) { $.log.e(' usernameexists needs a callback '); return; }
-					
-		MongoDB.query(response.extra.database, tbl_hsbt, { name: username }, function (rows) {
-			cb((rows && rows.length === 1));
-		});
-	},
 	passwordisvalid: function (password) {
 		var result = {
 			code: false
@@ -51,21 +47,26 @@ Sessions = sessions = {
 		}
 		return result;
 	},
-	hashpassword: function (password, callback) {
-		if (typeof callback === 'function') {
-			hashalgo.hash(password, function (err, hash, salt) {
-				if (err) throw err;
-				
-				callback({
-					err: err,
-					salt: salt,
-					hash: hash
-				});
-			});
-		}
+	hash_password: async function (password, callback) {
+		var resolve, error;
+		var promise = new Promise(function (r, e) {
+			resolve = r;
+			error = e;
+		});
+		hashalgo.hash(password, function (err, hash, salt) {
+			if (err) {
+				error(err);
+//				throw err;
+			}
+			
+			resolve({ err, salt, hash });
+			if (isfun(callback)) callback({ err, salt, hash });
+		});
+		return promise;
 	},
 	verifypassword: function (salt, hash, password, cb) {
-		if (typeof cb !== 'function') return;
+		if (!isfun(cb)) return;
+		if (!isstr(salt) || !isstr(hash)) { cb(); return; }
 		
 		hashalgo.verify(salt, hash, password, function (err, matched) {
 			if (err) throw err;
@@ -133,6 +134,12 @@ Sessions = sessions = {
 		});
 	},
 
+	remove_all_for_account: async function (account) {
+		var outcome = await MongoDB.purge(Config.database.name, module_name, { account });
+		
+		return outcome.count;
+	},
+	
 	sendcaptcha: function (response) {
 		captcha.get(response.extra.boxdatabase, function (svg) {
 			response.need('captcha')
@@ -182,6 +189,7 @@ Sessions = sessions = {
 			talab		: accountrow.talab			, // wants (TODO its own table)
 			phone		: accountrow.phone			, // haatif
 			status		: accountrow.status			, // haalah
+			owner		: accountrow.owner			, // maalik
 			connected	: accountrow.connected		, // ittisaal
 			joined		: accountrow.joined			, // post invitation (indimaam)
 			latitude	: accountrow.latitude		, // xattil3ard
@@ -264,9 +272,10 @@ Sessions = sessions = {
 		clearTimeout(sessions._schedpopto);
 	}
 };
+Sessions.hashpassword = Sessions.hash_password; // old compat, TODO deprecate
 
 // key attached, verify & add account info
-Network.favor(PRIMARY).intercept('sessions', 'key', function (response) {
+Network.favor(PRIMARY).intercept(module_name, 'key', function (response) {
 	Sessions.get_session_account(response.value, function (result) {
 		if (result) {
 			response.intercept(result.session.uid);
@@ -279,12 +288,12 @@ Network.favor(PRIMARY).intercept('sessions', 'key', function (response) {
 	});
 });
 // requested captcha
-Network.get('sessions', 'captcha', function (response) {
+Network.get(module_name, 'captcha', function (response) {
 	$.log( 'sessions', 'captcha' );
 	sessions.sendcaptcha(response);
 });
 // requested sign in duxool entry sign up
-Network.get('sessions', 'sign_in', function (response) {
+Network.get(module_name, 'sign_in', function (response) {
 	var creds = response.value;
 	var boxdatabase = response.extra.boxdatabase;
 	var database = response.extra.database;
@@ -325,8 +334,9 @@ Network.get('sessions', 'sign_in', function (response) {
 										// tie newly created account to a new session
 										accountrow = outcome.rows[0];
 										
-										sessions.set(database, accountrow, response, function () {
+										Sessions.set(database, accountrow, response, function () {
 											response.finish();
+											Polling.finish(); // end all polls
 										});
 									});
 								});
@@ -387,11 +397,11 @@ Network.get('sessions', 'sign_in', function (response) {
 	} else response.get(false).finish();
 });
 // requested sign out xurooj
-Network.get('sessions', 'sign_out', function (response) {
+Network.get(module_name, 'sign_out', function (response) {
 	response.get(true).finish();
 });
 // username exists ? mowjood
-Network.get('sessions', 'username_exists', function (response) {
+Network.get(module_name, 'username_exists', function (response) {
 	var creds = response.value,
 		database = response.extra.database;
 
@@ -416,7 +426,7 @@ Network.get('sessions', 'username_exists', function (response) {
 		}
 	} else response.finish();
 });
-Network.get('sessions', 'active', function (response) {
+Network.get(module_name, 'active', function (response) {
 	var database = response.extra.database;
 	MongoDB.query(database, tbl_adwr, {}, function (result) {
 		var names = [];
@@ -449,4 +459,9 @@ Web.add(function (done, queue, extra) {
 	else
 		done(queue, extra);
 });
+
+
+
+})();
+
 

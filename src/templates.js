@@ -31,7 +31,7 @@ var Templates, templates, namaavij;
 			}
 			return false;
 		},
-		set: function (clone, o, template) {
+		set: function (clone, o, template) { // template is optional
 			var keys = templates.keys(clone);
 			o = o || {};
 			if (o.hidden) clone.hidden = 1;
@@ -52,11 +52,8 @@ var Templates, templates, namaavij;
 
 			if (o.onclick) clone.onclick = o.onclick;
 			for (var i in keys) {
-				/* TODO document why this is so
-				 * this doesn't let you specify i18n in templates :(
-				 * cleanup previous mess from i18n
-				 * */
-				if (isundef(o[i+'$t'])) {
+				// $t = translate, specify an empty string to remove previous translation
+				if (o[i+'$t'] === '') { // 
 					if (keys[i].dataset.i18n) {
 						innertext(keys[i], '');
 						delete keys[i].dataset.i18n;
@@ -81,6 +78,9 @@ var Templates, templates, namaavij;
 					} else
 					if (o[i] == 'izhar') {
 						keys[i].hidden = 0;
+					} else
+					if (isfun(keys[i].set_value)) {
+						keys[i].set_value(o[i]);
 					} else
 					if (keys[i] instanceof HTMLInputElement) {
 						keys[i].value = o[i];

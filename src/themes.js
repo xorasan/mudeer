@@ -14,9 +14,9 @@ var Themes, themes;
 			textxd:		'#777',
 			textxdt:	'#77777755',
 
-			primaryl:	'#050505',
+			primaryl:	'#0e0e0e',
 			primary:	'black',
-			primaryd:	'black',
+			primaryd:	'#070707',
 			primaryt:	'rgba(0,0,0,0.8)', // perfect transparent level
 			primaryxt:	'rgba(0,0,0,0.4)',
 
@@ -41,7 +41,9 @@ var Themes, themes;
 			greend:		'#0b0',
 			green:		'#0c0',
 			greenl:		'#0d0',
+			yellowd:	'#b90',
 			yellow:		'#ca0',
+			yellowl:	'#db0',
 			redl:		'#f99',
 			red:		'#c00',
 			redd:		'#900',
@@ -57,9 +59,9 @@ var Themes, themes;
 			textxd:		'#888',
 			textxdt:	'#88888855',
 
-			primaryl:	'#e6e6e6',
+			primaryl:	'#e9e9e9',
 			primary:	'#fff',
-			primaryd:	'#d6d6d6',
+			primaryd:	'#f3f3f3',
 			primaryt:	'rgba(255,255,255,0.8)', // perfect transparent level
 			primaryxt:	'rgba(255,255,255,0.4)',
 
@@ -84,7 +86,9 @@ var Themes, themes;
 			greend:		'#0b0',
 			green:		'#0c0',
 			greenl:		'#0d0',
+			yellowd:	'#b90',
 			yellow:		'#ca0',
+			yellowl:	'#db0',
 			redl:		'#900',
 			red:		'#c00',
 			redd:		'#faa',
@@ -296,13 +300,13 @@ var Themes, themes;
 			const darkenedR = Math.round(r / factor);
 			const darkenedG = Math.round(g / factor);
 			const darkenedB = Math.round(b / factor);
-	
+
 			// Convert back to hex
 			const darkenedHex = `#${darkenedR.toString(16).padStart(2, '0')}${darkenedG.toString(16).padStart(2, '0')}${darkenedB.toString(16).padStart(2, '0')}`;
 	
 			return darkenedHex;
 		}
-	
+
 		// Return original color if below threshold
 		return hexColor;
 	}

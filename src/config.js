@@ -9,6 +9,10 @@ var Config = {};
 		// TODO make error specific and more helpful
 		$.log(' '+process.cwd()+' ');
 		$.log(' config.w not found, try mudeer-create ');
-		return;
 	}
+	Config = Config || {};
+	if (process.env.DEWAAN_MONGO_DB) {
+		Config.database.name = process.env.DEWAAN_MONGO_DB;
+	}
+	Cli.echo(' ^bright^Database~~ '+Config.database.name);
 })();

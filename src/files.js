@@ -254,16 +254,28 @@ var Files;
 			},
 			folder: function (path, cb, rf) {
 				if (typeof cb === 'function') {
-					Files.fs.rmdir(path, {
+					Files.fs.rm(path, {
 						recursive: !!rf,
 					}, cb);
 				} else {
-					Files.fs.rmdirSync(path, {
+					Files.fs.rmSync(path, {
 						recursive: !!rf,
 					}, cb);
 				}
 				return true;
 			}
+		},
+		remove_recursive: function (path, cb) {
+			if (typeof cb === 'function') {
+				Files.fs.rm(path, {
+					recursive: true,
+				}, cb);
+			} else {
+				Files.fs.rmSync(path, {
+					recursive: true,
+				}, cb);
+			}
+			return true;
 		}
 	};
 	Files.init();

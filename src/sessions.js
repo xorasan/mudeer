@@ -5,9 +5,9 @@ var Sessions, sessions,
 	PASSWORDMAX = 2048;
 ;(function(){
 	'use strict';
-	// TODO fix keyboard shows up and softkeys bottom row gets hidden
+	var Sidebar = get_global_object().Sidebar;
 	var cache = {}, lastsearch, mfateeh, usnmavlble = {}, debug_sessions = 1;
-	var go_forward;
+	var go_forward, login_state = {}, join_state = {};
 	function setup_fields(mfateeh) {
 		mfateeh.username.uponenter = function () {
 			focusnext(mfateeh.username);
@@ -30,23 +30,21 @@ var Sessions, sessions,
 		su.answer.value = '';
 		si.answer.value = '';
 	}
-	var jaddadkeys = function (parent) {
-		var current = parseint(parent.dataset.currentqadam || 0);
-		if (current === 0) {
-			Softkeys.set(K.sr, function () {
+	function update_softkeys() {
+		Softkeys.add({ k: K.sr,
+			c: function () {
 				Hooks.run('back');
-			}, 0, 'iconarrowback');
-		} else {
-			Softkeys.set(K.sr, function () {
-				Sessions.shimaal(parent);
+			},
+			i: 'iconarrowback'
+		});
+		Softkeys.add({ n: 'Done',
+			k: K.sl,
+			c: function () {
+				Sessions.go_forward(parent);
 				return 1;
-			}, 0, 'iconarrowback');
-		}
-		go_forward = function () {
-			Sessions.yameen(parent);
-			return 1;
-		}
-		Softkeys.set(K.sl, go_forward, 0, 'icondone');
+			},
+			i: 'icondone'
+		});
 	};
 	var setcaptcha = function () {
 		if (cache && mfateeh) {
@@ -54,81 +52,71 @@ var Sessions, sessions,
 			innerhtml(mfateeh.captcha, cache.captcha);
 		}
 	};
-	var smartfocus = function (parent) {
-		var current = parseint(parent.dataset.currentqadam || 0);
-		if (mfateeh) {
-			var current_view = View.get();
-			if (current_view === 'signup') {
-				if (current === 0) {
-					mfateeh.username.focus();
-				}
-				if (current === 1) {
-					mfateeh.password.focus();
-				}
-				if (current === 2) {
-					mfateeh.answer.focus();
-				}
-			}
-			if (current_view === 'signin') {
-				if (current === 0) {
-					mfateeh.username.focus();
-				}
-				if (current === 1) {
-					mfateeh.answer.focus();
-				}
+	var smartfocus = function (parent) { if (mfateeh) {
+		var current_view = View.get();
+		if (current_view === 'signup') {
+			if (!join_state.username) {
+				mfateeh.username.focus();
+			} else if (!join_state.password) {
+				mfateeh.password.focus();
+			} else if (!join_state.answer) {
+				mfateeh.answer.focus();
 			}
 		}
-	};
+		if (current_view === 'signin') {
+			if (!login_state.username) {
+				mfateeh.username.focus();
+			} else if (!login_state.password) {
+				mfateeh.password.focus();
+			} else if (!login_state.answer) {
+				mfateeh.answer.focus();
+			}
+		}
+	} };
 	var usernamevalid = function (user) {
 		if (user.length >= USERNAMEMIN && user.length <= USERNAMEMAX) {
 			innertext(mfateeh.aliasstatus, '');
+			izhar(mfateeh.usernamewillbe);
 			return 1;
 		} else {
 			if (user.length === 0) innertext(mfateeh.aliasstatus, '');
 			else innertext(mfateeh.aliasstatus, xlate(
 				user.length < USERNAMEMIN ? 'usernameunder' : 'usernameover'
 			));
+			ixtaf(mfateeh.usernamewillbe);
 			return 0;
 		}
 	};
-	var usernamexataa = function (xataa, username, proceed) {
-		if ( View.is_active('signup') ) {
-			var m = View.mfateeh('signup');
-			if (username) {
-				innertext(m.usernamerefined, username);
-			}
-			innertext(m.aliasstatus, xlate(xataa));
-			if (proceed) {
-				m.aqdaam.dataset.currentqadam =
-								xataa === 'usernameavailable' ? 1 : 0;
-				Sessions.jaddad(m.aqdaam);
-			}
-			smartfocus(m.aqdaam);
+	var usernamexataa = function (xataa, username, proceed) { if ( View.is_active('signup') ) {
+		var m = View.dom_keys('signup');
+		izhar(mfateeh.usernamewillbe);
+		innertext(m.usernamerefined, username ? username : '...');
+		innertext(m.aliasstatus, xlate(xataa));
+		$.log( xataa, proceed );
+		join_state.username = xataa == 'usernameavailable' ? 1 : 0;
+		if (proceed) {
+			update_softkeys();
 		}
-	};
-	var passwordxataa = function (xataa) {
+	} };
+	var passwordxataa = function (xataa) { if ( View.is_active('signin') ) {
+		var m = View.dom_keys('signin');
+		m.aqdaam.dataset.currentqadam = 0;
+		update_softkeys();
+		m.password.focus();
+		innertext(m.passstatus, xlate(xataa))
+	} };
+	var answerxataa = function (xataa) { if ( View.is_active(['signin', 'signup']) ) {
+		var m = View.dom_keys( View.get() );
+		update_softkeys();
+		Sessions.getcaptcha();
+		m.answer.focus();
+		innertext(m.answerstatus, xlate(xataa));
 		if ( View.is_active('signin') ) {
-			var m = View.dom_keys('signin');
-			m.aqdaam.dataset.currentqadam = 0;
-			Sessions.jaddad( m.aqdaam );
-			m.password.focus();
-			innertext(m.passstatus, xlate(xataa))
+			login_state.answer = xataa == 'answerwrong' ? 0 : 1;
+		} else {
+			join_state.answer = xataa == 'answerwrong' ? 0 : 1;
 		}
-	};
-	var answerxataa = function (xataa) {
-		if ( View.is_active(['signin', 'signup']) ) {
-			var m = View.dom_keys( View.get() );
-			Sessions.jaddad( m.aqdaam );
-			Sessions.getcaptcha();
-			m.answer.focus();
-			innertext(m.answerstatus, xlate(xataa));
-			if ( View.is_active('signin') ) {
-				m.aqdaam.dataset.currentqadam = 1;
-			} else {
-				m.aqdaam.dataset.currentqadam = 2;
-			}
-		}
-	};
+	} };
 	function password_visibility(yes) {
 		softkeys.add({ n: yes ? 'Hide Password' : 'Show Password',
 			shift: 1,
@@ -141,80 +129,50 @@ var Sessions, sessions,
 			}
 		});
 	}
-	function update_sidebar() { if (get_global_object().Sidebar) {
+	function update_sidebar() { if (Sidebar) {
 		if (Sessions.signedin()) {
-			Sidebar.remove('signin');
-			Sidebar.remove('signup');
-			Sidebar.set({
-				uid: 'signout',
-				title: xlate('signout'),
-				icon: 'iconexittoapp',
-				keep_open: 1,
-				callback: function () {
-					Hooks.run('dialog', {
-						m: xlate('signoutconfirm'),
-						c: function () {
-							Sessions.signout();
-						},
-					});
-				}
-			});
+			Sidebar.hide_item('signin' );
+			Sidebar.hide_item('signup' );
+			Sidebar.show_item('signout');
 		} else {
-			Sidebar.remove('signout');
-			Sidebar.set({
-				uid: 'signin',
-				title: xlate('signin'),
-				icon: 'iconperson',
-			});
-			Sidebar.set({
-				uid: 'signup',
-				title: xlate('signup'),
-				icon: 'iconpersonadd',
-			});
+			Sidebar.show_item('signin' );
+			Sidebar.show_item('signup' );
+			Sidebar.hide_item('signout');
 		}
 	} }
 	
 	Sessions = sessions = {
 		jaddad: function (parent) {
-			jaddadkeys(parent);
-			var current = parseint(parent.dataset.currentqadam || 0);
-			var cn = parent.children, element = false;
-			for (var i = 0; i < cn.length; ++i) {
-				var e = cn[i];
-				if (i === current) {
-					element = e;
-					e.hidden = 0
-				} else {
-					e.hidden = 1;
-				}
-			}
+			update_softkeys();
 			return element;
 		},
-		yameen: function (parent) {
-			if (debug_sessions) $.log.w( 'Sessions yameen' );
-			var current = parseint(parent.dataset.currentqadam || 0), yes;
+		go_forward: function (parent) {
+			if (debug_sessions) $.log.w( 'Sessions go_forward' );
 			if (mfateeh) {
 				var user = generate_alias(mfateeh.username.value);
 				var pass = mfateeh.password.value.trim();
 				var answer = mfateeh.answer.value;
-				var hash = mfateeh.hash.value;
+				var hash = mfateeh.hash.value, yes;
 				var current_view = View.get()
 				if (current_view === 'signup') {
 					yes = 1;
-					if (current == 0) {
-						if (usernamevalid(user)) sessions.usernameexists(user);
+					if (!join_state.username) {
+						if (usernamevalid(user)) Sessions.usernameexists(user);
 						yes = 0;
 					}
-					if (current == 1) {
-						if (pass.length >= PASSWORDMIN && pass.length <= PASSWORDMAX)
+					if (!join_state.password) {
+						if (pass.length >= PASSWORDMIN && pass.length <= PASSWORDMAX) {
 							innertext(mfateeh.passstatus, '');
-						else
+							join_state.password = 1;
+						} else {
 							innertext(mfateeh.passstatus, xlate(
 								pass.length < PASSWORDMIN ? 'passwordunder' : 'passwordover'
-							)),
+							));
+							join_state.password = 0;
 							yes = 0;
+						}
 					}
-					if (current == 2) {
+					if (!join_state.answer) {
 						if (answer.length)
 							innertext(mfateeh.answerstatus, '');
 						else
@@ -222,53 +180,53 @@ var Sessions, sessions,
 							yes = 0;
 
 						if (yes) {
-							sessions.login(user, pass, hash, answer, 1);
+							Sessions.login(user, pass, hash, answer, 1);
 						}
 					}
 				}
 				if (current_view === 'signin') {
 					yes = 1;
-					if (current == 0) {
-						if (user.length >= USERNAMEMIN && user.length <= USERNAMEMAX)
-							innertext(mfateeh.aliasstatus, '');
-						else
-							innertext(mfateeh.aliasstatus, xlate(
-								user.length < USERNAMEMIN ? 'usernameunder' : 'usernameover'
-							)),
-							yes = 0;
-
-						if (pass.length >= PASSWORDMIN && pass.length <= PASSWORDMAX)
-							innertext(mfateeh.passstatus, '');
-						else
-							innertext(mfateeh.passstatus, xlate(
-								pass.length < PASSWORDMIN ? 'passwordunder' : 'passwordover'
-							)),
-							yes = 0;
+					if (user.length >= USERNAMEMIN && user.length <= USERNAMEMAX) {
+						innertext(mfateeh.aliasstatus, '');
+						login_state.username = 1;
+					} else {
+						innertext(mfateeh.aliasstatus, xlate(
+							user.length < USERNAMEMIN ? 'usernameunder' : 'usernameover'
+						));
+						login_state.username = 0;
+						yes = 0;
 					}
-					if (current == 1) {
-						if (answer.length)
-							innertext(mfateeh.answerstatus, '');
-						else
-							innertext(mfateeh.answerstatus, xlate('answerblank')),
-							yes = 0;
-
-						if (yes) {
-							sessions.login(user, pass, hash, answer);
-						}
+					if (pass.length >= PASSWORDMIN && pass.length <= PASSWORDMAX) {
+						innertext(mfateeh.passstatus, '');
+						login_state.password = 1;
+					} else {
+						innertext(mfateeh.passstatus, xlate(
+							pass.length < PASSWORDMIN ? 'passwordunder' : 'passwordover'
+						));
+						login_state.password = 0;
+						yes = 0;
+					}
+					if (answer.length) {
+						innertext(mfateeh.answerstatus, '');
+					} else {
+						innertext(mfateeh.answerstatus, xlate('answerblank')),
+						yes = 0;
+					}
+					if (yes) {
+						Sessions.login(user, pass, hash, answer);
 					}
 				}
 			}
-			if (yes && current < parent.childElementCount-1) {
-				parent.dataset.currentqadam = ++current;
-				sessions.jaddad(parent);
-				smartfocus(parent);
+			if (yes) {
+				update_softkeys();
 			}
+			smartfocus(parent);
 		},
 		shimaal: function (parent) {
 			var current = parseint(parent.dataset.currentqadam || 0);
 			if (current > 0) {
 				parent.dataset.currentqadam = --current;
-				Sessions.jaddad(parent);
+				update_softkeys();
 				smartfocus(parent);
 			}
 		},
@@ -321,51 +279,6 @@ var Sessions, sessions,
 			
 			appui.lasturi = uri;
 		},
-		/*
-		 * this updates the UI, hides or shows elements etc
-		 * */
-		setsession: function () {
-			var statuschanged = false;
-			
-			var key			= preferences.get(1);
-			var uid			= '';
-			var username	= '';
-			var displayname	= '';
-			var permissions	= '';
-			
-			if (key && appui.signedin !== true)
-				statuschanged = true;
-			else if (!key && appui.signedin === false)
-				statuschanged = true;
-			
-			appui.signedin = false;
-			if (key) {
-				appui.signedin = true;
-
-				uid			= preferences.get(	2				);
-				username	= preferences.get(	20				);
-				displayname	= preferences.get(	21				);
-				permissions	= preferences.get(	11				);
-			}
-
-			if (appui.signedin) {
-				sessionformaway.hidden = false;
-				sessionform.hidden = true;
-				document.body.className = permissions;
-			} else {
-				sessionformaway.hidden = true;
-				sessionform.hidden = false;
-				document.body.className = '';
-				networki.stoplistening();
-			}
-			
-			if (statuschanged) {
-				dom.applysession( appui.signedin );
-				menu.setupdynamicparts();
-				appui.resetloginform();
-				Hooks.run('appuisessionchange', appui.signedin);
-			}
-		},
 		getcaptcha: function () {
 			var key = preferences.get(1);
 			if (!key) {
@@ -375,71 +288,6 @@ var Sessions, sessions,
 					Network.get('sessions', 'captcha', 1);
 				} else {
 					setcaptcha();
-				}
-			}
-		},
-		resetloginform: function () {
-			var keys = dom.getformkeys( sessionform );
-
-			keys.alias.value = '';
-			delete keys.alias.dataset.error;
-
-			keys.pass.value = '';
-			delete keys.pass.dataset.error;
-
-			keys.answer.value = '';
-			delete keys.answer.dataset.error;
-
-			keys.hash.value = '';
-
-			delete document.body.dataset.listitem;
-		},
-		setloginform: function (data) {
-			data = data || {};
-			var keys = dom.getformkeys( sessionform );
-			var captcha = keys.captcha;
-			var hash = keys.hash;
-			
-			if (data.key) {
-				preferences.set( 1				, data.key						); // miftaah
-				preferences.set( 81				, data.latitude					); // xattil3ard
-				preferences.set( 82				, data.longitude				); // xattiltool
-				preferences.set( 2				, data.uid						);
-				preferences.set( 20				, data.username					); // ism
-				preferences.set( 21				, data.displayname				); // ismmubeen
-				preferences.set( 22				, data.type						);
-				
-			} else {
-				if (data.username === 'taken') {
-					keys.aliasstatus.innerText = translate('aliasunique');
-					keys.alias.dataset.error = 1;
-				} else {
-					keys.aliasstatus.innerText = '';
-					delete keys.alias.dataset.error;
-				}
-
-				if (data.password === 'wrong') {
-					keys.passstatus.innerText = translate('passwrong');
-					keys.pass.dataset.error = 1;
-				} else {
-					keys.passstatus.innerText = '';
-					delete keys.pass.dataset.error;
-				}
-				
-				if (data.answer === 'wrong') {
-					keys.answerstatus.innerText = translate('answerwrong');
-					keys.answer.dataset.error = 1;
-				} else {
-					keys.answerstatus.innerText = '';
-					delete keys.answer.dataset.error;
-				}
-				
-				if (data.captcha) {
-					captcha.hidden		= false;
-					captcha.innerHTML	= data.captcha;
-					hash.value			= data.hash;
-				} else {
-					captcha.hidden = true;
 				}
 			}
 		},
@@ -461,9 +309,9 @@ var Sessions, sessions,
 				Webapp.status( xlate('loggedout') );
 				Hooks.run('sessionchange', 0);
 
-				if (Backstack.darajah)
-					Backstack.back();
-				else
+//				if (Backstack.darajah)
+//					Backstack.back();
+//				else
 					Hooks.run('view', 'main');
 			});
 		},
@@ -481,7 +329,7 @@ var Sessions, sessions,
 					};
 
 					if (!temp)
-						webapp.dimmer(LAYERTOPMOST, xlate('checkingusername'));
+						Webapp.dimmer(LAYERTOPMOST, xlate('checkingusername'));
 
 					Network.get('sessions', 'username_exists', payload);
 				}
@@ -508,8 +356,38 @@ var Sessions, sessions,
 		update_sidebar();
 	});
 	Hooks.set('ready', function (args) {
+		if (Sidebar) {
+			Sidebar.set({
+				uid: 'signout',
+				title: xlate('signout'),
+				icon: 'iconexittoapp',
+				keep_open: 1,
+				hidden: 1,
+				callback: function () {
+					Hooks.run('dialog', {
+						m: xlate('signoutconfirm'),
+						c: function () {
+							Sessions.signout();
+						},
+					});
+				}
+			});
+			Sidebar.set({
+				uid: 'signin',
+				title: xlate('signin'),
+				icon: 'iconperson',
+				hidden: 1,
+			});
+			Sidebar.set({
+				uid: 'signup',
+				title: xlate('signup'),
+				icon: 'iconpersonadd',
+				hidden: 1,
+			});
+		}
+		
 		Network.intercept('sessions', 'key', function (finish) {
-			finish(sessions.signedin() || undefined);
+			finish(Sessions.signedin() || undefined);
 		});
 		Network.response.intercept('sessions', 'key', function (response) {
 			if (response === false) {
@@ -560,9 +438,9 @@ var Sessions, sessions,
 					Webapp.status( xlate('loggedin') );
 					reset_all_forms();
 					
-					if (Backstack.darajah)
-						Backstack.back();
-					else
+//					if (Backstack.darajah)
+//						Backstack.back();
+//					else
 						Hooks.run('view', 'main');
 				}
 			}
@@ -589,7 +467,7 @@ var Sessions, sessions,
 
 		Hooks.run('sessionchange', !!Sessions.signedin());
 
-		var m = view.mfateeh('signup');
+		var m = View.dom_keys('signup');
 		var usnmfld = m.username;
 		usnmfld.onkeyup = function () {
 			var user = generate_alias(usnmfld.value);
@@ -597,9 +475,7 @@ var Sessions, sessions,
 				var cached = usnmavlble['_'+user];
 				if (cached === undefined)
 				$.taxeer('usernametempcheck', function () {
-					if (m.aqdaam.dataset.currentqadam == '0') {
-						sessions.usernameexists( user, 1 );
-					}
+					Sessions.usernameexists( user, 1 );
 				}, 1000);
 				else usernamexataa(cached, user);
 			}
@@ -615,7 +491,7 @@ var Sessions, sessions,
 				mfateeh.aqdaam.dataset.currentqadam = 0;
 
 			setup_fields(mfateeh);
-			sessions.jaddad( mfateeh.aqdaam );
+			update_softkeys();
 			sessions.getcaptcha();
 			smartfocus( mfateeh.aqdaam );
 			password_visibility( getattribute(mfateeh.password, 'type') == 'text' );
@@ -627,7 +503,7 @@ var Sessions, sessions,
 				mfateeh.aqdaam.dataset.currentqadam = 0;
 
 			setup_fields(mfateeh);
-			sessions.jaddad( mfateeh.aqdaam );
+			update_softkeys();
 			sessions.getcaptcha();
 			smartfocus( mfateeh.aqdaam );
 			password_visibility( getattribute(mfateeh.password, 'type') == 'text' );

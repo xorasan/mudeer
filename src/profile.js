@@ -2,7 +2,7 @@ var Profile, profile, ISMMUBEENMAX = 48, TAGMAX = 15, HIKAAYAHMAX = 480;
 var profilelist;
 ;(function(){
 	'use strict';
-
+	var Sidebar = get_global_object().Sidebar;
 	var open_keys, maxba = {}, module_name = 'profile';
 	/* WHY since most profile text props have almost the same dialog logic
 	 * title, message, max, ..multiline
@@ -33,7 +33,7 @@ var profilelist;
 			q: details[0] || item.uid
 		});
 	};
-	function update_sidebar() { if (get_global_object().Sidebar) {
+	function update_sidebar() { if (Sidebar) {
 		if (Sessions.signedin()) {
 			var name, displayname;
 			if (profilelist) {
@@ -46,8 +46,9 @@ var profilelist;
 				subtitle: name ? '@'+name : undefined,
 				icon: 'iconperson',
 			});
+			Sidebar.show_item(module_name);
 		} else {
-			Sidebar.remove(module_name);
+			Sidebar.hide_item(module_name);
 		}
 	} }
 	
@@ -60,6 +61,13 @@ var profilelist;
 
 			maxba[uid] = value;
 		},
+		clear: function () { if (profilelist) {
+			var arr = Object.keys(text_prop_logic);
+			arr.forEach(function (o) {
+				if (typeof o == 'string') o = { uid: o, tafseel: '' };
+				profilelist.set(o);
+			});
+		} },
 		update: function () {
 			var arr = maxba.profile || Object.keys(text_prop_logic);
 			arr.forEach(function (o) {
@@ -82,17 +90,25 @@ var profilelist;
 		keyvalue: 1
 	});
 	function set_sidebar_and_header(subtitle) {
-		if (view.is_active(module_name)) {
+		if (View.is_active(module_name)) {
 			if (get_global_object().Sidebar) Sidebar.choose(module_name);
-			webapp.header([[module_name], subtitle || '', 'iconperson']);
+			Webapp.header([[module_name], subtitle || '', 'iconperson']);
 		}
 	}
 	
 	Hooks.set('sessionchange', function (signedin) {
 		update_sidebar();
+		if (!signedin) {
+			maxba = {};
+			Profile.clear();
+		}
 	});
 	Hooks.set('ready', function () {
-		var dom_keys = view.dom_keys(module_name);
+		if (Sidebar) {
+			Sidebar.set({ uid: module_name, hidden: 1 });
+		}
+
+		var dom_keys = View.dom_keys(module_name);
 
 		profilelist = List( dom_keys.list ).idprefix(module_name).listitem('profilekatab');
 		

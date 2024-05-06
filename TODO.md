@@ -2,6 +2,7 @@
 This is an incomplete progress list of features & known bugs.  
 
 * [ ] List
+	* [x] Grid
 	* [ ] Recycle: Only render visible elements `recycle( yes )`
 		* [ ] Dynamic items
 		* [ ] Calculate scroll height on update
@@ -13,8 +14,9 @@ This is an incomplete progress list of features & known bugs.
 	* [ ] Add system theme detection
 		* [ ] [Samsung Internet dark mode](https://developer.samsung.com/internet/blog/en-us/2020/12/15/dark-mode-in-samsung-internet)
 	* [ ] [Notch support](https://css-tricks.com/the-notch-and-css/)
+		* [ ] figure out a way to support this without breaking on-screen kb
 	* [x] Tall & curved screens support
-	* [ ] Fix bug where selected theme and contrast isn't restored properly
+	* [x] Fix bug where selected theme and contrast isn't restored properly
 
 * [ ] Install
 	* [ ] Make `src` optional, include can be used to figure out `src`
@@ -49,7 +51,7 @@ This is an incomplete progress list of features & known bugs.
 		* [x] `Webapp.add_home_view`, `Webapp.remove_home_view`, `Webapp.get_home_views`
 
 * [ ] Softkeys
-	* [ ] Move `Webapp.status` above the back button on desktop
+	* [x] Move `Webapp.status` above the back button on desktop
 	* [ ] `Webapp.notify` actions can be merged into the softkeys
 	* [ ] Support new properties `order`, `last`, `first`, `before`, `after`
 	* [ ] Add .alias to support linking secondary keysets to a shortcut entry

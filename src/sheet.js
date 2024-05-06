@@ -1,8 +1,13 @@
 //icons hourglassempty
-var Sheet, sheet;
+var Sheet, sheet,
+	sheet_ready	= 'sheet-ready',
+	sheet_done	= 'sheet-done',
+	sheet_cancel= 'sheet-cancel',
+	sheet_anyway= 'sheet-anyway'
+	;
 ;(function(){
 	var index = {}, header, container, active_sheet_name, active_sheet_uid, active_args, active_keys, new_list,
-		before_okay,
+		active_data, before_okay, debug_sheet,
 		ae, murakkaz;
 
 	Sheet = sheet = {
@@ -23,6 +28,12 @@ var Sheet, sheet;
 		},
 		get_active_title: function () {
 			return header.innerText;
+		},
+		set_data: function (o) {
+			active_data = o;
+		},
+		get_data: function () {
+			return active_data;
 		},
 		get_title: function () {
 			return header.innerText;
@@ -73,7 +84,7 @@ var Sheet, sheet;
 			}
 		},
 		hide: function () {
-			$.log.w( 'Sheet hide' );
+			if (debug_sheet) $.log.w( 'Sheet hide' );
 			sheetui.hidden = 1;
 			sheet.okay = 0;
 			sheet.cancel = 0;
@@ -98,6 +109,7 @@ var Sheet, sheet;
 				};
 			
 			active_args = args;
+			this.set_data();
 			
 			var name		= args.name		||	args.n,
 				title		= args.title	||	args.t	||	'',
@@ -154,7 +166,7 @@ var Sheet, sheet;
 					}
 					
 					// TODO transition modules to use this method to (re)construct sheets
-					Hooks.run('sheet-ready', args, keys, new_list);
+					Hooks.run(sheet_ready, args, keys, new_list);
 
 					Hooks.rununtilconsumed('widgets', sheetui);
 				}
@@ -165,8 +177,8 @@ var Sheet, sheet;
 				callback && callback( args || keys );
 				ayyihaal && ayyihaal( args || keys );
 				// TODO transition modules to use this method to (re)construct sheets
-				Hooks.run('sheet-okay', args, keys, new_list);
-				Hooks.run('sheet-anyway', args, keys, new_list);
+				Hooks.run(sheet_done, args, keys, new_list);
+				Hooks.run(sheet_anyway, args, keys, new_list);
 
 				Webapp.blur();
 				Hooks.run('back');
@@ -198,8 +210,8 @@ var Sheet, sheet;
 				oncancel && oncancel( args || keys );
 				ayyihaal && ayyihaal( args || keys );
 				// TODO transition modules to use this method to (re)construct sheets
-				Hooks.run('sheet-cancel', args, keys, new_list);
-				Hooks.run('sheet-anyway', args, keys, new_list);
+				Hooks.run(sheet_cancel, args, keys, new_list);
+				Hooks.run(sheet_anyway, args, keys, new_list);
 
 				Webapp.blur();
 				Hooks.run('back');
@@ -244,8 +256,8 @@ var Sheet, sheet;
 		if (!crumbs.is_sheet) {
 			if (!isundef(active_sheet_uid)) { // a sheet was active previously
 				// we dont trigger the Sheet.cancel function because it's deprecated
-				Hooks.run('sheet-cancel', active_args, active_keys, new_list);
-				Hooks.run('sheet-anyway', active_args, active_keys, new_list);
+				Hooks.run(sheet_cancel, active_args, active_keys, new_list);
+				Hooks.run(sheet_anyway, active_args, active_keys, new_list);
 			}
 			Sheet.hide(); // clear active sheet name and uid + okay/cancel funcs
 			Webapp.blur();

@@ -120,81 +120,90 @@ Web.add(function (done, queue, extra) {
 			finish: function () {
 				donesub(queuesub, extra);
 			},
-			consumed: function () {
+			consumed: function () { // also calls finish :)
 				extra.consumed = 1; // handled consumed
 				donesub(queuesub, extra);
 			},
-			get: function (valuex, value2, need2) {
-				var h = need2 || need || 'default';
+			get: function (valuex, value2, need2, name2) { // actual value, optional name+need
+				var h = need2 || need || 'default', final_name = name;
 				obj.get					= obj.get			|| {};
-				obj.get[ name ]				= obj.get[ name ]	|| {};
+				if (name2) final_name = name2;
+				obj.get[ final_name ]				= obj.get[ final_name ]	|| {};
 				if (value2 !== undefined) {
-					obj.get[ name ][ h ] = obj.get[ name ][ h ] || {};
-					obj.get[ name ][ h ][ valuex ] = obj.get[ name ][ h ][ valuex ] || {};
-					obj.get[ name ][ h ][ valuex ] = value2;
+					obj.get[ final_name ][ h ] = obj.get[ final_name ][ h ] || {};
+					obj.get[ final_name ][ h ][ valuex ] = obj.get[ final_name ][ h ][ valuex ] || {};
+					obj.get[ final_name ][ h ][ valuex ] = value2;
 				} else {
-					obj.get[ name ][ h ] = valuex;
+					obj.get[ final_name ][ h ] = valuex;
 				}
 				return rsp;
 			},
-			sync: function (valuex, value2, need2) {
-				var h = need2 || need || 'default';
+			sync: function (valuex, value2, need2, name2) {
+				var h = need2 || need || 'default', final_name = name;
 				obj.sync					= obj.sync		|| {};
-				obj.sync[ name ]			= obj.sync[ name ]	|| {};
+				if (name2) final_name = name2;
+				obj.sync[ final_name ]			= obj.sync[ final_name ]	|| {};
 				if (value2 !== undefined) {
-					obj.sync[ name ][ h ] = obj.sync[ name ][ h ] || {};
-					obj.sync[ name ][ h ][ valuex ] = obj.sync[ name ][ h ][ valuex ] || {};
-					obj.sync[ name ][ h ][ valuex ] = value2;
+					obj.sync[ final_name ][ h ] = obj.sync[ final_name ][ h ] || {};
+					obj.sync[ final_name ][ h ][ valuex ] = obj.sync[ final_name ][ h ][ valuex ] || {};
+					obj.sync[ final_name ][ h ][ valuex ] = value2;
 				} else {
-					obj.sync[ name ][ h ] = valuex;
+					obj.sync[ final_name ][ h ] = valuex;
 				}
 				return rsp;
 			},
-			intercept: function (valuex, value2, need2) {
-				var h = need2 || need || 'default';
+			intercept: function (valuex, value2, need2, name2) {
+				var h = need2 || need || 'default', final_name = name;
 				obj.intercession			= obj.intercession		|| {};
-				obj.intercession[ name ]		= obj.intercession[ name ]	|| {};
+				if (name2) final_name = name2;
+				obj.intercession[ final_name ]		= obj.intercession[ final_name ]	|| {};
 				if (value2 !== undefined) {
-					obj.intercession[ name ][ h ] = obj.intercession[ name ][ h ] || {};
-					obj.intercession[ name ][ h ][ valuex ] = obj.intercession[ name ][ h ][ valuex ] || {};
-					obj.intercession[ name ][ h ][ valuex ] = value2;
+					obj.intercession[ final_name ][ h ] = obj.intercession[ final_name ][ h ] || {};
+					obj.intercession[ final_name ][ h ][ valuex ] = obj.intercession[ final_name ][ h ][ valuex ] || {};
+					obj.intercession[ final_name ][ h ][ valuex ] = value2;
 				} else {
-					obj.intercession[ name ][ h ] = valuex;
+					obj.intercession[ final_name ][ h ] = valuex;
 				}
 				return rsp;
 			},
-			upload: function (valuex, value2, need2) {
-				var h = need2 || need || 'default';
+			upload: function (valuex, value2, need2, name2) {
+				var h = need2 || need || 'default', final_name = name;
 				obj.upload				= obj.upload			|| {};
-				obj.upload[ name ]		= obj.upload[ name ]	|| {};
+				if (name2) final_name = name2;
+				obj.upload[ final_name ]		= obj.upload[ final_name ]	|| {};
 				if (value2 !== undefined) {
-					obj.upload[ name ][ h ] = obj.upload[ name ][ h ] || {};
-					obj.upload[ name ][ h ][ valuex ] = obj.upload[ name ][ h ][ valuex ] || {};
-					obj.upload[ name ][ h ][ valuex ] = value2;
+					obj.upload[ final_name ][ h ] = obj.upload[ final_name ][ h ] || {};
+					obj.upload[ final_name ][ h ][ valuex ] = obj.upload[ final_name ][ h ][ valuex ] || {};
+					obj.upload[ final_name ][ h ][ valuex ] = value2;
 				} else {
-					obj.upload[ name ][ h ] = valuex;
+					obj.upload[ final_name ][ h ] = valuex;
 				}
 				return rsp;
 			},
-			need: function (name) {
+			name_need: function (name2, need) { // name optional
+				need = need || 'default';
+				name2 = name2 || name;
 				var rsp2 = Object.assign({}, rsp);
 				rsp2.get = function (valuex, value2) {
-					rsp.get(valuex, value2, name);
+					rsp.get(valuex, value2, need, name2);
 					return rsp2;
 				};
 				rsp2.sync = function (valuex, value2) {
-					rsp.sync(valuex, value2, name);
+					rsp.sync(valuex, value2, need, name2);
 					return rsp2;
 				};
 				rsp2.intercept = function (valuex, value2) {
-					rsp.intercept(valuex, value2, name);
+					rsp.intercept(valuex, value2, need, name2);
 					return rsp2;
 				};
 				rsp2.upload = function (valuex, value2) {
-					rsp.upload(valuex, value2, name);
+					rsp.upload(valuex, value2, need, name2);
 					return rsp2;
 				};
 				return rsp2;
+			},
+			need: function (need) {
+				return rsp.name_need(0, need);
 			},
 			account: extra.account,
 			time: extra.time,

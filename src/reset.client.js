@@ -1,5 +1,14 @@
 // put global functions here that are only available to zaboon
 var
+is_partly_visible = function (el, partiallyVisible = true) {
+	const { top, left, bottom, right } = el.getBoundingClientRect();
+	const { innerHeight, innerWidth } = window;
+	return partiallyVisible
+		? ((top > 0 && top < innerHeight) ||
+			(bottom > 0 && bottom < innerHeight)) &&
+			((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+		: top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+},
 select_content = function (e, start, end) {
 	if (e instanceof HTMLInputElement || e instanceof HTMLTextAreaElement) {
 		if (isnum(start)) {
@@ -106,6 +115,12 @@ innerhtml = function (obj, v) {
 setvalue = function (obj, v) {
 	obj.value = v;
 },
+scroll_by = function (x, y, a) {
+	scrollBy({ left: x, top: y, behavior: a ? 'smooth' : 'instant' });
+},
+scroll_to = function (x, y, a) {
+	scrollTo({ left: x, top: y, behavior: a ? 'smooth' : 'instant' });
+},
 scrollintoview = function (obj) {
 	obj && obj.scrollIntoView(1);
 },
@@ -182,10 +197,14 @@ hasownprop = function (obj, i) {
 		return obj.hasOwnProperty(i);
 },
 izhar = function (v) {
-	v.hidden = 0;
+	for (var v of arguments) {
+		v.hidden = 0;
+	}
 },
-ixtaf = function (v) {
-	v.hidden = 1;
+ixtaf = function () {
+	for (var v of arguments) {
+		v.hidden = 1;
+	}
 },
 isixtaf = function (v) {
 	return v.hidden || getattribute(v, 'type') == 'hidden';
@@ -221,9 +240,12 @@ createelement = function (name, classes, id) {
 	if (id) e.id = id;
 	return e;
 },
-tahmeel = function (filename, text, mimetype) { // download file with a name
-	var e = createelement('a');
-	attribute(e, 'href', (mimetype||'data:text/plain;charset=utf-8,') + encodeURIComponent(text));
+tahmeel = function (filename, text, mimetype, encode) { // download file with a name
+	var e = createelement('a'), prefix = '';
+	if (mimetype !== false) prefix = (mimetype||'data:text/plain;charset=utf-8,');
+	if (encode   !== false) text = encodeURIComponent(text);
+
+	attribute(e, 'href', prefix + text);
 	attribute(e, 'download', filename);
 	setcss(e, 'display', 'none');
 	document.body.appendChild(e);
@@ -241,33 +263,17 @@ iswithinelement = function (arr, element) {
 	return (a >= x && a <= w && b >= y && b <= h);
 },
 getposition = function (el) {
-	var xPos = 0;
-	var yPos = 0;
+	var x = 0, y = 0, w = 0, h = 0;
 	
-	var dir = document.body.dir;
-
-	if ( dir === 'rtl' )
-		xPos = xPos + el.clientWidth;
-
-	while (el) {
-		if (el.tagName == 'BODY') {
-			// deal with browser quirks with body/window/document and page scroll
-			var xScroll = el.scrollLeft || document.documentElement.scrollLeft;
-			var yScroll = el.scrollTop || document.documentElement.scrollTop;
-	
-			xPos += (el.offsetLeft - xScroll + el.clientLeft);
-			yPos += (el.offsetTop - yScroll + el.clientTop);
-		} else {
-			// for all other non-BODY elements
-			xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
-			yPos += (el.offsetTop - el.scrollTop + el.clientTop);
-		}
-
-		el = el.offsetParent;
+	if (el) {
+		var pos = el.getBoundingClientRect();
+		x = pos.x; y = pos.y;
+		w = pos.width; h = pos.height;
 	}
 
-	return [xPos, yPos];
+	return [x, y, w, h];
 },
+get_bounds = getposition,
 replacewith = function (el, el2) {
 	el.replaceWith(el2);
 };

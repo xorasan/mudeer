@@ -1,5 +1,9 @@
 // TODO make dialogs recovering using uids and asking the requesting module to regenerate it on popstate
-var Dialog, dialog;
+var Dialog, dialog,
+	dialog_ready	= 'dialog-ready',
+	dialog_done		= 'dialog-done',
+	dialog_cancel	= 'dialog-cancel',
+	dialog_anyway	= 'dialog-anyway';
 ;(function(){
 	var current_name, current_uid;
 	
@@ -70,17 +74,25 @@ var Dialog, dialog;
 			Dialog.onshow && Dialog.onshow(name);
 
 			// TODO transition modules to use this method to (re)construct dialogs
-			Hooks.run('dialog-ready', args, k);
+			Hooks.run(dialog_ready, args, k);
 			
 			Dialog.okay = function () {
 				var answer = input_element.value;
 				if (max) answer = answer.slice(0, max);
 				callback && callback(answer);
 				document.activeElement && document.activeElement.blur();
+
+				Hooks.run(dialog_done, args, k, answer);
+				Hooks.run(dialog_anyway, args, k, answer);
+
 				Hooks.run('back');
 			};
 			Dialog.cancel = function () {
 				document.activeElement && document.activeElement.blur();
+
+				Hooks.run(dialog_cancel, args, k);
+				Hooks.run(dialog_anyway, args, k);
+
 				Hooks.run('back');
 			};
 			

@@ -15,14 +15,14 @@ if min-width = 320px
 		display			flex !important
 		flex-direction	row
 		align-items		center
-	#softkeysui .row2 button:hover .tooltip, #softkeysui[data-shown] .row2 button .tooltip, #softkeysui .row2 [data-hawm="1"] .tooltip
+	#softkeysui .row2 button:hover .tooltip, #softkeysui .row2 [data-hawm="1"] .tooltip
 		display			flex
+//	#softkeysui[data-shown] .row2 button .tooltip
+//		display			flex
 //	#softkeysui[data-shown] .row2 button .tooltip label
 //		display			none
 	#softkeysui .row2 button:hover .tooltip label
 		display			flex
-	#softkeysui[data-shown] .row2 button .tooltip
-		font-size		80%
 	#softkeysui .row2 button .tooltip
 		display			none
 		position		absolute

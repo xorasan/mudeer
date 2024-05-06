@@ -57,8 +57,8 @@ function url_content_to_data_uri(url){
 		}
 	};
 	Hooks.set('viewready', function () {
-		if (backstack.darajah == 0) {
-			softkeys.add(notify_softkey);
+		if (Backstack.darajah == 0) {
+//			Softkeys.add(notify_softkey);
 		}
 	});
 })();

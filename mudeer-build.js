@@ -103,14 +103,20 @@ var makemanifest = function (args, conf, BUILDNUMBER, xpath) {
 		"chromium-args": '--disable-features=ProcessPerSiteUpToMainFrameThreshold',
 	};
 	
+	packagejson.window = packagejson.window || {};
+
+	packagejson.window.icon = 'pub/e.png';
+	
+	if (typeof conf.frame == 'boolean') {
+		packagejson.window.frame = String(conf.frame);
+	}
+
 	if (conf.height || conf.width) {
-		packagejson.window = packagejson.window || {};
 		packagejson.window.width = parseInt(conf.width||0);
 		packagejson.window.height = parseInt(conf.height||0);
 	}
 	
 	if (conf.bg == 'transparent') {
-		packagejson.window = packagejson.window || {};
 		packagejson.window.frame = false;
 		packagejson.window.transparent = true;
 	}

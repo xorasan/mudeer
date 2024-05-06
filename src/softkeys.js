@@ -8,7 +8,7 @@
  * all keyups are pd'd, fig out logic for keydowns in .press
  * modifiers now do work! 13 sep 2023
  */
-var Softkeys, softkeys, K, P;
+var Softkeys, softkeys, K, P, debug_softkeys = 0;
 ;(function(){
 	K = { // key code names
 		mt:	'microphonetoggle',
@@ -31,7 +31,7 @@ var Softkeys, softkeys, K, P;
 		list: {},
 	};
 
-	var global_keys = ['f1', 'f2', 'f5', 'escape', K.sl, K.sr], debug_softkeys = 0;
+	var global_keys = ['f1', 'f2', 'f5', 'escape', K.sl, K.sr];
 
 	var hfizM = {}, M = {}, // mapped keys
 	current,
@@ -54,7 +54,7 @@ var Softkeys, softkeys, K, P;
 		
 		if (args.length === 1 || args.hidden || args.h) o.hidden = 1;
 		
-		var callback = args[0] || args.callback;
+		var callback = args[0] || args._callback;
 		var k = args.key || uid;
 		
 		if (callback) o.onclick = function (e) {
@@ -63,12 +63,18 @@ var Softkeys, softkeys, K, P;
 			var key = e ? e.key : undefined;
 			callback(key, e);
 		};
+		if (o.contextmenu) o.oncontextmenu = function (e) {
+			if (index[k]) index[k].blur(); // prevent focus
+
+			var key = e ? e.key : undefined;
+			o.contextmenu(key, e);
+		};
 		
 		o.name = args.name || args.n || '';
 		o.label = args[1] || args.label || args.l || '';
-		o.icon = args[2] || args.icon || args.i;
+		o.real_icon$icon = args[2] || args.icon || args.i;
 		o.status = args[3] || args.status || args.s;
-		if (o.icon === false) {
+		if (o.real_icon$icon === false) {
 			o.name = k;
 		}
 		
@@ -270,14 +276,17 @@ var Softkeys, softkeys, K, P;
 			   l label
 			   s status
 			   k key
+			   a aux right click/context menu
 			   c cb callback
 			   first: keeps this softkey at the top
 			   last: keeps this softkey at the bottom
 			*/
-			o.callback = o.callback || o.c || o.cb;
+			// _callback ensures that later function assignments are applied
+			o._callback = o.callback || o.c || o.cb;
+			o.contextmenu = o.a || o.aux;
 			o.key = tolower(o.key || o.k);
 
-			if ( isfun(o.callback) && isstr(o.key) ) {
+			if ( isfun(o._callback) && isstr(o.key) ) {
 				o.uid = (o.ctrl  ? 1 : 0) +'-'+
 						(o.alt   ? 1 : 0) +'-'+
 						(o.shift ? 1 : 0) +'-'+
@@ -289,7 +298,11 @@ var Softkeys, softkeys, K, P;
 			}
 			return this;
 		},
-		remove: function (uid) { // use this instead of .talaf
+		remove: function (uid) { // use this instead of .talaf, also accepts { uid }
+			if (uid && uid.uid) {
+				uid = uid.uid;
+				delete uid.uid; // to retain the object and be able to reuse it with a new gen'd uid
+			}
 			this.talaf(uid);
 		},
 		/*
@@ -485,7 +498,7 @@ var Softkeys, softkeys, K, P;
 			var uid = (event.ctrlKey?1:0) +'-'+ (event.altKey?1:0) +'-'+ (event.shiftKey?1:0) +'-'+ k;
 			if (M[uid]) {
 				mmm = M[uid];
-				callback = mmm.callback;
+				callback = mmm._callback;
 				let_through = 1;
 			}
 
@@ -528,8 +541,28 @@ var Softkeys, softkeys, K, P;
 		return skmain.offsetHeight;
 	};
 	Softkeys.showhints();
-	Softkeys.M = function () {
-		return M;
+	Softkeys.M = function () { return M; };
+	var shadow_visible = 1;
+	Softkeys.shadow = function (yes) {
+		if (yes) {
+			shadow_visible = 1;
+			setcss(softkeysui, 'background', '');
+			setcss(skmain, 'min-height', '');
+		} else {
+			shadow_visible = 0;
+			setcss(softkeysui, 'background', '0');
+			setcss(skmain, 'min-height', '0');
+		}
+	};
+	var dots_visible = 1;
+	Softkeys.hide_dots = function () {
+		if (dots_visible) {
+			dots_visible = 0;
+			ixtaf(softkeys_backstack);
+		} else {
+			dots_visible = 1;
+			izhar(softkeys_backstack);
+		}
 	};
 	
 	var autoheight = function (a) {
@@ -561,8 +594,9 @@ var Softkeys, softkeys, K, P;
 		// BUG idk why but this can't detect .altKey
 		if (a && (a instanceof HTMLInputElement
 		|| a.contentEditable == 'true'
-		||	a instanceof HTMLTextAreaElement) && a.type != 'range') {
-			Softkeys.showhints();
+		||	a instanceof HTMLTextAreaElement
+		||	a instanceof HTMLAnchorElement) && a.type != 'range') {
+//			Softkeys.showhints();
 		} else {
 			Softkeys.showhints();
 			return 1;
@@ -578,7 +612,7 @@ var Softkeys, softkeys, K, P;
 		e && softkeys.press('', e, e.type);
 	});
 	Hooks.set('keyup', function (e) {
-////		$.log( 'keyup', lastkey, e.key.toLowerCase() );
+//		$.log( 'keyup', lastkey, e.key.toLowerCase() );
 //
 //		if (repeatmode) {
 //		} else
@@ -598,7 +632,9 @@ var Softkeys, softkeys, K, P;
 		var a = document.activeElement;
 		if ((a instanceof HTMLInputElement
 		||	a instanceof HTMLTextAreaElement) && a.type != 'range') {
-			var len = a.value.trim().length, yes;
+			var str = a.value;
+			if (a.type != 'password') str = str.trim();
+			var len = str.length, yes;
 			if (len) {
 				var min = parseint(getattribute(a, 'min') || 0);
 				var max = parseint(getattribute(a, 'max') || 0);
@@ -671,17 +707,17 @@ var Softkeys, softkeys, K, P;
 			t = args[3];
 		
 		if (t === 'skbutton') {
-			if (k.icon && !o.icon)
+			if (k.icon && !o.real_icon$icon)
 				k.icon.remove();
 			
-			if (!o.label && !o.icon)
+			if (!o.label && !o.real_icon$icon)
 				c.hidden = 1;
 //			return 1; // to let sk.touch run
 		}
 	});
 	// needs to be set first, else any modifications in other module hooks before this cause bugs
 	Hooks.set_first('restore', function (args) {
-		$.log.w( 'Softkeys restore hook' );
+		if (debug_softkeys) $.log.w( 'Softkeys restore hook' );
 		var oldM = backstack.get('softkeys');
 		if (oldM) {
 			M = Object.assign({}, oldM);
