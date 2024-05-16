@@ -242,6 +242,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	Webapp = webapp = {
 		visible: 1,
 		isdimmed: 0,
+		has_focus: () => document.hasFocus(),
 		/* an array of features that can be check like
 		 * 'feature'	in window OR
 		 * 				in Navigator OR
@@ -557,7 +558,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 		if (text) {
 			if (text instanceof Array) {
 				element.dataset.i18n = text[0];
-				translate.update(itlaa3);
+				Translate.update(webapp_status_ui);
 			} else {
 				delete element.dataset.i18n,
 				element.innerText = text;
@@ -573,7 +574,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 			$.taxeer('webapp_status', function () {
 				if (innerwidth() > 1024) webapp_status_ui.style.right = '-20px';
 				$.taxeer('webapp_status_final', function () {
-					webapp.itlaa3();
+					Webapp.status();
 				}, 100);
 			}, time||3000);
 		} else {

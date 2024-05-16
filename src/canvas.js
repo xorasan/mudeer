@@ -1,5 +1,6 @@
 // TODO add props mw, mh
 // TODO add maintain aspect ratio on resize given one min dimension
+// supports Array based gradient as fill type :)
 var Canvas, canvas;
 var calcdistance = function (x1, y1, x2, y2) {
 	var dx = x2 - x1; dx *= dx;
@@ -38,19 +39,19 @@ var calcdistance = function (x1, y1, x2, y2) {
 		c.linewidth = function (v) {
 			c.o.lineWidth = v;
 		};
-		c.fillcolor = function (v) {
+		c.fillcolor = function (v) { // { x, y, w, h, stops: [ [0, color], [1, color] ] }
 			c.f = v;
 			if (typeof v == 'object') {
-				var grd = c.o.createLinearGradient(
-							0, 0, v.length, v.angle
-						);
+				var x = isundef(v.x) ? 0 : v.x;
+				var y = isundef(v.y) ? 0 : v.y;
+				var w = isundef(v.w) ? element.width  : v.w;
+				var h = isundef(v.h) ? element.height : v.h;
+				var grd = c.o.createLinearGradient( x, y, w, h );
 				v.stops.forEach(function (item, i) {
 					if (item instanceof Array) {
-						grd.addColorStop(item[0], item[1]);
+						grd.addColorStop(item[0], item[1] || 'black');
 					} else {
-						var stop = 0;
-						if (i) stop = (i+1)/v.length;
-						grd.addColorStop(stop, item);
+						grd.addColorStop(i, item || 'black');
 					}
 				});
 				c.o.fillStyle = grd;
@@ -112,7 +113,7 @@ var calcdistance = function (x1, y1, x2, y2) {
 			if (s) c.o.stroke();
 		};
 		c.clear = function (x, y, w, h) {
-			c.o.clearRect(x, y, w, h);
+			c.o.clearRect(x || 0, y || 0, w || element.width, h || element.height);
 		};
 		
 		c.text = c.matn;

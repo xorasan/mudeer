@@ -173,9 +173,9 @@ MSJLINTAHAA		= 90	;	// exited recording
 	
 	function apply_mode() {
 		// Recording
-		if (Recorder.recording)
+//		if (Recorder.recording)
 		// Paused Recording
-		if (Recorder.recording)
+//		if (Recorder.recording)
 		// Has Recording Blob
 		// Playing
 		// Paused Playback

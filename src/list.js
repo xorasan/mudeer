@@ -714,8 +714,12 @@ var List, list;
 			if (isnum(LV._muntahaa) && LV._muntahaa > -1) {
 				innertext(LV._muntahaabox, len+' / '+ LV._muntahaa);
 			}
-			this.keys.raees.hidden = len ? 0 : 1;
-			if (!this._mowdoo3) this.keys.raees.hidden = 1;
+			if (!this._mowdoo3) {
+				if (!this.keys.raees.hidden) this.keys.raees.hidden = 1;
+			} else {
+				var new_value = len ? 0 : 1;
+				if (this.keys.raees.hidden !== !!new_value) this.keys.raees.hidden = new_value;
+			}
 		},
 		mowdoo3: function (m, i18n) { // deprecated -> title
 			this._mowdoo3 = m || 0;

@@ -78,8 +78,8 @@ var Themes, themes;
 
 			accentl:	'#0bb8cb',
 			accent:		'#00609a',
-			accentt:	'rgba(0, 67, 113, 0.7)',
-			accentxt:	'rgba(0, 67, 113, 0.4)',
+			accentt:	'rgba(112, 198, 255, 0.7)',
+			accentxt:	'rgba(112, 198, 255, 0.4)',
 			accentd:	'#004371',
 			accentdt:	'rgba(0, 37, 93, 0.7)',
 
@@ -164,8 +164,8 @@ var Themes, themes;
 
 			accentl:	'#0bb8cb',
 			accent:		'#00609a',
-			accentt:	'rgba(0, 67, 113, 0.7)',
-			accentxt:	'rgba(0, 67, 113, 0.4)',
+			accentt:	'rgba(112, 198, 255, 0.7)',
+			accentxt:	'rgba(112, 198, 255, 0.4)',
 			accentd:	'#004371',
 			accentdt:	'rgba(0, 37, 93, 0.7)',
 
@@ -206,7 +206,7 @@ var Themes, themes;
 		 * that refer to slang css variables
 		 * 
 		 * +if only theme & key are provided and not value
-		 * assumes that key is an object representing theme
+		 * assumes theme is key, and key is value and set it into the current theme
 		 * 
 		 * +if key and value are also provided
 		 * inside a store.theme, set a key to value
@@ -214,7 +214,7 @@ var Themes, themes;
 		set: function (theme, key, value) {
 			var arglen = arguments.length;
 			if (arglen === 0) {
-				themes.set(current);
+				Themes.set(current);
 			}
 
 			if (arglen === 1) {
@@ -225,7 +225,8 @@ var Themes, themes;
 			}
 
 			if (arglen === 2) {
-				store[theme] = key;
+				store[current] = store[current] || {};
+				store[current][theme] = key;
 			}
 			
 			if (arglen === 3) {
