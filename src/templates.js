@@ -128,14 +128,14 @@ var Templates, templates, namaavij;
 							keys[i].innerHTML = '';
 						}
 					} else
-					if (['icon', 'eqonah'].includes(i) || is_icon || is_image) { // create SVG inside or img if src = /...
+					if ( isundef(o['icon$h']) && (['icon', 'eqonah'].includes(i) || is_icon || is_image) ) { // create SVG inside or img if src = /...
 						var icon_src = o[i];
 						if (is_icon || is_image) {
 							icon_src = o[i+'$icon'] || o[i+'$image'];
 						}
 						if (isstr(icon_src) && icon_src.length) {
 							keys[i].hidden = 0;
-							if (icon_src.startsWith('/') || is_image) {
+							if (icon_src.startsWith('file:/') || icon_src.startsWith('/') || is_image) {
 								innerhtml(keys[i], '<img src="'+icon_src+'" />');
 							} else {
 								var e = icons.querySelector('#'+icon_src);
@@ -254,8 +254,24 @@ var Templates, templates, namaavij;
 			}
 			return index;
 		},
+		expunge: function (parent) { // remove from index
+			// parent can be an htm element or an array of view names
+
+			let elements;
+			if (parent instanceof HTMLElement || isundef(parent)) {
+				elements = (parent||document.body).querySelectorAll('[data-template]');
+			} else if (isarr(parent)) {
+				elements = [];
+				parent.forEach(function (o) {
+					elements.push( document.body.querySelectorAll('[data-template="'+o+'"]') );
+				});
+			}
+			elements.forEach(function (o) {
+				delete index[ o.dataset.template ];
+			});
+		},
 	};
-	templates.index();
+	Templates.index();
 	namaavij = templates;
 	namaavij.axav = namaavij.get;
 })();

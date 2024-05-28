@@ -3,15 +3,14 @@
  * this will include auto saving changes to the list adapter to Offline stores
  * TODO add a way to salvage data from previous builds
  * */
-var Offline, offline;
+var Offline, offline, debug_offline = 0;
 ;(function(){
 	'use strict';
 	var database	= 'db', db = false, maxaazin = {},
 		unsavedname = 'unsaved'+'default',
 		exclusions	= [unsavedname],
 		delaydefault = 30*1000,
-		gcallback,
-		debug_offline = 0;
+		gcallback;
 
 	var ajraa = function (callback) {
 		// get pending items from all offline stores
@@ -201,7 +200,7 @@ var Offline, offline;
 			}
 		},
 		create: function (name, need, o) { // ixtalaq/create store
-			if (debug_offline) $.log.w('Offline.create', name, need);
+			if (debug_offline) $.log.w('Offline create', name, need);
 
 			o = o || {};
 			o.delay = o.delay || undefined;
@@ -1129,15 +1128,29 @@ var Offline, offline;
 			dom.setloading( 'appneedsreload' );
 		},
 		init: function (callback) {
-			if (debug_offline) $.log.w('Offline.init');
+			var on_resolve;
+			var promise = new Promise(function (r) {
+				on_resolve = r;
+			});
 			
-			gcallback = callback;
+			if (debug_offline) $.log.w('Offline init');
+			
+			gcallback = function () {
+				on_resolve.apply(this, arguments);
+				if (isfun(callback))
+					callback.apply(this, arguments);
+			}
 			Offline.create('unsaved', 'default', {
 				mfateeh: ['_store']
 			});
+			
+			return promise;
 		}
 	};
 	
+	Hooks.set('webapp-before-init', async function () {
+		await Offline.init();
+	});
 	Hooks.set('response-sync', function (payload) {
 		if (debug_offline) $.log.w( 'Offline response-sync', payload );
 		for (var name in payload) {

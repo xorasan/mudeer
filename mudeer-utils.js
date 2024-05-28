@@ -7,8 +7,9 @@ var Cli, Files, Weld,
 	dummyargs = { one: [], two: [], raw: [], keys: {}, };
 var currentfolder = function () { return process.cwd().split('/').pop(); };
 function print_help() {
-	Cli.echo(' ^bright^mudeer-utils~~ needs at least one argument ');
+	Cli.echo(' ^bright^mudeer-utils~~ needs at least command ');
 	Cli.echo('    ^bright^ gitignore~~ creates a .gitignore file with important directives ');
+	Cli.echo('    ^bright^ get-icons~~ takes icon names and gives a compressed string ');
 }
 var do_install = function (args) {
 	var pathprefix = './';
@@ -25,6 +26,28 @@ var do_install = function (args) {
 				Files.set.file( pathprefix+'.gitignore', Files.get.file($.path+'/.gitignore').toString() );
 
 			Cli.echo(' .gitignore created ');
+		} catch (e) {}
+	} else if (args.raw[0] == 'get-icons') {
+		var icons = args.raw.slice(1);
+		if (icons.length === 0) {
+			Cli.echo(' ^bright^ get-icons~~ needs at least one icon names ');
+			return;
+		}
+
+		try {
+			var icon_files = {};
+			icons.forEach(function (o, i) {
+				try {
+					var file = Files.get.file($.path+'/icons/'+o+'.svg');
+					if (file) {
+						icon_files[ o ] = file.toString().replace(/\n/g, '').replace(/  /g, '').trim();
+					}
+				} catch (e) {}
+			});
+//			var rootfolder = Files.get.folder(pathprefix) || [];
+//				Files.set.file( pathprefix+'.gitignore', Files.get.file($.path+'/.gitignore').toString() );
+//
+			Cli.echo( JSON.stringify( icon_files ) );
 		} catch (e) {}
 	} else {
 		print_help();

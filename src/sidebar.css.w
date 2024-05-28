@@ -5,13 +5,14 @@
 	border-right	1px solid @tertiaryd
 	border-bottom	1px solid @tertiaryd
 	width			260px
-	min-height		calc(100vh - 70px)
+//	min-height		calc(100vh - 70px)
 	top				0
 	left			0
+	bottom			70px
 	border-radius	0 0 10px 0
 	display			none
 	flex-direction	column-reverse
-	overflow		hidden
+	overflow		auto
 
 .fill_available
 	width			100%

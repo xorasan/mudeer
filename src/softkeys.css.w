@@ -104,3 +104,64 @@
 
 input[data-over], textarea[data-over], input[data-under], textarea[data-under]
 	border-color	@red
+
+if min-width = 320px
+	#softkeysui .left
+		display			flex !important
+		flex-direction	row-reverse
+		align-items		center
+	#softkeysui .right
+		display			flex !important
+		flex-direction	row
+		align-items		center
+	#softkeysui .row2 button:hover .tooltip, #softkeysui .row2 [data-hawm="1"] .tooltip
+		display			flex
+//	#softkeysui[data-shown] .row2 button .tooltip
+//		display			flex
+//	#softkeysui[data-shown] .row2 button .tooltip label
+//		display			none
+	#softkeysui .row2 button:hover .tooltip label
+		display			flex
+	#softkeysui .row2 button
+		padding			0 4px
+	#softkeysui .row2 button .tooltip
+		display			none
+		position		absolute
+		right			70px
+		align-items		center
+		top				0
+		font-weight		normal
+		border			1px solid @secondaryd
+		background		@primaryl
+		font-size		100%
+		width			max-content
+		padding			8px
+		border-radius	8px
+		pointer-events	none
+	#softkeysui button .key
+		margin			2px
+		padding			2px
+		background		@secondaryd
+	#softkeysui button label
+		border			0 !important
+		height			auto
+	#softkeysui .row1 button .tooltip
+		font-size		90%
+		flex-direction	column
+
+if min-width = 1200px
+	#softkeysui .row2 button .tooltip
+		display			inline-block
+		right			64px
+		top				3px
+	#softkeysui .row2 button:not(:hover) .tooltip
+		top				9px
+	#softkeysui button:not(:hover) .key
+		display			none
+
+if min-width = 1400px
+	#softkeysui .row2 button
+		padding			0 14px 0 54px
+	#softkeysui .row2 button .tooltip
+		right			84px
+

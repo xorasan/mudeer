@@ -1,6 +1,7 @@
 var Webapp, webapp, appname = 'APPNAME' || '',
 	// to avoid missing module errors
-	Offline = Offline || 0,
+	// TODO replae all these with global pre-checks and hook based dep filling
+//	Offline = Offline || 0,
 	pager = pager || 0,
 	Pager = Pager || 0,
 	Checkbox = Checkbox || 0,
@@ -8,7 +9,8 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	translate = translate || 0,
 	// deprecate rakkazawwal
 	rakkazawwal, focus_first_element, focusprev, focusnext, navigables, is_navigable,
-	LAYERTOPMOST = 3000;
+	LAYERTOPMOST = 3000,
+	debug_webapp = 0;
 ;(function(){
 	var doc = document, bod = doc.body, wakelockstatus, isalbixraaj;
 	
@@ -325,6 +327,8 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 				if (isstr(header_icon) && header_icon.length) {
 					if (header_icon.startsWith('/')) {
 						innerhtml(icon, '<img src="'+header_icon+'" />');
+					} else if (header_icon.startsWith('<svg')) {
+						innerhtml(icon, header_icon);
 					} else {
 						var e = icons.querySelector('#'+header_icon);
 						if (e) {
@@ -418,8 +422,8 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 				if ( confirm(xlate('sure')) ) close();
 			} else close();
 		},
-		icons: function () {
-			var elements = doc.body.querySelectorAll('[data-icon]');
+		icons: function (parent) {
+			var elements = (parent||doc.body).querySelectorAll('[data-icon]');
 			for (var i in elements) {
 				if ( elements.hasOwnProperty(i) && elements[i].dataset.icon ) {
 					var e = icons.querySelector('#'+elements[i].dataset.icon);
@@ -729,38 +733,43 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 	listener('keydown', function (e) {
 		Hooks.rununtilconsumed('keydown', e);
 	});
-	listener('load', function (e) {
-		header_keys = templates.keys(headerui);
-		tall_header_keys = templates.keys(tallheaderui);
+	listener('load', async function (e) {
+		header_keys = Templates.keys(headerui);
+		tall_header_keys = Templates.keys(tallheaderui);
 
 		Webapp.header( xlate(appname) );
 //		Webapp.status( xlate('loading') );
 
 		xlate.update();
-		time && time.start();
+		Time && Time.start();
 
-		webapp.icons();
-		webapp.uponresize();
-		view.fahras();
+		Webapp.icons();
+		Webapp.uponresize();
+		Views.index();
 		setupforms();
 		
 		doc.title = 'APPNAME';
 
-		// if Offline is loaded, defer 'ready' to it
-		if (Offline && Offline.init) {
-			Offline.init(function () {
-				Hooks.run('ready', 1);
-				Backstack.main(2);
-				loadingbox.hidden = 1;
-			});
-		}
-		else {
-			Hooks.run('ready', 1);
-			$.taxeer('loadingbox', function () {
-				loadingbox.hidden = 1;
-			});
-			Backstack.main(2);
-		}
+		var loading_dom = Templates.keys(loadingbox);
+		var progress_list = List( loading_dom.progress ).id_prefix('progress').listitem('progress_item');
+		Webapp.report_progress = function ( { uid, title, info, progress } ) {
+			progress_list.set( { uid, title, info, progress } );
+		};
+		
+		if (debug_webapp) $.log.w('Webapp before-init');
+		await Hooks.until('webapp-before-init');
+
+		if (debug_webapp) $.log.w('Webapp init');
+		await Hooks.until('webapp-init');
+
+		if (debug_webapp) $.log.w('Webapp ready');
+		await Hooks.until('webapp-ready'); // 2024 use this
+		Hooks.run('ready', 1); // deprecated
+
+		$.taxeer('loadingbox', function () {
+			loadingbox.hidden = 1;
+		});
+		Backstack.main(2);
 
 		$.taxeer('webapp-on-scroll', function () {
 			on_scroll();
@@ -768,10 +777,10 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 
 		doc.addEventListener('visibilitychange', function () {
 			if (doc.visibilityState === 'visible') {
-				webapp.visible = 1;
+				Webapp.visible = 1;
 				Hooks.run('visible');
 			} else {
-				webapp.visible = 0;
+				Webapp.visible = 0;
 				Hooks.run('hidden');
 			}
 		});

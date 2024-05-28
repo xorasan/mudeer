@@ -16,7 +16,7 @@
  * 
  * */
 
-var Server, SocketIO;
+let Server, SocketIO;
 ;(function(){
 	'use strict';
 	

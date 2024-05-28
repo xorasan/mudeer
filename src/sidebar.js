@@ -31,6 +31,10 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 				options = Object.assign(old_options, options);
 			}
 			
+			if (isundef(options.before) && options.uid !== 'main') {
+				options.before = elementbyid( ( Sidebar.get('main') || {} ).id_dom );
+			}
+			
 			sidebar_list.set(options);
 			if (sidebar_sheet_list) {
 				delete options.id_dom;
@@ -94,7 +98,7 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 			}
 		});
 	});
-	Hooks.set('ready', function () {
+	Hooks.set('webapp-before-init', async function () {
 		sidebar_list = List( templates.keys(sidebarui).list ).idprefix('sdbr')
 						.listitem('sidebar_item').title('Sidebar');
 

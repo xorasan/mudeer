@@ -188,11 +188,12 @@ var Themes, themes;
 //			}
 //		} else { // low
 			if ( theme ) { // white
-				themes.set(1);
+				Themes.set(1);
 			} else { // black
-				themes.set(0);
+				Themes.set(0);
 			}
 //		}
+		Hooks.run('themes-set', Themes.get_current_theme());
 	}
 
 	Themes = themes = {
@@ -250,6 +251,9 @@ var Themes, themes;
 				return store[theme][key];
 			
 			return false;
+		},
+		get_current_theme: function () {
+			return store[current];
 		},
 		toggle: function () {
 			if (debug_themes) $.log.w( 'Themes toggle', current );
@@ -325,20 +329,20 @@ var Themes, themes;
 	Themes.generate_predictable_color = generate_predictable_color;
 
 	Hooks.set('ready', function () {
-		if (preferences) {
-			current = preferences.get(themes.saveto, 1) || 0;
-			contrast = preferences.get(themes.saveto_contrast, 1) || 0;
+		if (Preferences) {
+			current = Preferences.get(themes.saveto, 1) || 0;
+			contrast = Preferences.get(themes.saveto_contrast, 1) || 0;
 		}
 
 		set_theme_with_contrast(current);
 		
-		settingsuid = settings.adaaf('theme', function () {
+		settingsuid = Settings.adaaf('theme', function () {
 			var iswhite = preferences.get(themes.saveto, 1);
 			current = iswhite ? 1 : 0;
 			set_theme_with_contrast(current);
 			return [ iswhite ? 'white' : 'black' ];
 		}, function () {
-			preferences.set(themes.saveto, preferences.get(themes.saveto, 1) ? 0 : 1);
+			Preferences.set(themes.saveto, preferences.get(themes.saveto, 1) ? 0 : 1);
 		}, 'icontheme');
 
 //		settings_contrast_uid = settings.adaaf('contrast', function () {
@@ -352,11 +356,11 @@ var Themes, themes;
 	});
 	Hooks.set('viewready', function (args) {
 		// TODO replace these everywhere with longer variables -_-
-		K = softkeys.K, // key names
-		P = softkeys.P; // presets
+		K = Softkeys.K, // key names
+		P = Softkeys.P; // presets
 
 		if (Webapp.is_at_home()) {
-			softkeys.add({ n: 'Theme',
+			Softkeys.add({ n: 'Theme',
 				k: 'i',
 				ctrl: 1,
 				alt: 1,

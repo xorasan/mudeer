@@ -17,14 +17,14 @@
  * 			this too triggers intercessions
  * 			it doesn't pile up with other requests
  * */
-var Network, network, sessions = sessions || 0;
+var Network, network, sessions = sessions || 0, debug_network = 0;
 ;(function(){
 	'use strict';
 	var 
 //		address = 'http://localhost:'+Config.port+'/',
 		address = location.protocol + '//' + location.host + location.pathname,
 		buildexpired = false, offlinetime, module_name = 'network', module_title = 'Network',
-		networkkeys, debug_network = 0;
+		networkkeys;
 	// TODO make a better address with ROOT support
 
 	var error_log = function (v) { $.log.w( v ); };
@@ -339,7 +339,7 @@ var Network, network, sessions = sessions || 0;
 			on_error = error;
 		});
 		
-		$.log.w( module_title, 'Fetch', payload.get );
+		if (debug_network) $.log.w( module_title, 'Fetch', payload.get );
 		var res = await fetch(address, {
 			method: 'POST',
 			body: new URLSearchParams( { json: JSON.stringify(payload) } ),

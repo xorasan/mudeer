@@ -21,11 +21,13 @@ var calcdistance = function (x1, y1, x2, y2) {
 		return (ang < 0 ? ang + 360 : ang);
 	};
 	
-	Canvas = canvas = function (element) {
+	Canvas = canvas = function (element, options = {}) {
+		var ctx_options = { willReadFrequently: options.frequent };
+		
 		var c = {
 			f: '#fff',
 			s: -1,
-			o: element.getContext('2d')
+			o: element.getContext('2d', ctx_options)
 		};
 		c.linedash = function (v) {
 			c.o.setLineDash(v || [])
@@ -85,6 +87,9 @@ var calcdistance = function (x1, y1, x2, y2) {
 					c.o.beginPath();
 					c.o.moveTo(p.x, p.y);
 				}
+				
+				if (!isundef(p.w)) // width
+					c.o.lineWidth = p.w;
 
 				if (p.c) {
 					c.o.quadraticCurveTo(p.cx, p.cy, p.x, p.y);

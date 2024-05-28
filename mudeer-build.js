@@ -497,7 +497,7 @@ var compile_icons = function (options, folder) {
 	
 	var result = options.formatting ? beautify($resultDocument.html(), options.formatting) : $resultDocument.html();
 	
-//			$.log.s( result.length );
+//	$.log.s( result.length );
 	Files.set.file( (folder||'src')+'/icons.svg', result);
 
 };

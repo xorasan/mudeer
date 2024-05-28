@@ -231,6 +231,22 @@ var Sheet, sheet,
 			}
 			return index;
 		},
+		expunge: function (parent) { // remove from index
+			// parent can be an htm element or an array of sheet names
+
+			let elements;
+			if (parent instanceof HTMLElement || isundef(parent)) {
+				elements = (parent||document.body).querySelectorAll('[data-sheet]');
+			} else if (isarr(parent)) {
+				elements = [];
+				parent.forEach(function (o) {
+					elements.push( document.body.querySelectorAll('[data-sheet="'+o+'"]') );
+				});
+			}
+			elements.forEach(function (o) {
+				delete index[ o.dataset.sheet ];
+			});
+		},
 	};
 	Hooks.set('ready', function () {
 		Sheet.index();

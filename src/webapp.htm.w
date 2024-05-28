@@ -3,9 +3,16 @@
 #tallscreenpadding
 .tahweem .absolute .top .bottom .left .right .noselect
 #tafawwaq .sticky
-#loadingbox .fixed .flex .big .bold
+#loadingbox .fixed .flex
 	.center
-		[i18n=loading]
+		.flex .vertical
+			[i18n=loading] .big .bold
+			[id=progress]
+[template=progress_item] .soft_item .flex
+	.flex .vertical .grow
+		[id=title] .bold
+		[id=info] .dim
+	[id=progress]
 #dimmer .fixed @hidden
 	#dimmertext
 // TODO support for ROOT for /

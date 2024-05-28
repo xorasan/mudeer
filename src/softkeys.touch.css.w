@@ -21,15 +21,15 @@ if min-width = 321px
 	#softkeysui button svg
 		height			42px
 		width			42px
-//#softkeysui .row1
-//	display			flex
-//	flex-direction	row-reverse
-//	width			240px
-//	position		fixed
-//	right			0
-//	bottom			0
-//#softkeysui .row1 button
-//	position		relative
+//	#softkeysui .row1
+//		display			flex
+//		flex-direction	row-reverse
+//		width			240px
+//		position		fixed
+//		right			0
+//		bottom			0
+//	#softkeysui .row1 button
+//		position		relative
 	#softkeysui .row2, #skdots
 		box-shadow		0 0 10px 0 @tertiary
 		display			flex
@@ -86,7 +86,6 @@ if min-width = 321px
 		border-right	0
 		border-radius	10px 0 0 10px
 	#softkeysui .row2 button
-		padding			0 4px
 		position		relative
 		overflow		visible
 		border-radius	10px 0 0 10px

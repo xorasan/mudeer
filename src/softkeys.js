@@ -8,7 +8,9 @@
  * all keyups are pd'd, fig out logic for keydowns in .press
  * modifiers now do work! 13 sep 2023
  */
-var Softkeys, softkeys, K, P, debug_softkeys = 0;
+var Softkeys, softkeys,
+	K, P, // TODO fig out better global names for these and transition all deps to it SK SP?
+	debug_softkeys = 0;
 ;(function(){
 	K = { // key code names
 		mt:	'microphonetoggle',

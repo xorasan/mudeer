@@ -33,17 +33,26 @@ var Hooks, hooks;
 		// if id is a fn, then assign it to fn and then gen rand id
 		set: function (hook, id, fn, priority) {
 			if (hook instanceof Array) {
+				var remove_uids = []
 				hook.forEach(function (item) {
-					Hooks.set(item, id, fn, priority);
+					remove_uids.push(
+						Hooks.set(item, id, fn, priority)
+					);
 				});
-				return;
+				return { // TODO test
+					remove: function () {
+						remove_uids.forEach(function (id) {
+							Hooks.pop(hook, id);
+						});
+					}
+				};
 			}
 			
 			var registry = Hooks._registry;
 			if (priority) registry = Hooks._registry_first;
 				
 			if (typeof id === 'function')
-				fn = id, id = new Date().getTime();
+				fn = id, id = new Date().getTime()+(Math.random());
 				
 			if (typeof fn === 'function') {
 				// check if there's a hook by that name
@@ -58,7 +67,11 @@ var Hooks, hooks;
 				
 				// map uid under id
 				Hooks._map[hook+'_'+id] = Hooks._uid;
-				return true;
+				return {
+					remove: function () {
+						Hooks.pop(hook, id);
+					}
+				};
 			}
 			return false;
 		},
@@ -126,11 +139,13 @@ var Hooks, hooks;
 			if (Hooks._registry_first[hook]) {
 				// get its uid from map using hook+id, access using uid
 				delete Hooks._registry_first[hook][ Hooks._map[hook+'_'+id] ];
+				delete Hooks._map[hook+'_'+id];
 				return true;
 			}
 			if (Hooks._registry[hook]) {
 				// get its uid from map using hook+id, access using uid
 				delete Hooks._registry[hook][ Hooks._map[hook+'_'+id] ];
+				delete Hooks._map[hook+'_'+id];
 				return true;
 			}
 			return false;

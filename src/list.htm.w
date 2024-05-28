@@ -1,5 +1,5 @@
 #listui
-	[template=list] .list
+	[template=list] .list [list]
 		[id=raees] .a3laa .flex .vertical .vcenter .pad .padv .gapb .bold .small .centertext
 			.mowdoo3list [id=mowdoo3list] .grow
 			.miqyaas [id=miqyaas] @hidden

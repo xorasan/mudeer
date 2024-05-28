@@ -1,7 +1,7 @@
-var View, view, debug_view = 0;
+var Views, View, view, debug_view = 0;
 ;(function(){
 	var index = {};
-	View = view = {
+	Views = View = view = {
 		zaahir: function (name) { // is_active, deprecated
 			return view.axav() === name;
 		},
@@ -97,8 +97,8 @@ var View, view, debug_view = 0;
 		axad: function (name, onlyelement) { // get, deprecated
 			return view.axav(name, onlyelement);
 		},
-		fahras: function () { // index
-			var elements = document.body.querySelectorAll('[data-view]');
+		index: function (parent) { // fahras
+			var elements = (parent||document.body).querySelectorAll('[data-view]');
 			for (var i in elements) {
 				if ( elements.hasOwnProperty(i) && elements[i].dataset.view ) {
 					// hide all views except main while indexing
@@ -110,10 +110,27 @@ var View, view, debug_view = 0;
 			}
 			return index;
 		},
+		expunge: function (parent) { // remove from index
+			// parent can be an htm element or an array of view names
+
+			let elements;
+			if (parent instanceof HTMLElement || isundef(parent)) {
+				elements = (parent||document.body).querySelectorAll('[data-view]');
+			} else if (isarr(parent)) {
+				elements = [];
+				parent.forEach(function (o) {
+					elements.push( document.body.querySelectorAll('[data-view="'+o+'"]') );
+				});
+			}
+			elements.forEach(function (o) {
+				delete index[ o.dataset.view ];
+			});
+		},
 	};
 	
 	View.get		= View.axav;
 	View.ishtaghal	= View.run;
+	View.fahras		= View.index;
 	View.dom_keys	= View.mfateeh;
 
 	Hooks.set('backstackview', function (args) {

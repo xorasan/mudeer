@@ -4,7 +4,7 @@
  * 
  * the dom list set/pop functions also mutate the adapter
  * */
-var List, list;
+var List, list, debug_list;
 ;(function(){
 	'use strict';
 
@@ -601,6 +601,9 @@ var List, list;
 		get_item_object: function (num) {
 			return this.adapter.get( this.num2id( isundef(num) ? this.selected : num ) );
 		},
+		get_item_object_by_uid: function (uid) {
+			return this.adapter.get( uid );
+		},
 		get_item_element: function (num) {
 			return this.get( isundef(num) ? this.selected : num );
 		},
@@ -657,8 +660,10 @@ var List, list;
 			var element = this.get(this.selected);
 			if (element) {
 				var item = this.adapter.get( element.dataset.uid );
-				if (item) {
-					(this.element.dataset.focussed || force) &&
+				// EXPLAIN focussed here is key in preventing cross-view key presses
+				// list should have a parent view connected to filter out irrelevant events when hidden
+				// if a list has no parent views defined, let onpress get triggered
+				if (item && (this.visible || force || !this.parent_views.length)) {
 					this.onpress && this.onpress( item, key, this.selected );
 
 					for (var opl in this.on_press_listeners) {
@@ -776,20 +781,80 @@ var List, list;
 	proto.id_prefix = proto.idprefix;
 	proto.list_item = proto.listitem;
 	proto.set_focus = proto.rakkaz;
+	proto.set_visibility = function (yes) {
+		var proto = this;
+		// TODO listen for changes on the visible data attribute and reflect them here
+		proto.visible = !!yes;
+		if (yes)
+			setdata(proto.element, 'visible', 1);
+		else
+			popdata(proto.element, 'visible');
+	};
 	proto.highlight = proto.baidaa;
 	proto.select_silently = proto.intaxabsaamitan;
 	proto.prevent_focus = function (yes) {
 		this._prevent_focus = yes;
 		return this;
 	};
-	proto.on_press_listeners = {};
+
 	proto.listen_on_press = function (callback, name) {
 		var count = Object.keys( this.on_press_listeners ).length;
 		this.on_press_listeners[ name || count ] = callback;
 	};
+
+	proto.get_parent_views = function () {
+		var proto = this;
+		return proto.parent_views.concat([]);
+	};
+	proto.add_parent_view = function (name) {
+		var proto = this;
+		if (isarr(name)) {
+			name.forEach(function (o) {
+				proto.add_parent_view(o)
+			});
+		} else if (!proto.parent_views.includes(name)) {
+			proto.parent_views.push(name);
+		}
+		return proto;
+	};
+	proto.remove_parent_view = function (name) {
+		var proto = this;
+		proto.parent_views.splice( proto.parent_views.indexOf(name), 1 );
+	};
+	proto.is_parent_view = function (name) {
+		var proto = this;
+		return proto.get_parent_views().includes(name);
+	};
+	
+	Hooks.set(['view-ready', 'restore'], function () {
+		var lists = document.body.querySelectorAll('[data-list]');
+		if (debug_list)	$.log.w( 'List', View.get(), 'ready' );
+		lists.forEach(function (l) {
+			if ( isundef( getdata(l, 'template') ) ) {
+				var LV = l.parentElement.listobject;
+				if (LV && LV.idprefix_raw) { // only unique lists should be targeted
+					var visible = LV.is_parent_view( View.get() );
+
+					LV.set_visibility( visible );
+
+					if (visible) {
+						if (debug_list)	$.log.w( 'List', LV.idprefix_raw, 'visible' );
+						// TODO only gain focus if it was previously focussed
+					} else {
+						if (debug_list)	$.log.w( 'List', LV.idprefix_raw, 'hidden' );
+//						controls_list.set_focus(); // lose focus
+					}
+				}
+			}
+		});
+	});
 	
 	List = list = function (element) { // TODO deprecate list
 		var LV = Object.create(proto);
+
+		LV.on_press_listeners = {};
+		LV.parent_views = [];
+
 		element.dataset.focus = 'list';
 		element.listobject = LV;
 		LV.filmakaan = element.dataset.filmakaan;

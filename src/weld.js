@@ -224,14 +224,16 @@ var _mod = {
 		
 	}
 };
+
 Weld = {
+	parse_weld,
 	parse_config: function ( text ) {
 		return _mod.parse( parse_weld( text ) );
 	},
 	/* converts json back to weld, each child level is represented by a \t
 	 * takes a json object, return string weld
 	 * */
-	encode_config: function (obj, tabs) {
+	encode_config: function (obj, tabs) { // was .toslang
 		var weld	= '',
 			tabs	= tabs || 0,
 			filler	= Cli.getfiller(obj);
@@ -261,5 +263,56 @@ Weld = {
 };
 
 Weld.decode_config = Weld.parse_config;
+Weld.encode = Weld.encode_config;
+
+// Uglification support base, all submodules depend on this
+/*
+ * used when mapping an uglified key to an original key
+ * @param	String optional key
+ * @return	Uglified unique key
+ */
+var ugly_uid = 0, ugly_seed = 'ثحخقضصطظذا';
+Weld.uglify_key = function (key) {
+	if (key === undefined) key = ugly_uid++;
+	
+	var uglykey	= '',
+		seed	= ugly_seed,
+		uid		= (key).toString();
+	
+	if (debug === false) {
+		uid = uid.split('');
+		for (var i in uid) {
+			uglykey += seed[ uid[i] ];
+		}
+	} else {
+		uglykey = uid;
+	}
+
+	// the delimiter can be any valid character not in _uglyseed
+	return '_'+uglykey;
+};
+/*
+ * this function adds the value to the map if it isn't already there
+ * if value === true, it'll auto gen unique uglykey
+ * mapit( map, key, value )
+ * mapit( map, value ) // uses value as both key & value
+ */
+Weld.map_key = function (map, key, value) {
+	if (value === undefined) value = key;
+	if (map[key] === undefined) {
+		if (value === true) {
+			if (debug) {
+				value = '_'+key+'_';
+			} else {
+				value = Weld.uglify_key();
+			}
+		}
+		map[key] = value;
+	} else {
+		return map[key];
+	}
+	return value;
+};
+
 
 })();

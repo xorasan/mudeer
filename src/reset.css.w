@@ -4,8 +4,6 @@
 	border			0
 *
 	box-sizing		border-box
-small, big
-	font-weight		normal
 small, .small
 	font-size		80%
 .medium
