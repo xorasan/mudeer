@@ -348,6 +348,8 @@ var Time, time;
 		if (	s	===	('M')		)	{ return val._month															}
 		if (	s	===	('dddd')	)	{ return val._dayname														}
 		if (	s	===	('ddd')		)	{ return (val._dayname||'').substr(0, 3)									}
+		if (	s	===	('DDDD')	)	{ return toupper(val._dayname)												}
+		if (	s	===	('DDD')		)	{ return toupper(val._dayname||'').substr(0, 3)								}
 		if (	s	===	('DD')		)	{ return val._day < 10 ? '0'+val._day : val._day							}
 		if (	s	===	('Do')		)	{ return val._day+val._o													}
 		if (	s	===	('D')		)	{ return val._day															}
@@ -413,6 +415,8 @@ var Time, time;
 				.replace(/M/g	, time.replacewithuid)
 				.replace(/dddd/g, time.replacewithuid)
 				.replace(/ddd/g	, time.replacewithuid)
+				.replace(/DDDD/g, time.replacewithuid)
+				.replace(/DDD/g	, time.replacewithuid)
 				.replace(/DD/g	, time.replacewithuid)
 				.replace(/Do/g	, time.replacewithuid)
 				.replace(/D/g	, time.replacewithuid)
@@ -425,7 +429,7 @@ var Time, time;
 
 		return  datetimestring;
 	};
-	time.format = time.formatdate; // NEW 2024
+	Time.format = time.formatdate; // NEW 2024
 
 	time.start = function (parent) {
 		started = 1;

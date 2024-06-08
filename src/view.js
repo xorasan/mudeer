@@ -25,19 +25,29 @@ var Views, View, view, debug_view = 0;
 		},
 		mfateeh: function (name) { // dom_keys
 			var element = index[name];
-			if (element) return templates.keys(element);
+			if (element) return Templates.keys(element);
 
 			return false;
 		},
 		run: async function (name, uid) {
-			var level	= backstack.level			,
+			var level	= Backstack.level			,
 				exists	= View.get_element(name)	;
 
 			if (isundef(exists)) {
 				$.log.w('View not found: "'+name+'"');
+				let element = Views.get_element('not_found');
+				if (element) {
+					Views.get('not_found');
+					Webapp.header([ 'Not Found', 0, 'iconclose' ]);
+					let keys = Templates.keys(element);
+					innertext(keys.path, location.pathname);
+					if (get_global_object().Sidebar) {
+						Sidebar.choose();
+					}
+				}
 			} else {
-				var element	= view.get(name)			,
-					keys	= templates.keys(element)	;
+				var element	= Views.get(name)			,
+					keys	= Templates.keys(element)	;
 				var out = {
 					name: name,
 					uid: uid,

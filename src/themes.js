@@ -19,6 +19,7 @@ var Themes, themes;
 			primaryd:	'#070707',
 			primaryt:	'rgba(0,0,0,0.8)', // perfect transparent level
 			primaryxt:	'rgba(0,0,0,0.4)',
+			primaryxxt:	'rgba(0,0,0,0.2)',
 
 			secondaryl:	'#353535',
 			secondary:	'#333',
@@ -64,6 +65,7 @@ var Themes, themes;
 			primaryd:	'#f3f3f3',
 			primaryt:	'rgba(255,255,255,0.8)', // perfect transparent level
 			primaryxt:	'rgba(255,255,255,0.4)',
+			primaryxxt:	'rgba(255,255,255,0.2)',
 
 			secondaryl:	'#c6c6c6',
 			secondary:	'#d6d6d6',

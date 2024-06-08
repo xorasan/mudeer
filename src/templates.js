@@ -22,6 +22,12 @@ var Templates, templates, namaavij;
 			}
 			return keys;
 		},
+		get_icon_as_svg: function (name) {
+			var e = icons.querySelector('#'+name);
+			if (e)
+				return '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
+			return '';
+		},
 		// matches properties in an object despite $suffixes, returns value
 		has_property: function (o, prop) {
 			for (var i in o) {
@@ -138,9 +144,7 @@ var Templates, templates, namaavij;
 							if (icon_src.startsWith('file:/') || icon_src.startsWith('/') || is_image) {
 								innerhtml(keys[i], '<img src="'+icon_src+'" />');
 							} else {
-								var e = icons.querySelector('#'+icon_src);
-								if (e)
-									keys[i].innerHTML	= '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
+								innerhtml( keys[i], Templates.get_icon_as_svg( icon_src ) );
 							}
 //							keys[i].innerHTML = '<svg><use xlink:href=\'#'+o[i]+'\'></use></svg>';
 						} else {

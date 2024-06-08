@@ -218,7 +218,7 @@ var List, list, debug_list;
 //				);
 			}
 			item = this.get(this.selected);
-			if (item) { // TODO only scroll if too close to edge
+			if (item && !this.element.dataset.freeflow) { // TODO only scroll if too close to edge
 				if (this.reverse) {
 					scroll_by(0, item.offsetHeight);
 				} else {
@@ -281,7 +281,7 @@ var List, list, debug_list;
 //				);
 			}
 			item = this.get(this.selected);
-			if (item) { // TODO only scroll if too close to edge
+			if (item && !this.element.dataset.freeflow) { // TODO only scroll if too close to edge
 				if (this.reverse) {
 					scroll_by(0, -item.offsetHeight);
 				} else {
@@ -879,9 +879,9 @@ var List, list, debug_list;
 			 * calls pop or set and that changes this.selected
 			 * */
 			LV.beforepress && LV.beforepress(i, e, uid);
-			LV.intaxabsaamitan( uid ); // select without trig event
+			LV.selected = parseint(uid); // this needs to be before select_silently so that events get the right uid
+			LV.select_silently( uid ); // select without trig event, this does trigger on_selection
 			var yes = LV.selected == uid && LV.element.dataset.focussed == 1;
-			LV.selected = parseint(uid);
 			LV.rakkaz(1, 1);
 			
 			if (yes) LV.press(K.en);

@@ -1,5 +1,5 @@
 html, body, svg text
-	font-family		Segoe UI, Noto Naskh Arabic UI, sans-serif
+	font-family		FreeSans, Segoe UI, Noto Naskh Arabic UI, sans-serif
 
 if min-height = 600px
 	body

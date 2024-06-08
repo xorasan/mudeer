@@ -39,3 +39,7 @@ button @type(button) [template=checkbox] .checkbox .flex .row
 	.center
 		.icon [id=icon]
 		label [id=label]
+[view=not_found] .pad .gapb .centertext
+	[id=title] .big 'Whoa!'
+	[id=message] .bold 'How did you get here?'
+	[id=path] .dim

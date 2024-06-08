@@ -85,7 +85,11 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 			}
 		},
 		choose: function (uid) { // merely highlights an item
-			sidebar_list.select_by_uid( uid, 1, 1, 1 );
+			if (isundef(uid)) {
+				sidebar_list.deselect();
+			} else {
+				sidebar_list.select_by_uid( uid, 1, 1, 1 );
+			}
 		},
 	};
 	

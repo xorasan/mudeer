@@ -1,4 +1,4 @@
-var has_access, create_access, set_access;
+let has_access, create_access, set_access, destroy_access;
 ;(function(){
 	'use strict';
 	
@@ -16,6 +16,12 @@ var has_access, create_access, set_access;
 	};
 	create_access = function ( name, feature, description ) {
 		access[ name+'_'+feature ] = { name, feature, description };
+		// TODO update list if visible
+	};
+	destroy_access = function ( name, feature ) {
+		let uid = name+'_'+feature;
+		delete access[ uid ];
+		access_list.remove_by_uid( uid );
 	};
 	set_access = function () {
 		

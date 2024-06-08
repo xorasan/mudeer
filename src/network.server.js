@@ -1,6 +1,6 @@
-/* Web.adaaf
- * network.get( name, need, cb )
- * network.sync( ... )
+/* Web.add
+ * Network.get( name, need, cb )
+ * Network.sync( ... )
  * 
  * json.get.name.need = value
  * json.sync.name.need = value
@@ -10,8 +10,15 @@
  * mirror this on client side
  * you are able to listen for specific responses for your own module
  * you can add batch commands to be executed every 24h
+ * 
+ * BIG IMPORTANT TODO transition Network over to Hooks.until
+ * ALL addons should only use the Hooks based API <3 
+ * 
+ * the old API is deprecated here onwards (including client-side) 06 Jun 2024
+ * this also means all Hooks subs will only need to remove their own hooks, which is super easy
+ * instead of having to learn Network's API
  * */
-var network_favors = {}, PRIMARY = 100, SECONDARY = 500, TERTIARY = 1000,
+var network_favors = {}, PRIMARY = 'primary', SECONDARY = 'secondary', TERTIARY = 'tertiary',
 	network_batches = {};
 [PRIMARY, SECONDARY, TERTIARY].forEach(function (favor) {
 	network_favors[favor] = {
@@ -111,11 +118,11 @@ Network.favor(PRIMARY).intercept('network', 'time', function (response) {
 	response.finish();
 });
 Web.add(function (done, queue, extra) {
-	var payload		= extra.payload	;
-	var obj			= extra.obj		;
-	var queuesub	= $.queue()		;
+	let payload		= extra.payload	;
+	let obj			= extra.obj		;
+	let queuesub	= $.queue()		;
 
-	var response = function (donesub, name, need, value_from_client) {
+	function response(donesub, name, need, value_from_client) {
 		var rsp = {
 			finish: function () {
 				donesub(queuesub, extra);
@@ -217,9 +224,9 @@ Web.add(function (done, queue, extra) {
 		return rsp;
 	};
 	
-	var arr = [], count = 0;
+	let arr = [], count = 0;
 	
-	var schedule = function (item, favor) { // priority
+	function schedule(item, favor, favor_name) { // priority
 		for (var name in payload[item]) {
 			if (favor[item][name]) {
 				var needs = payload[item][name];
@@ -233,10 +240,41 @@ Web.add(function (done, queue, extra) {
 						var o = arr[count];
 						count++;
 						if (typeof favor[item][o.name][o.need] == 'function') {
+							if (debug_network) $.log( 'network running', o.name, o.need, o.value );
 							favor[item][o.name][o.need](
 								response(donesub, o.name, o.need, o.value)
 							);
 						} else donesub(queuesub);
+					});
+				}
+			}
+		}
+		
+		let favor_suffix = '';
+		if ([PRIMARY, TERTIARY].includes(favor_name)) {
+			favor_suffix = '-'+favor_name;
+		}
+		
+		let hook_ids = Hooks.get_ids('network-'+item+favor_suffix);
+		if (hook_ids.length) {
+			if (debug_network) $.log( 'hook_ids -> network-'+item+favor_suffix );
+			for (let hook_id of hook_ids) {
+				let [ name, need ] = hook_id.split(',');
+				if (debug_network) $.log( 'name, need', name, need );
+				let handler = Hooks.get_handler('network-'+item, hook_id);
+				if (payload[item] && payload[item][name] && payload[item][name][need]) {
+					if (debug_network) $.log( 'payload', payload[item][name][need] );
+					queuesub.set(async function (donesub) {
+						if (debug_network) $.log( 'network running', name, need );
+						let rsp = response(donesub, name, need, payload[item][name][need]);
+						let result = await handler( rsp );
+						if (!isundef(result)) {
+							let channel = item;
+							if (item == 'intercession') channel = 'intercept';
+							rsp[channel](result);
+						}
+						if (debug_network) $.log( 'network result', name, need, result );
+						donesub(queuesub);
 					});
 				}
 			}
@@ -246,7 +284,7 @@ Web.add(function (done, queue, extra) {
 	['intercession', 'get', 'sync', 'upload'].forEach(function (item) {
 		if (payload[item]) {
 			[PRIMARY, SECONDARY, TERTIARY].forEach(function (favor) {
-				schedule( item, network_favors[favor] );
+				schedule( item, network_favors[favor], favor );
 			});
 		}
 	});

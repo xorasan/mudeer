@@ -31,6 +31,7 @@ var Hooks, hooks;
 		_uid: 0,
 		// set multiple handlers on a hook id
 		// if id is a fn, then assign it to fn and then gen rand id
+		// the only two reserved chars for hook & id are _
 		set: function (hook, id, fn, priority) {
 			if (hook instanceof Array) {
 				var remove_uids = []
@@ -50,9 +51,14 @@ var Hooks, hooks;
 			
 			var registry = Hooks._registry;
 			if (priority) registry = Hooks._registry_first;
-				
-			if (typeof id === 'function')
+			
+			if (id instanceof Array) {
+				id = id.join(',');
+			}
+			
+			if (typeof id === 'function') {
 				fn = id, id = new Date().getTime()+(Math.random());
+			}
 				
 			if (typeof fn === 'function') {
 				// check if there's a hook by that name
@@ -60,12 +66,17 @@ var Hooks, hooks;
 					registry[hook] = [];
 				}
 				
-				++Hooks._uid;
+				// only increment the global uid if this handler isn't registered perviously
+				if (Hooks._map[hook+'_'+id] === undefined) {
+					++Hooks._uid;
+				}
+				
 				
 				// register using uid
 				registry[hook][Hooks._uid] = fn;
 				
 				// map uid under id
+				// BUG this doesn't account for re-registering under diff priority
 				Hooks._map[hook+'_'+id] = Hooks._uid;
 				return {
 					remove: function () {
@@ -77,6 +88,27 @@ var Hooks, hooks;
 		},
 		set_first: function (hook, id, fn) {
 			return this.set(hook, id, fn, 1);
+		},
+		get_handler: function (hook, hid) {
+			let uid = Hooks._map[hook+'_'+hid];
+			let handler = (Hooks._registry_first[hook] || {})[uid];
+			if (handler) return handler;
+			handler = (Hooks._registry[hook] || {})[uid];
+			if (handler) return handler;
+		},
+		get_ids: function (hook) {
+			// returns sorted list of id index as [ id, ... ]
+			// with that you can either run the handlers yourself or prepare custom arguments for each of them
+			// before running each of them
+			let handler_ids = [];
+			for (let hook_id in Hooks._map) {
+				if (hook_id.startsWith( hook+'_' )) {
+					let hid = hook_id.split('_')[1];
+
+					handler_ids.push( hid );
+				}
+			}
+			return handler_ids;
 		},
 		// run all handlers listening on this id and pass it this extras object
 		// add a try/catch clause to both run* fn's; make contigencies

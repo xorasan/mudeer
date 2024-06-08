@@ -1,6 +1,8 @@
 // TODO add props mw, mh
 // TODO add maintain aspect ratio on resize given one min dimension
 // supports Array based gradient as fill type :)
+// TODO add support panning and zooming
+// TODO add support for deep zoom
 var Canvas, canvas;
 var calcdistance = function (x1, y1, x2, y2) {
 	var dx = x2 - x1; dx *= dx;
@@ -119,6 +121,43 @@ var calcdistance = function (x1, y1, x2, y2) {
 		};
 		c.clear = function (x, y, w, h) {
 			c.o.clearRect(x || 0, y || 0, w || element.width, h || element.height);
+		};
+		
+		// points expects [ f%, f% ]
+		c.graph = function (points = [], stroke = -1, fill) {
+			let w = element.width, h = element.height;
+			
+			if (isundef(fill)) {
+				fill = {
+					w: 0,
+					h: h*1.5,
+					stops: [Themes.get('accentt'), 'transparent']
+				};
+			}
+
+			c.clear();
+
+			if (isarr(points) && points.length) {
+				points = points.concat([]);
+
+				$.log( w, points.length );
+
+				let step_width = (w / points.length); // px
+
+				points.unshift( 1 );
+				points.push( 1 );
+
+				points.forEach(function (o, i) {
+					points[i] = {
+						x: (i / points.length) * step_width,
+						y: h * o,
+					};
+				});
+
+				c.line(points, stroke, fill);
+			}
+			
+			return points;
 		};
 		
 		c.text = c.matn;

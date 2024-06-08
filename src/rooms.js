@@ -3,7 +3,7 @@
  * 		[ room
  * 
  * */
-var Rooms, rooms, rooms_list, rooms_recycler;
+var Rooms;
 ;(function(){
 	var keys, oldresults = [], photo, module_name = 'rooms', module_title = 'Rooms', module_icon = 'iconbluron',
 		room_detail_level_suid, room_detail_level = 'room_detail_level',
@@ -118,8 +118,8 @@ var Rooms, rooms, rooms_list, rooms_recycler;
 		},
 		condition: function (m) { // condition of room
 			var condition = 0, byyou = 0, msg = '';
-			var is_other = rooms.is_other(m.members);
-			var is_you = rooms.is_you(m.members);
+			var is_other = Rooms.is_other(m.members);
+			var is_you = Rooms.is_you(m.members);
 			if (isarr(is_other) && isarr(is_you)) {
 				if (is_other[1] === -3) { // he blocked you
 					condition = -3;
@@ -240,10 +240,6 @@ var Rooms, rooms, rooms_list, rooms_recycler;
 			}
 		});
 
-		create_access( module_name, 'create', 'Create Room' );
-		create_access( module_name, 'remove', 'Remove Room' );
-		create_access( module_name, 'invite', 'Invite members to a Room' );
-
 		keys = View.dom_keys(module_name);
 
 		rooms_list = list( keys.list ).idprefix(module_name).listitem('roomitem');
@@ -346,27 +342,6 @@ var Rooms, rooms, rooms_list, rooms_recycler;
 		};
 
 	});
-	Hooks.set('view-init', async function (args) { if ( View.is_active_fully( module_name ) ) {
-		await Rooms.update();
-		
-		Softkeys.list.basic(rooms_list);
-		rooms_list.select();
-		
-		if ( await has_access( module_name, 'create' ) ) {
-			if ( View.is_active( module_name ) ) {
-				Softkeys.add({ n: 'Create Room',
-					k: K.sl,
-					i: 'iconadd',
-					c: function () {
-						Rooms.open();
-						return 1;
-					}
-				});
-			}
-		}
-
-		sort_softkey();
-	} });
 	Hooks.set('recycler-insert-done', async function ({ name, need }) { if (name == module_name) {
 		await Rooms.apply_room_details();
 	} });

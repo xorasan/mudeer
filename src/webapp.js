@@ -706,6 +706,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 
 	listener('resize', function () {
 		Webapp.uponresize();
+		Hooks.run('webapp-resize');
 	});
 	listener('contextmenu', function (e) {
 		var yes = Hooks.rununtilconsumed('contextmenu', e);

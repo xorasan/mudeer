@@ -613,6 +613,45 @@ var Softkeys, softkeys,
 	Hooks.set('mousewheel', function (e) {
 		e && softkeys.press('', e, e.type);
 	});
+	
+	function fire_hook(name, e) {
+		let key = tolower(e.key||'');
+
+		// TODO BUG this causes bugs when messages are loaded, voice recording starts imm
+		// but without it, many uponenters dont get triggered
+//		if (key == K.en) {
+//			Softkeys.press(e.key, e, e.type, 0);
+//		}
+
+		let code = (e || {}).keyCode, modifiers = [];
+		let is_alphanum, is_alpha, is_lower, is_upper, is_number;
+		if (isnum(code)) {
+			is_number	= code >= 48 && code <= 57;
+			is_upper	= code >= 65 && code <= 90;
+			is_lower	= code >= 97 && code <= 122;
+			is_alpha	= is_lower || is_upper;
+			is_alphanum	= is_number || is_upper || is_lower;
+		}
+		
+		if (e) {
+			modifiers = [e.ctrlKey, e.altKey, e.shiftKey];
+		}
+
+		Hooks.until(name, {
+			key,
+			code,
+			event: e || {},
+			type: e && e.type,
+			is_number	,
+			is_upper	,
+			is_lower	,
+			is_alpha	,
+			is_alphanum	,
+//			has_handler	,
+			modifiers	,
+		});
+	}
+	
 	Hooks.set('keyup', function (e) {
 //		$.log( 'keyup', lastkey, e.key.toLowerCase() );
 //
@@ -660,7 +699,7 @@ var Softkeys, softkeys,
 			}, 100);
 		} else {
 		}
-		var key = (e.key||'').toLowerCase();
+		let key = tolower(e.key||'');
 
 		// TODO BUG this causes bugs when messages are loaded, voice recording starts imm
 		// but without it, many uponenters dont get triggered
@@ -669,6 +708,7 @@ var Softkeys, softkeys,
 //		}
 
 		Hooks.rununtilconsumed('softkey', [key, e || {}, e && e.type, 0]);
+		fire_hook('softkeys-up', e);
 		preventdefault(e);
 	});
 	Hooks.set('keydown', function (e) {
@@ -681,6 +721,9 @@ var Softkeys, softkeys,
 		} else {
 			preventdefault(e);
 		}
+
+		fire_hook('softkeys-down', e);
+
 //
 //		if (time.now() - lastkeytime < 300) {
 //			repeatmode = 1;
