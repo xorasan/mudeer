@@ -1,7 +1,9 @@
 var Sidebar, sidebar_list, sidebar_sheet_list;
 ;(function(){
-	var debug_sidebar = 0;
-	var sidebar_softkey = { n: 'Sidebar',
+	let debug_sidebar = 0,
+		max_width = 860
+		;
+	let sidebar_softkey = { n: 'Sidebar',
 		k: 'contextmenu',
 		last: 1,
 		ctrl: 1,
@@ -31,7 +33,10 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 				options = Object.assign(old_options, options);
 			}
 			
-			if (isundef(options.before) && options.uid !== 'main') {
+			if (   isundef(options.before) // not overridden
+				&& options.uid !== 'main'	// no need for the Home/Main entry
+				&& !sidebar_list.adapter.get(options.uid)	// also if doesn't already exist
+				) {
 				options.before = elementbyid( ( Sidebar.get('main') || {} ).id_dom );
 			}
 			
@@ -63,7 +68,7 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 			if (c) izhar(c);
 		},
 		open: function () {
-			if (innerwidth() > 1024) {
+			if (innerwidth() > max_width) {
 //				sidebar_list.set_focus(1, 1);
 				// TODO escape to restore focus maybe?
 			} else {
@@ -95,7 +100,7 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 	
 	listener('resize', function () {
 		$.taxeer('sidebar-softkey', function () {
-			if (innerwidth() > 1024) {
+			if (innerwidth() > max_width) {
 				Sidebar.remove_softkey();
 			} else {
 				Sidebar.set_softkey();
@@ -129,14 +134,14 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 //			sidebar_list.set_focus();
 		};
 	});
-	Hooks.set('viewready', function (args) {
-		if (/*Backstack.darajah <= 1 && */innerwidth() <= 1024) {
+	Hooks.set('viewready', function () {
+		if (/*Backstack.darajah <= 1 && */innerwidth() <= max_width) {
 			Sidebar.set_softkey();
 		}
 	});
 	Hooks.set('restore', function (level) {
 		if (level <= 1) {
-			if (innerwidth() <= 1024) {
+			if (innerwidth() <= max_width) {
 //				Sidebar.set_softkey();
 			} else {
 				Sidebar.remove_softkey();

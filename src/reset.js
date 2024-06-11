@@ -151,6 +151,11 @@ to_num = function (v) { // forces v to be an integer or float or undefined
 	}
 	return;
 },
+to_arr_or_undef = function (v) { // forces v to be an arr (even an empty one) or undefined
+	if (isundef(v)) return;
+	else if (!isarr(v)) return [];
+	return v;
+},
 intify = function (arr) {
 	for (var i = 0; i < arr.length; ++i) {
 		arr[i] = parseint(arr[i]);

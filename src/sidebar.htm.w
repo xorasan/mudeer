@@ -3,7 +3,7 @@
 [template=sidebar_item] .sidebar_item .flex .padv
 	[id=icon] .icon
 	.flex .vertical .narrowline
-		[id=title] .pad
-		[id=subtitle] .pad .dim .small
-	[id=count_tag] .tag
+		[id=title] .pad .title
+		[id=subtitle] .pad .dim .small .subtitle
+	[id=count_tag] .count
 		[id=count] .pad .dim

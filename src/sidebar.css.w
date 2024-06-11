@@ -12,7 +12,7 @@
 	border-radius	0 0 10px 0
 	display			none
 	flex-direction	column-reverse
-	overflow		auto
+	overflow		visible
 
 .fill_available
 	width			100%
@@ -23,6 +23,7 @@
 	padding-bottom	10px
 	background		@primaryl
 	align-items		center
+	border-top		1px solid @secondaryd
 .sidebar_item:hover
 	background		@secondaryl
 [data-selected].sidebar_item
@@ -34,19 +35,44 @@
 	background		@accentd
 .sidebar_item .icon
 	padding-right	5px
+.sidebar_item .count
+	background		@secondaryl
+	border			1px solid @textxd
+	color			@textd
+	padding			3px
+	font-weight		bold
+	right			-5px
+	position		absolute
+	z-index			20
+	border-radius	10px
+.sidebar_item:hover .count
+	background		@tertiaryl
+	border			1px solid @textd
+	color			@textl
+	
 
 
-if min-width = 1024px
+if min-width = 860px
 	#sidebarui
-		display		inline-flex
-//		display		inline-block
+		display			inline-flex
+//		display			inline-block
 	#tallheaderui
 		padding-left	260px
 		padding-right	90px
 	body
 		max-width		720px
-		margin-left		max(260px, 25%)
-		margin-right	max(90px, 25%)
+		margin-left		max(140px, 10%)
+		margin-right	max( 90px, 10%)
 	#pagermowjoodah
 		max-width		650px
 		justify-content	left
+if min-width = 1024px
+	body
+		max-width		720px
+		margin-left		max(260px, 25%)
+		margin-right	max(90px, 25%)
+if max-width = 1024px
+	#sidebarui
+		width			64px
+	.sidebar_item .title, .sidebar_item .subtitle
+		display			none

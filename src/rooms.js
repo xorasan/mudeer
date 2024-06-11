@@ -167,12 +167,6 @@ var Rooms;
 				await rooms_recycler.render();
 			}
 		},
-		open: function (uid) { // open room
-			Hooks.run('sheet', {
-				n: create_room_sheet,
-				u: uid,
-			});
-		},
 		invite: function (profile) {
 			Network.get('rooms', 'invite', profile);
 		},
@@ -365,8 +359,6 @@ var Rooms;
 	Rooms.get_room = get_room;
 
 	var delete_room_dialog = 'delete-room';
-	var create_room_sheet = 'setup-room';
-	var sheet_out = { }, sheet_list, setup_room_dom_keys;
 	Hooks.set(dialog_ready, async function (args, k) { if (args.name == delete_room_dialog) {
 		var room = await get_room(args.uid);
 		if (Dialog.get_name() == delete_room_dialog && Dialog.get_uid() == room.uid) {
@@ -381,41 +373,6 @@ var Rooms;
 		o.remove = 1;
 		rooms_recycler.set([o]);
 		Offline.remove(module_name, { uid });
-	} });
-	Hooks.set(sheet_ready, async function (args, k) { if (args.name == create_room_sheet) {
-		$.log( args );
-		Sheet.set_title('Setup Room');
-		setup_room_dom_keys = k;
-		var out = sheet_out, l = sheet_list;
-		var suid = Sessions.uid(); // TODO CHECK
-		k.name.focus();
-
-		if (args.uid) {
-			var room = await get_room(args.uid);
-			Sheet.set_data(room);
-			if (Sheet.get_active() == create_room_sheet && setup_room_dom_keys && room) {
-				if (room.remove && room.uid === Sheet.get_active_uid()) {
-					Sheet.cancel();
-				} else {
-					setup_room_dom_keys.uid	.value	= room.uid;
-					setup_room_dom_keys.name.value	= room.name;
-					setup_room_dom_keys.link.value	= room.link;
-				}
-			}
-		}
-	} });
-	Hooks.set(sheet_done, function (args, k) { if (args.name == create_room_sheet) {
-		setup_room_dom_keys = 0;
-		var room = Sheet.get_data();
-		var o = {
-			uid:		k.uid.value || Offline.ruid(),
-			name:		k.name.value,
-			link:		generate_alias(k.link.value),
-			pending:	1,
-		};
-		if (room) o.created = room.created;
-		Offline.add(module_name, shallowcopy(o));
-		rooms_recycler.set([o]);
 	} });
 })();
 
