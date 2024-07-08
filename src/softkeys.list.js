@@ -1,7 +1,7 @@
 //+ list basic
 ;(function(){
 	var softkeys_list_debug = 0;
-	softkeys.list = {
+	Softkeys.list = {
 		/*
 		 * if LV is undefined, it clears these keys
 		 * */

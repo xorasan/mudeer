@@ -10,7 +10,14 @@ var MongoDB;
 	'use strict';
 	const { MongoClient, ObjectId } = require('./deps/mongodb');
 	// TODO if default user pass, exit with error
-	const uri = process.env.DEWAAN_MONGO_URI || 'mongodb://localhost/';
+	let uri = process.env.DEWAAN_MONGO_URI || 'mongodb://localhost/';
+	if (process.env.DEWAAN_MONGO_NAME) {
+		let mongo_name = process.env.DEWAAN_MONGO_NAME || 'dewaan-mongodb',
+			mongo_user = process.env.DEWAAN_MONGO_USER || 'PLEASE_CHANGE_ME',
+			mongo_pass = process.env.DEWAAN_MONGO_PASS || 'PLEASE_CHANGE_ME',
+			mongo_port = '27017';
+		uri = 'mongodb://'+mongo_user+':'+mongo_pass+'@'+mongo_name+':'+mongo_port+'/';
+	}
 	const client = new MongoClient( uri );
 	var db, tbl_pops = 'pops', debug_mongodb = 0;
 
@@ -314,11 +321,16 @@ var MongoDB;
 	async function delete_many_without_notice(db, collection_name, filter, cb) {
 		if (debug_mongodb) $.log( ' delete_many_without_notice... ', collection_name );
 
-		var result, out_error;
+		let result, out_error;
+
+		if (filter && filter.uid) {
+			filter._id = filter.uid;
+			delete filter.uid;
+		}
 
 		try {
 			const collection = use_db( db ).collection( collection_name );
-			result = await collection.deleteMany( filter )
+			result = await collection.deleteMany( filter );
 			
 			if (result.deletedCount) {
 			}

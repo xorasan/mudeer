@@ -127,9 +127,10 @@ Web.add(function (done, queue, extra) {
 			finish: function () {
 				donesub(queuesub, extra);
 			},
-			consumed: function () { // also calls finish :)
+			consumed: function (no_finish) { // also calls finish :)
 				extra.consumed = 1; // handled consumed
-				donesub(queuesub, extra);
+				if (!no_finish)
+					donesub(queuesub, extra);
 			},
 			get: function (valuex, value2, need2, name2) { // actual value, optional name+need
 				var h = need2 || need || 'default', final_name = name;
@@ -259,14 +260,20 @@ Web.add(function (done, queue, extra) {
 		if (hook_ids.length) {
 			if (debug_network) $.log( 'hook_ids -> network-'+item+favor_suffix );
 			for (let hook_id of hook_ids) {
-				let [ name, need ] = hook_id.split(',');
+				let [ name, need = 'default' ] = hook_id.split(',');
 				if (debug_network) $.log( 'name, need', name, need );
 				let handler = Hooks.get_handler('network-'+item, hook_id);
 				if (payload[item] && payload[item][name] && payload[item][name][need]) {
 					if (debug_network) $.log( 'payload', payload[item][name][need] );
 					queuesub.set(async function (donesub) {
 						if (debug_network) $.log( 'network running', name, need );
-						let rsp = response(donesub, name, need, payload[item][name][need]);
+
+						let response_sent;
+						let rsp = response(function () {
+							response_sent = 1;
+							return donesub.apply(queuesub, arguments);
+						}, name, need, payload[item][name][need]);
+
 						let result = await handler( rsp );
 						if (!isundef(result)) {
 							let channel = item;
@@ -274,7 +281,8 @@ Web.add(function (done, queue, extra) {
 							rsp[channel](result);
 						}
 						if (debug_network) $.log( 'network result', name, need, result );
-						donesub(queuesub);
+						
+						if (!response_sent) donesub(queuesub);
 					});
 				}
 			}

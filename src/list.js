@@ -879,9 +879,10 @@ var List, list, debug_list;
 			 * calls pop or set and that changes this.selected
 			 * */
 			LV.beforepress && LV.beforepress(i, e, uid);
+			let old_selection = LV.selected; // to allow select then press logic TODO allow press on select with holds
 			LV.selected = parseint(uid); // this needs to be before select_silently so that events get the right uid
 			LV.select_silently( uid ); // select without trig event, this does trigger on_selection
-			var yes = LV.selected == uid && LV.element.dataset.focussed == 1;
+			let yes = old_selection == uid && LV.element.dataset.focussed == 1;
 			LV.rakkaz(1, 1);
 			
 			if (yes) LV.press(K.en);

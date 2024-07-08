@@ -222,14 +222,19 @@ var Sheet, sheet,
 			else return index[name];
 		},
 		index: function (parent) {
-			var elements = (parent||document.body).querySelectorAll('[data-sheet]');
+			let elements = (parent||document.body).querySelectorAll('[data-sheet]');
+			let sheets_found = [];
 			for (var i in elements) {
 				if ( elements.hasOwnProperty(i) && elements[i].dataset.sheet ) {
 					elements[i].hidden = 1;
-					index[ elements[i].dataset.sheet ] = elements[i];
+
+					let name = elements[i].dataset.sheet;
+
+					index[ name ] = elements[i];
+					push_if_unique( sheets_found, name );
 				}
 			}
-			return index;
+			return sheets_found;
 		},
 		expunge: function (parent) { // remove from index
 			// parent can be an htm element or an array of sheet names
@@ -258,13 +263,21 @@ var Sheet, sheet,
 		Webapp.dimmer(400);
 		Softkeys.clear();
 		if (args.callback || args.c) {
-			Softkeys.set(K.sl, function () {
-				Sheet.okay && Sheet.okay();
-			}, 0, 'icondone');
+			Softkeys.add({ n: 'Done',
+				k: K.sl,
+				i: 'icondone',
+				c: function () {
+					Sheet.okay && Sheet.okay();
+				},
+			});
 		}
-		Softkeys.set(K.sr, function () {
-			Sheet.cancel && Sheet.cancel();
-		}, 0, 'iconarrowback');
+		Softkeys.add({ n: 'Back',
+			k: K.sr,
+			i: 'iconarrowback',
+			c: function () {
+				Sheet.cancel && Sheet.cancel();
+			},
+		});
 		Sheet.show(args);
 //		Softkeys.showhints();
 	});

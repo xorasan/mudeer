@@ -116,69 +116,43 @@ var Network, network, sessions = sessions || 0, debug_network = 0;
 			$.fetchcancel( 'sync' );
 		}
 	};
-	var handle_response = function (response) {
-		if (response.upload)
-		for (var name in response.upload) {
-			if (network.channels.upload[name]) {
-				var needs = response.upload[name];
-				for (var need in needs) {
-					if (isfun( network.channels.upload[name][need] )) {
-						network.channels.upload[name][need](
-							needs[need]
-						);
-					}
-				}
-			}
-		}
-
-		if (response.intercession)
-		for (var name in response.intercession) {
-			if (network.channels.intercession[name]) {
-				var needs = response.intercession[name];
-				for (var need in needs) {
-					if (isfun( network.channels.intercession[name][need] )) {
-						network.channels.intercession[name][need](
-							needs[need]
-						);
-					}
-				}
-			}
-		}
-
-		if (response.get) {
-			for (var name in response.get) {
-				if (network.channels.get[name]) {
-					var needs = response.get[name];
+	async function handle_response(response) {
+		['intercession', 'get', 'sync', 'upload'].forEach(async function (channel) {
+			// Old API using Network
+			for (var name in response[channel]) {
+				if (network.channels[channel][name]) {
+					var needs = response[channel][name];
 					for (var need in needs) {
-						if (typeof network.channels.get[name][need] == 'function') {
-							network.channels.get[name][need](
+						if (isfun( network.channels[channel][name][need] )) {
+							network.channels[channel][name][need](
 								needs[need]
 							);
 						}
 					}
 				}
 			}
-			Hooks.run('responseget', response.sync); // TODO deprecate
-			Hooks.run('response-get', response.sync);
-		}
-
-		if (response.sync) {
-			for (var name in response.sync) {
-				if (network.channels.sync[name]) {
-					var needs = response.sync[name];
-					for (var need in needs) {
-						if (typeof network.channels.sync[name][need] == 'function') {
-							network.channels.sync[name][need](
-								needs[need]
-							);
-						}
+			// New API using Hooks
+			let favor_suffix = ''; // TODO add support for favors
+			let hook_ids = Hooks.get_ids('network-'+channel+favor_suffix);
+			if (hook_ids.length) {
+				if (debug_network) $.log( 'hook_ids -> network-'+channel+favor_suffix );
+				for (let hook_id of hook_ids) {
+					let [ name, need = 'default' ] = hook_id.split(',');
+					if (debug_network) $.log( 'name, need', name, need );
+					let handler = Hooks.get_handler('network-'+channel, hook_id);
+					if (response[channel] && response[channel][name] && response[channel][name][need]) {
+						if (debug_network) $.log( 'response', response[channel][name][need] );
+						let result = await handler( response[channel][name][need] );
+						if (debug_network) $.log( 'network result', name, need, result );
 					}
 				}
 			}
-			Hooks.run('responsesync', response.sync); // TODO deprecate
-			Hooks.run('response-sync', response.sync);
-		}
-	};
+			// To allow channel level processing
+			Hooks.run('response'+channel, response[channel]); // TODO deprecate
+			Hooks.run('response-'+channel, response[channel]); // TODO deprecate
+			Hooks.run('network-response-'+channel, response[channel]);
+		});
+	}
 
 	var cachedkey, broadcast_state = 0, broadcast_delay = 500;
 	var broadcast_process = function (payload, intercession) {

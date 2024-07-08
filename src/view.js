@@ -1,6 +1,6 @@
 var Views, View, view, debug_view = 0;
 ;(function(){
-	var index = {};
+	let index = {}, requested;
 	Views = View = view = {
 		zaahir: function (name) { // is_active, deprecated
 			return view.axav() === name;
@@ -30,6 +30,8 @@ var Views, View, view, debug_view = 0;
 			return false;
 		},
 		run: async function (name, uid) {
+			requested = { name, uid };
+			
 			var level	= Backstack.level			,
 				exists	= View.get_element(name)	;
 
@@ -40,7 +42,7 @@ var Views, View, view, debug_view = 0;
 					Views.get('not_found');
 					Webapp.header([ 'Not Found', 0, 'iconclose' ]);
 					let keys = Templates.keys(element);
-					innertext(keys.path, location.pathname);
+					innertext(keys.path, '...');
 					if (get_global_object().Sidebar) {
 						Sidebar.choose();
 					}
@@ -74,7 +76,11 @@ var Views, View, view, debug_view = 0;
 				}
 			}
 		},
+		get_requested: function () {
+			return requested;
+		},
 		get_element: function (name) { // get dom element of a view
+			if (isundef(name)) return 0;
 			return this.get(name, 1);
 		},
 		get_uid: function () {
@@ -82,9 +88,9 @@ var Views, View, view, debug_view = 0;
 				return Backstack.states.view.uid;
 			}
 		},
-		axav: function (name, onlyelement) { // get
+		get: function (name, onlyelement) { // axav
 			if (!name) {
-				for (var i in index) {
+				for (let i in index) {
 					if (!index[i].hidden) {
 						return i;
 					}
@@ -92,8 +98,8 @@ var Views, View, view, debug_view = 0;
 				return;
 			}
 
-			var view;
-			for (var i in index) {
+			let view;
+			for (let i in index) {
 				if (i == name)
 					view = index[i];
 				else if (!onlyelement)
@@ -107,18 +113,22 @@ var Views, View, view, debug_view = 0;
 		axad: function (name, onlyelement) { // get, deprecated
 			return view.axav(name, onlyelement);
 		},
-		index: function (parent) { // fahras
-			var elements = (parent||document.body).querySelectorAll('[data-view]');
-			for (var i in elements) {
+		index: function (parent) { // fahras, returns the newly indexed views
+			let elements = (parent||document.body).querySelectorAll('[data-view]');
+			let views_found = [];
+			for (let i in elements) {
 				if ( elements.hasOwnProperty(i) && elements[i].dataset.view ) {
 					// hide all views except main while indexing
 					if (elements[i].dataset.view !== 'main')
 						elements[i].hidden = 1;
 
-					index[ elements[i].dataset.view ] = elements[i];
+					let name = elements[i].dataset.view;
+
+					index[ name ] = elements[i];
+					push_if_unique( views_found, name );
 				}
 			}
-			return index;
+			return views_found;
 		},
 		expunge: function (parent) { // remove from index
 			// parent can be an htm element or an array of view names
@@ -138,10 +148,10 @@ var Views, View, view, debug_view = 0;
 		},
 	};
 	
-	View.get		= View.axav;
-	View.ishtaghal	= View.run;
-	View.fahras		= View.index;
-	View.dom_keys	= View.mfateeh;
+	Views.axav		= Views.get		;
+	Views.ishtaghal	= Views.run		;
+	Views.fahras	= Views.index	;
+	Views.dom_keys	= Views.mfateeh	;
 
 	Hooks.set('backstackview', function (args) {
 		var name, uid;
@@ -154,10 +164,14 @@ var Views, View, view, debug_view = 0;
 		Webapp.dimmer();
 		Softkeys.clear();
 		Softkeys.P.empty();
-		Softkeys.set(K.sr, function () {
-			Hooks.run('back');
-		}, 0, 'iconarrowback');
-		View.run(name, uid);
+		Softkeys.add({ n: 'Back',
+			k: K.sr,
+			i: 'iconarrowback',
+			c: function () {
+				Hooks.run('back');
+			},
+		});
+		Views.run(name, uid);
 //		Softkeys.showhints();
 		return 1; // stop propagation
 	});

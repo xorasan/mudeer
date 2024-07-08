@@ -197,5 +197,6 @@ var Hooks, hooks;
 	};
 	
 	module.exports = Hooks;
+	global.Hooks = Hooks;
 	hooks = Hooks;
 })();

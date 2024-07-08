@@ -56,6 +56,7 @@ var Softkeys, softkeys,
 		
 		if (args.length === 1 || args.hidden || args.h) o.hidden = 1;
 		
+		var soft_hidden = args.hidden || args.h;
 		var callback = args[0] || args._callback;
 		var k = args.key || uid;
 		
@@ -110,6 +111,9 @@ var Softkeys, softkeys,
 			before = parent.lastElementChild;
 		}
 		index[k] = templates.get('skbutton', parent, before, o.id)(o);
+		
+		if (soft_hidden == 1) ixtaf(index[k]);
+		else if (soft_hidden == 0) izhar(index[k]);
 		
 		skdots.hidden = totalvisible() ? 0 : 1;
 
@@ -287,6 +291,8 @@ var Softkeys, softkeys,
 			o._callback = o.callback || o.c || o.cb;
 			o.contextmenu = o.a || o.aux;
 			o.key = tolower(o.key || o.k);
+
+			if ( !isfun(o._callback) ) $.log.w('Softkeys add needs a callback');
 
 			if ( isfun(o._callback) && isstr(o.key) ) {
 				o.uid = (o.ctrl  ? 1 : 0) +'-'+

@@ -6,7 +6,6 @@
 var Rooms;
 ;(function(){
 	var keys, oldresults = [], photo, module_name = 'rooms', module_title = 'Rooms', module_icon = 'iconbluron',
-		room_detail_level_suid, room_detail_level = 'room_detail_level',
 		waqtsaabiq = 0, mklmttaxeer = 1*60*1000;
 
 	function sort_softkey() { if ( View.is_active( module_name ) ) {
@@ -26,75 +25,6 @@ var Rooms;
 	} }
 	
 	Rooms = rooms = {
-		apply_room_details: async function () {
-			var detail_level = Preferences.get(room_detail_level, 1);
-
-			var elements = await rooms_recycler.get_elements();
-			elements.reverse();
-			for (var element of elements) {
-				var k = templates.keys(element);
-				var item = rooms_list.adapter.get( getdata(element, 'uid') );
-				// BUG item is undefined
-
-				ixtaf(k.count_box);
-				ixtaf(k.updated);
-				if (item.count) {
-					Messages.update_room_count(item);
-					
-					if (item.message) {
-						var msg = item.message, message_str = '';
-						if (msg.kind == 2) {
-							message_str = 'Photo';
-						} else if (msg.kind == 1) {
-							message_str = 'Audio';
-						} else {
-							message_str = Markdown.deformat( (msg.text||'').replace(/\n/g, ' ') );
-							if (message_str.length > 48) {
-								message_str = message_str.slice(0, 48)+'...';
-							}
-						}
-						var account_name = '';
-						var account = await Accounts.fetch(msg.owner);
-						if (account) {
-							account_name = Accounts.get_name(account)+': ';
-						}
-
-						izhar(k.updated);
-						innertext(k.message, account_name + message_str);
-					}
-					
-					izhar(k.count_box);
-					innertext(k.count, item.count);
-				}
-				ixtaf(k.call_box);
-				if (isarr(item.connected) && item.connected.length) {
-					izhar(k.call_box);
-					innertext(k.connected, item.connected.length);
-				}
-
-				// TODO efficiency, do only once
-				// stable color
-				var unique_color = Themes.generate_predictable_color(item.uid);
-				setcss(k.photo, 'background-color', Themes.darken_hex_color(unique_color, 130, .5) );
-				setcss(k.photo, 'color', Themes.brighten_hex_color(unique_color, 130, .7) );
-
-				var short_name = '';
-				if (item.name) {
-					short_name = item.name;
-				} else if (item.link) {
-					short_name = '@'+item.link;
-				}
-				innertext( k.short_name, short_name.slice(0, 3)+'\n'+short_name.slice(3, 6) );
-
-				if (item.link && item.link.length) {
-					k.created.classList.add('pad');
-				} else {
-					k.created.classList.remove('pad');
-				}
-
-				(detail_level ? izhar : ixtaf)(k.created, k.updated, k.count_box);
-			}
-		},
 		raakib: function (members) { // non-member profile
 			if (isarr(members))
 			for (var i = 0; i < members.length; ++i) {
@@ -159,13 +89,6 @@ var Rooms;
 				}
 			}
 			return [condition, byyou, msg]; // [condition, ?byyou, msg]
-		},
-		update: async function (force, clear) {
-			var loaded_objects = rooms_recycler.get_objects();
-			if (loaded_objects.length == 0) {
-				await rooms_recycler.count();
-				await rooms_recycler.render();
-			}
 		},
 		invite: function (profile) {
 			Network.get('rooms', 'invite', profile);
@@ -234,129 +157,13 @@ var Rooms;
 			}
 		});
 
-		keys = View.dom_keys(module_name);
-
-		rooms_list = list( keys.list ).idprefix(module_name).listitem('roomitem');
-
-		rooms_recycler = Recycler( rooms_list, module_name );
-		rooms_recycler.set_reversed( 1 );
-		rooms_recycler.add_view( module_name );
-		rooms_recycler.set_phrase( 'next', 'Older' );
-		rooms_recycler.set_phrase( 'prev', 'Newer' );
-		rooms_recycler.add_intercept(async function (need, payload) {
-			return 1;
-		});
-		rooms_recycler.add_postcept(async function (need, payload) {
-			return 1;
-		});
-		
-		rooms_list.after_set = async function (o, clone, k) {
-			if (['next', 'prev'].includes(o.uid)) return;
-
-			var msg = '';
-			if (o.pending) msg = 'pending sync';
-			if (o.remove) msg += (msg ? ' · ' : '')+'will remove';
-
-			innertext(k.info, msg);
-		};
-		rooms_list.beforeset = function (item) {
-			if (['next', 'prev'].includes(item.uid)) return item;
-
-			if (!isundef(item.created)) item.created$time = item.created;
-			if (!isundef(item.updated)) item.updated$time = item.updated;
-			if (item.link) {
-				item.link_str = '@'+item.link;
-			} else {
-				item.link_str = '';
-			}
-			return item;
-		};
-
-		var edit_key = { n: 'Edit Room',
-				k: 'e',
-				ctrl: 1,
-				i: 'iconedit',
-			},
-			delete_key = { n: 'Delete Room',
-				k: 'delete',
-				alt: 1,
-				i: 'icondeleteforever',
-			};
-		rooms_list.on_selection = async function (o) { if ( View.is_active( module_name ) ) {
-			if (['next', 'prev'].includes(o.uid)) {
-				Softkeys.remove(edit_key.uid);
-				Softkeys.remove(delete_key.uid);
-				return;
-			}
-
-			Softkeys.add({ n: 'Join Call',
-				k: 'c',
-				alt: 1,
-				i: 'iconcall',
-				c: function () {
-					Hooks.run('view', {
-						name: 'call_screen',
-						uid: o.link ? '@'+o.link : o.uid,
-					});
-					return 1;
-				}
-			});
-			
-			edit_key.c = function () {
-				Rooms.open(o.uid);
-				return 1;
-			};
-			if ( await has_access( module_name, 'edit' ) ) {
-				if ( View.is_active( module_name ) ) {
-					Softkeys.add(edit_key);
-				}
-			}
-
-			delete_key.c = function () {
-				Hooks.run('dialog', {
-					n: delete_room_dialog,
-					u: o.uid,
-				});
-				return 1;
-			};
-			if ( await has_access( module_name, 'remove' ) ) {
-				if ( View.is_active( module_name ) ) {
-					Softkeys.add(delete_key);
-				}
-			}
-		} };
-		rooms_list.onpress = function (o, key, uid) {
-			if (['next', 'prev'].includes(o.uid)) return;
-
-			Hooks.run('view', {
-				name: 'messages',
-				uid: o.link ? '@'+o.link : o.uid,
-			});
-//			messages.open(o);
-		};
-
 	});
-	Hooks.set('recycler-insert-done', async function ({ name, need }) { if (name == module_name) {
-		await Rooms.apply_room_details();
-	} });
 
 	Hooks.set('sessionchange', async function (signedin) {
 		if (!signedin) {
 			if (rooms_recycler) await rooms_recycler.remove_all();
 		}
 	});
-
-	async function get_room(uid) { if (uid) {
-		var filter = {};
-		if (uid.startsWith('@')) {
-			filter.link = uid.slice(1);
-		} else {
-			filter.uid = uid;
-		}
-		var arr = await Offline.fetch( module_name, 0, { filter } );
-		return arr[0];
-	} }
-	Rooms.get_room = get_room;
 
 	var delete_room_dialog = 'delete-room';
 	Hooks.set(dialog_ready, async function (args, k) { if (args.name == delete_room_dialog) {

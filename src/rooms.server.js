@@ -5,7 +5,6 @@ var Rooms, rooms,
 'use strict';
 var module_name = 'rooms';
 var maxba = {}; // uid: {}
-var debug_rooms = 0;
 
 Rooms = rooms = {
 	raakib: function (members) { // non-member profile
@@ -57,100 +56,6 @@ Rooms = rooms = {
 		rooms.finish_all(uid);
 		
 		return v;
-	},
-	fill_connections: function (out) { // {}
-		out.connected = out.connected || [];
-		var conns = Callscreen.get_room_connections(out.uid); // connections are pre-exported
-		if (conns)
-		conns.forEach(function (o, i) {
-			out.connected.push( o );
-		});
-		return out;
-	},
-	query: async function (filter) { // by uid or link or filter, autodetects
-		var on_resolve, on_error, refined_filter = {};
-
-		var promise = new Promise(function (resolve, error) {
-			on_resolve = resolve;
-			on_error = error;
-		});
-
-		if (isstr(filter.uid)) {
-			var uid = filter.uid;
-			if (uid.startsWith('@')) {
-				refined_filter.link = uid.slice(1);
-			} else {
-				refined_filter.uid = uid;
-			}
-		} else if (isstr(filter.link)) {
-			refined_filter.link = filter.link;
-		}
-
-		var outcome = await MongoDB.query(Config.database.name, module_name, refined_filter);
-
-		for await (var o of outcome.rows) {
-			o.count = await Messages.get_count_in_room( o.uid );
-			Rooms.fill_connections(o);
-		}
-
-		on_resolve( outcome.rows );
-
-		return promise;
-	},
-	update_room_by_uid: async function (uid, account_uid) { // TODO make this truly async with errors
-		if (debug_rooms) $.log( 'Rooms update_room_by_uid', uid, account_uid );
-		var room = await MongoDB.get(Config.database.name, module_name, { uid });
-		if (room) {
-			var outcome = await MongoDB.set(Config.database.name, module_name, {
-				uid: room.uid,
-				updated: get_time_now(),
-			});
-
-			if (debug_rooms) $.log( 'updated room', room.uid, room.link );
-			// TODO improve eff
-			Polling.finish_all([account_uid]);
-		} else {
-			if (debug_rooms) $.log( 'room not found by uid', uid );
-		}
-	},
-	link_exists: async function (link, uid) { // provide a uid to exclude self
-		if (!isstr(link)) { $.log.e(' Rooms link_exists expects link as string '); return; }
-		var filter = { link };
-		if (uid) { filter.uid = { $ne: uid }; }
-		var { rows } = await MongoDB.query(Config.database.name, module_name, filter);
-		return (rows && rows.length === 1);
-	},
-	validate_room: async function ({ uid, ruid, name, link, created, updated }) {
-		name = to_str_or_num(name);
-
-		if (isstr(name)) {
-			name = name.slice(0, 64);
-		} else {
-			name = '';
-		}
-
-		// uniqueness
-		link = generate_alias(link);
-		if (link.length) {
-			if ( await Rooms.link_exists(link, uid) ) {
-				link = link+'-'+MongoDB.uid();
-				// TODO deliver error back to client
-			}
-		}
-
-		var room = { uid, ruid, name, link, created, updated };
-
-		return room;
-	},
-	export_room: async function ({ uid, ruid, name, link, members, count, connected, created, updated }) {
-		var room = { uid, ruid, name, link, members, count, connected, created, updated };
-		Rooms.fill_connections( room );
-		room.count = await Messages.get_count_in_room( uid );
-		var messages = await Messages.get_recent_in_room( uid, 0, 1 );
-		if (messages.length) {
-			room.message = messages[0];
-		}
-		return room;
 	},
 	members: function (uid, members) {
 		var v = rooms.maxba(uid, 'members');
@@ -445,28 +350,6 @@ Network.sync('-rooms', function (response) {
 	} else response.finish();
 });
 
-Network.get(module_name, async function (response) {
-	if (!response.account) { response.finish(); return; } // not signed in
-
-	try {
-		if (response.value && response.value.filter) {
-			try {
-				var rooms = await Rooms.query( response.value.filter );
-				response.get( rooms );
-			} catch (e) {
-				$.log.e( e );
-				response.get( false );
-			}
-		} else {
-			response.get( false );
-		}
-		
-		response.finish();
-	} catch (e) {
-		response.get(false)
-				.finish();
-	}
-});
 Network.get(module_name, 'invite', function (response) {
 	var prof1 = response.value, prof0 = response.account.uid;
 	

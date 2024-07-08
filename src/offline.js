@@ -1156,10 +1156,11 @@ var Offline, offline, debug_offline = 0;
 		for (var name in payload) {
 			for (var need in payload[name]) {
 				var value = payload[name][need];
-				Offline.save(name, need, value);
+				if ( Offline.allstores().includes(name+need) )
+					Offline.save(name, need, value);
 				
 				var m = maxaazin[ name+need ];
-				if (m.keyvalue) {
+				if (m && m.keyvalue) {
 					var kind = Offline.mundarij.get;
 					if (kind[name] && typeof kind[name][need] == 'function')
 						kind[name][need]( shallowcopy(value) );

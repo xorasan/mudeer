@@ -33,5 +33,8 @@
 			}, customdelay );
 		}
 	};
+	
+	$.delay = $.taxeer;
+	$.cancel_delay = $.taxeercancel;
 
 })();

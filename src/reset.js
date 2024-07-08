@@ -1,7 +1,7 @@
 // put global functions here available to both server and client
 var
 get_global_object = function () { // to check module prop in window.* or global.*
-	return window || {}; // TODO add global safely
+	return window || {}; // window is the global object on server side
 },
 generate_alias = function (o, l) { // this replaces helpers.alias database.alias wuqu3aat.alias
 	// this generates url friendly links for titles of say blog posts ...
@@ -14,7 +14,7 @@ generate_alias = function (o, l) { // this replaces helpers.alias database.alias
 		.replace(/\%/g,						' pct'			)
 		.replace(/\@/g,						' at '			)
 		.replace(/\&/g,						' and '			)
-		.replace(/[$-\-/:-?\{\}-~!"^_`\[\]@#]/g,	'-'				) // symbols
+		.replace(/[$-\-/:-?\{\}-~!"^`\[\]@#]/g,	'-'				) // symbols
 		.replace(/[^.\d\wa-zA-Z0-9ا-ےÄäÜüÖößЀ-ҁҊ-ӿÇçĞğŞşIıÜüﻙ]+/g,	'-'	) // most alphanums
 		.replace(/\s[\s]+/g,					'-'				)
 		.replace(/[\s]+/g,						'-'				)
@@ -85,6 +85,10 @@ areobjectsequal = function (a, b) { // only compares primitives bw 2 objs
 },
 zero = function (num) {
 	return num < 10 ? '0'+num : num;
+},
+push_if_unique = function (arr, v) {
+	if (!arr.includes( v ))
+		arr.push( v );
 },
 collapsearray = function (arr) {
 	var arr2 = [];

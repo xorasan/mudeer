@@ -229,8 +229,9 @@
 			uuid: ++uuid,
 		};
 		if (states.view) { // rooms
-			var view_name = View.get();
-			var view_uid = View.get_uid();
+			let requested = View.get_requested();
+			let view_name = requested.name;
+			let view_uid = requested.uid;
 			// if it's a home view and no uid is present, then stay at root
 			if (Webapp.is_home_view(view_name) && !view_uid) {
 
@@ -267,12 +268,22 @@
 		// check if the current entry is the same as the one being pushed, if so, restore it silently
 		var current_entry = get_current_entry();
 		if (current_entry && current_entry.link && current_entry.link == link || location.pathname == link) {
-			if (debug_backstack_history) $.log.w( 'Backstack staying at current entry silenty' );
+			if (debug_backstack_history) $.log.w( 'Backstack staying at current entry silently' );
 			return;
 		}
 
 		chronicle.push({ state, link });
 		history.pushState( state, '', link );
+
+		// find out the real active visible view, if it's not_found then put in the current path
+		if ( Views.get() == 'not_found' ) {
+			let element = Views.get_element('not_found');
+			if (element) {
+				let keys = Templates.keys(element);
+				innertext(keys.path, location.pathname);
+			}
+		}
+
 	}
 	
 	// backstack-* hooks are refined and validate calls
