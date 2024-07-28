@@ -18,8 +18,7 @@
  * this also means all Hooks subs will only need to remove their own hooks, which is super easy
  * instead of having to learn Network's API
  * */
-var network_favors = {}, PRIMARY = 'primary', SECONDARY = 'secondary', TERTIARY = 'tertiary',
-	network_batches = {};
+network_favors = {}, PRIMARY = 'primary', SECONDARY = 'secondary', TERTIARY = 'tertiary', network_batches = {};
 [PRIMARY, SECONDARY, TERTIARY].forEach(function (favor) {
 	network_favors[favor] = {
 		intercession	: {},
@@ -28,8 +27,56 @@ var network_favors = {}, PRIMARY = 'primary', SECONDARY = 'secondary', TERTIARY 
 		upload			: {},
 	};
 });
-var debug_network = 0;
-var Network = network = {
+debug_network = 0;
+Network = network = {
+	fetch: async function ({ name, need, value, address }) {
+		let payload = {};
+		payload.get = payload.get || {};
+		payload.get[name] = payload.get[name] || {};
+		payload.get[name][need] = value;
+		let res = await fetch(address, {
+			method: 'POST',
+			body: new URLSearchParams( { json: stringify(payload) } ),
+		});
+		
+		let response = {};
+		if (res.status != 200)
+			response.err = 1;
+
+	    if (res.headers.has('content-type') && res.headers.get('content-type').includes('application/octet-stream')) {
+			let blob, file_name;
+			try {
+				blob = await res.blob();
+				file_name = 'file-'+get_time_now()+'.bin';
+				if (res.headers.has('content-disposition')) {
+					file_name = res.headers.get('content-disposition').slice(22, -1);
+				}
+
+			} catch (e) {
+				$.log( 'fetch error in blob' );
+				throw new Error( e );
+			}
+			
+			return { blob, file_name };
+		} else { // else it must be json
+			try {
+				response = await res.json();
+			} catch (e) {
+				response.get = 1;
+				response.error = e;
+			}
+
+			if (response.error) {
+				throw new Error( response.error );
+			} else {
+				let out;
+				if (response.get && response.get[name] && response.get[name][need]) {
+					out = response.get[name][need];
+				}
+				return out;
+			}
+		}
+	},
 	intercept: function (name, need, cb) {
 		if (typeof need == 'function') cb = need, need = 0;
 		need = need || 'default';
@@ -215,7 +262,7 @@ Web.add(function (done, queue, extra) {
 			},
 			account: extra.account,
 			time: extra.time,
-			value: value_from_client,
+			value: value_from_client || {},
 			extra: extra,
 			broadcast: !!payload.broadcast,
 		};
@@ -276,9 +323,23 @@ Web.add(function (done, queue, extra) {
 
 						let result = await handler( rsp );
 						if (!isundef(result)) {
-							let channel = item;
-							if (item == 'intercession') channel = 'intercept';
-							rsp[channel](result);
+							if (result instanceof File) {
+								response_sent = 1;
+								let res = extra.res, path = result.name;
+								let file_name = path.split('/').pop();
+								res.setHeader('content-disposition', `attachment; filename="${file_name}"`);
+								res.sendFile(path, null, function (err) {
+									if (err) {
+										$.log( 'error sending file', path, err );
+										if (!res.headersSent)
+											res.sendStatus(404);
+									}
+								});
+							} else {
+								let channel = item;
+								if (item == 'intercession') channel = 'intercept';
+								rsp[channel](result);
+							}
 						}
 						if (debug_network) $.log( 'network result', name, need, result );
 						

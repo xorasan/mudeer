@@ -1,8 +1,8 @@
 // requires Server, Files, Polling
 /*
- *
+ * register a hook on 'server-get' or 'server-post', you can return a new File or JSON
  */
-var Web;
+Web = {};
 ;(function(){
 	'use strict';
 
@@ -12,6 +12,25 @@ var Web;
 	var echo = Cli.echo;
 	function print_prop(a, b) {
 		echo( ' ^bright^'+a+'~~ '+b+' ' )
+	}
+	function is_response_sent( result, extra ) {
+		let response_sent;
+		if (!isundef(result)) {
+			if (result instanceof File) {
+				response_sent = 1;
+				let res = extra.res, path = result.name;
+				let file_name = path.split('/').pop();
+//				res.setHeader('content-disposition', `attachment; filename="${file_name}"`);
+				res.sendFile(path, null, function (err) {
+					if (err) {
+						$.log( 'error sending file', path, err );
+						if (!res.headersSent)
+							res.sendStatus(404);
+					}
+				});
+			}
+		}
+		return response_sent;
 	}
 
 	Web = {
@@ -59,7 +78,10 @@ var Web;
 					req:			req		,
 					res:			res		,
 					Cache:			Cache	,
+					url:			req.originalUrl || '',
 				};
+			
+			let response_sent;
 			
 			var q = $.queue();
 			q.set(function (done, queue) {
@@ -110,8 +132,14 @@ var Web;
 			} catch (e) {
 				$.log.s( 'q.set*', e );
 			}
+			q.set(async function (done, queue) { // New API using Hooks
+				let result = await Hooks.until('server-post', extra);
+				response_sent = is_response_sent( result, extra );
+				done(queue, extra);
+			});
 			q.run(function (queue, obj) {
-				Web._out(req, res, extra.obj, extra.payload);
+				if (!response_sent)
+					Web._out(req, res, extra.obj, extra.payload);
 			});
 		},
 		init: function (callback) {
@@ -131,7 +159,7 @@ var Web;
 
 			q.set(function (done, queue) {
 //				$.log.s( 'registering controller intercepts' );
-				var intercept = function (req, res) {
+				var intercept = async function (req, res) {
 //					$.log( 'intercept', req.headers );
 					var path = public_path,
 						file = path+'index.html';
@@ -198,6 +226,18 @@ var Web;
 							res.sendStatus(404);
 						}
 						else {
+							// if none of the other get logic caught the request, hand it over to the hook
+							let extra = {
+								req:			req,
+								res:			res,
+								url:			req.originalUrl || '',
+							};
+							let result = await Hooks.until('server-get', extra);
+							if ( is_response_sent( result, extra ) ) {
+								return;
+							}
+							// otherwise send the root index.html
+							
 							res.sendFile(file, null, function (err) {
 								if (err) {
 //									$.log.s( 'error sending file', file );
@@ -221,13 +261,14 @@ var Web;
 			});
 			q.run(function () {
 //				$.log.s( 'starting server' );
+				let web_port = process.env.DEWAAN_WEB_PORT || Config.port || 3060;
 				Server.init({
-					port: Config.port,
-					name: "APPNAME"
+					port: web_port,
+					name: "APPNAME",
 				});
 				print_prop( 'Public Path', public_path );
 				print_prop( 'Build', BUILDNUMBER );
-				print_prop( 'Server Port', Config.port );
+				print_prop( 'Server Port', web_port );
 				
 				if (isfun(callback)) callback();
 			});

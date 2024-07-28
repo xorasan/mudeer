@@ -32,3 +32,7 @@
 			.min .center
 				.uid .hide	[id=uid]
 	[template=listsep] .sep
+	[template=list_item] .soft_item
+		[id=icon] .icon
+		[id=title] .title
+		[id=subtitle] .subtitle

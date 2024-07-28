@@ -1,4 +1,4 @@
-var Config = {};
+Config = {};
 ;(function(){
 	var configw;
 	try {

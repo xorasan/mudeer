@@ -7,7 +7,7 @@
  * have stuff to return they can mark the request as handled
  * and that'll tell the polling.worker to not get queued
  * */
-var Polling;
+Polling = {};
 ;(function(){
 	'use strict';
 	var connections = {};

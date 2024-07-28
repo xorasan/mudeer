@@ -3,7 +3,7 @@
  * 
  */
 
-var Databases, uid_with_value;
+Databases = {}, uid_with_value = {};
 ;(function () {
 	'use strict';
 	Databases = {

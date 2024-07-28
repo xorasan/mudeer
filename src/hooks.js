@@ -10,7 +10,7 @@
 // jan 2024 Hooks.set_first these hooks get executed before normal hooks
 // 23 jan 2024 run* now supports 1+ arguments
 
-var Hooks, hooks;
+Hooks = hooks = {};
 ;(function (){
 	'use strict';
 
@@ -197,6 +197,5 @@ var Hooks, hooks;
 	};
 	
 	module.exports = Hooks;
-	global.Hooks = Hooks;
 	hooks = Hooks;
 })();

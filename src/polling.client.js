@@ -2,7 +2,7 @@
  * adds a debug option in settings that shows a sheet listing users currently listening on
  * the broadcast channel
  * */
-var Polling;
+Polling = {};
 ;(function(){
 	'use strict';
 	var connections_list;

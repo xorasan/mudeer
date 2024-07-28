@@ -5,7 +5,7 @@
  * TODO: make async functions return value or error, make callbacks optional
  */
 
-var MongoDB;
+MongoDB = {};
 ;(function () {
 	'use strict';
 	const { MongoClient, ObjectId } = require('./deps/mongodb');
@@ -24,7 +24,7 @@ var MongoDB;
 	function generate_uid() { return new ObjectId().toString(); }
 
 	async function connect() { // TODO hide sensitive data
-		Cli.echo(' ^bright^MongoDB~~ Connecting... ^dim^', uri, '~~');
+		Cli.echo(' ^bright^MongoDB~~ Connecting... ^dim^', uri.slice(0, 10), '...', uri.slice(-26), '~~');
 		try {
 			await client.connect();
 			Cli.echo(' ^bright^MongoDB~~ Connected ');
@@ -55,7 +55,7 @@ var MongoDB;
 		try {
 			const collection = use_db( db ).collection( collection_name );
 
-			var created = get_time_now(), uid, ruid;
+			let created = get_time_now(), uid, ruid, pending;
 			if (doc.uid) {
 				if (isnum(doc.uid) && doc.uid < 0) {
 					ruid = doc.uid;
@@ -70,6 +70,12 @@ var MongoDB;
 			delete doc.uid; // this is a readonly system property
 			doc.updated = created; // needed for syncing in network module
 			delete doc.created; // this is a readonly system property
+
+			if (doc.pending) { // if .pending is detected, return a =0 and don't save it
+				pending = 1;
+				delete doc.pending;
+			}
+
 
 			// Specify the update or the document to insert if not found
 			const update = {
@@ -92,6 +98,7 @@ var MongoDB;
 				delete doc._id; // MongoDB doesnt even return this tho, prolly extraneous
 //				$.log(' Doc updated:', doc);
 			}
+			if (pending) doc.pending = 0; // to prevent infinite network loops
 			if (ruid) doc.ruid = ruid;
 		} catch (error) {
 			$.log.e(' Error during upsert:', error);
@@ -107,6 +114,7 @@ var MongoDB;
 
 		if (!isarr( doc_or_docs )) doc_or_docs = [ doc_or_docs ];
 
+		if (doc_or_docs.length)
 		for (const o of doc_or_docs) {
 			await upsert(db, collection_name, o, function (err, doc) {
 				if (err) {

@@ -1125,7 +1125,7 @@ var Offline, offline, debug_offline = 0;
 			 * */
 			db.close();
 			// replace this with our custom loader screen + this message and a reload button
-			dom.setloading( 'appneedsreload' );
+			Webapp.dimmer( LAYERTOPMOST, translate('appneedsreload') );
 		},
 		init: function (callback) {
 			var on_resolve;

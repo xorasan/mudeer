@@ -1,3 +1,14 @@
+/* 
+ * TODO new API should provide the View constructor
+ * you should be able to do View({ name, element, title, icon, softkeys })
+ * if no element, it'll create one, with Addons it'll autoremove on deactivation
+ * if has title/icon, whenever the view is active, it'll set that as the Webapp.header
+ * 
+ * with the new API, softkeys can be added to the view and upon activation, it'll always restore them
+ * .add_softkey // add or update
+ * .remove_softkey
+ * 
+ */
 var Views, View, view, debug_view = 0;
 ;(function(){
 	let index = {}, requested;

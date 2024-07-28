@@ -3,7 +3,7 @@
 		  - 11 Nov 2016
 		  - 22 May 2018	add sync retrieval support
 */
-var Files;
+Files = {};
 ;(function () {
 	'use strict';
 	Files = {
@@ -12,7 +12,7 @@ var Files;
 		fs: false,
 		path: false,
 		basepath: false,
-		s: false,
+		s: false, // sep
 		init: function () {
 			if (Files.fs === false) {
 				if (typeof require === 'function') { // use node fs
@@ -278,6 +278,135 @@ var Files;
 			return true;
 		}
 	};
+	
+	Files.get_file = async function (path, options) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+		
+		Files.get.file(path, function (data, err) {
+			if (err) error(err);
+			else resolve(data);
+		}, options);
+		
+		return promise;
+	};
+	Files.get_folder = async function (path, options) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+		
+		Files.get.folder(path, function (data, err) {
+			if (err) error(err);
+			else resolve(data);
+		}, options);
+		
+		return promise;
+	};
+	Files.set_file = async function (path, data) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+		
+		try {
+			Files.set.file(path, function (result) {
+				resolve(result);
+			}, data);
+		} catch (e) {
+			error(e);
+		}
+		
+		return promise;
+	};
+	Files.set_folder = async function (path, { mask, uid, gid } = {}) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+		
+		Files.set.folder(path, mask, function (err) {
+			if (err) error(err);
+			else {
+				if (!isundef(uid) || !isundef(gid)) {
+					Files.fs.chown(path, uid, gid, (err) => {
+						if (err) error(err);
+						else resolve(null);
+					});
+				} else {
+					resolve(null);
+				}
+			}
+		});
+		
+		return promise;
+	};
+	Files.get_stats = async function (path) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+		
+		Files.stats(path, function (err, data) {
+			if (err) error(err);
+			else resolve(data);
+		});
+		
+		return promise;
+	};
+	Files.file_exists = async function (path) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+		
+		resolve( Files.exists.file(path) );
+		
+		return promise;
+	};
+	Files.folder_exists = async function (path) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+		
+		resolve( Files.exists.folder(path) );
+		
+		return promise;
+	};
+	Files.remove_file = async function (path) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+	
+		Files.pop.file(path, function (err) {
+			if (err) error(err);
+			else {
+				resolve(null);
+			}
+		});
+		
+		return promise;
+	};
+	Files.remove_folder = async function (path) {
+		let resolve, error;
+		let promise = new Promise(function (r, e) {
+			resolve = r, error = e;
+		});
+		
+		Files.pop.folder(path, function (err) {
+			if (err) error(err);
+			else {
+				resolve(null);
+			}
+		});
+		
+		return promise;
+	};
+	
 	Files.init();
 	module.exports = Files;
 })();

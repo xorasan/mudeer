@@ -60,7 +60,7 @@
 	min-height		26px
 #softkeysui .row1 button
 	padding			0 5px
-	display			block
+//	display			block
 	border-top		1px solid @secondaryd
 #softkeysui .row1 button:hover
 	box-shadow		0 0 25px 2px @secondary
@@ -107,11 +107,11 @@ input[data-over], textarea[data-over], input[data-under], textarea[data-under]
 
 if min-width = 320px
 	#softkeysui .left
-		display			flex !important
+		display			flex
 		flex-direction	row-reverse
 		align-items		center
 	#softkeysui .right
-		display			flex !important
+		display			flex
 		flex-direction	row
 		align-items		center
 	#softkeysui .row2 button:hover .tooltip, #softkeysui .row2 [data-hawm="1"] .tooltip

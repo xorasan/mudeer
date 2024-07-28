@@ -625,9 +625,9 @@ var Softkeys, softkeys,
 
 		// TODO BUG this causes bugs when messages are loaded, voice recording starts imm
 		// but without it, many uponenters dont get triggered
-//		if (key == K.en) {
-//			Softkeys.press(e.key, e, e.type, 0);
-//		}
+		if (key == K.en) {
+			Softkeys.press(e.key, e, e.type, 0);
+		}
 
 		let code = (e || {}).keyCode, modifiers = [];
 		let is_alphanum, is_alpha, is_lower, is_upper, is_number;

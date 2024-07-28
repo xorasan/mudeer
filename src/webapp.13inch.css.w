@@ -43,7 +43,7 @@ if min-width = 800px
 
 if min-width = 1024px
 	body
-		max-width	840px
+		max-width		840px
 	#eqonahui
 		display			inline-block
 	#softkeysui .row1 button

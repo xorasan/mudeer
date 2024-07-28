@@ -14,11 +14,8 @@
  * 		cli-ask		{ question, options } returns answer
  */
 
-var Cli = Cli || {};
+Cli = {};
 ;(function () {
-	'use strict';
-	var Hooks		= $('hooks');
-	
 	var _ = {
 		events: {
 			cli:		3129,
@@ -106,13 +103,13 @@ var Cli = Cli || {};
 			return str;
 		},
 		echo: function () {
-			var str = '';
+			var args = [];
 			
 			for (var i in arguments) {
-				str += _.ansi( arguments[i] );
+				args.push( _.ansi( arguments[i] ) );
 			}
 			
-			console.log(str);
+			console.log.apply(console, args);
 		},
 		write: function () {
 			var str = '';

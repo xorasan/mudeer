@@ -47,7 +47,9 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 			}
 		} },
 		get: function (uid) {
-			return shallowcopy( sidebar_list.adapter.get(uid) );
+			let object = sidebar_list.adapter.get(uid);
+			if (object)
+				return shallowcopy( sidebar_list.adapter.get(uid) );
 		},
 		remove: function (uid) {
 			sidebar_list.pop(uid);

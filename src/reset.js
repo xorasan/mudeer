@@ -1,5 +1,4 @@
 // put global functions here available to both server and client
-var
 get_global_object = function () { // to check module prop in window.* or global.*
 	return window || {}; // window is the global object on server side
 },
@@ -69,7 +68,7 @@ isfun = function (v) {
 	return typeof v == 'function';
 },
 isarr = function (v) {
-	return v instanceof Array;
+	return Array.isArray(v);
 },
 areobjectsequal = function (a, b) { // only compares primitives bw 2 objs
 	var same = 1;
@@ -133,6 +132,7 @@ parsefloat = function (v, n) {
 parsestring = function (v, m) { // forces v to be a string, maximum
 	if (isstr(v)) {}
 	else if (isnum(v)) v = String(v);
+	else if (v && v.toString) v = v.toString();
 	else v = '';
 	if (isnum(m)) v = v.substr(0, m);
 	return v;
@@ -172,3 +172,4 @@ tolower = function (s) {
 toupper = function (s) {
 	return (s||'').toUpperCase();
 };
+

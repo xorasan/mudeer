@@ -845,4 +845,4 @@ $.preload = function (mods, fn) { // loads mods then calls the fn
 	};
 })();
 
-$.b = 3;
+$.b = 4;

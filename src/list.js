@@ -242,6 +242,7 @@ var List, list, debug_list;
 			return this.keys.items.children.length;
 		},
 		down: function (e, fake) {
+			// TODO skip hidden elements
 			if (!fake && this.reverse) return this.up(e, 1);
 
 			if (e) preventdefault(e);
@@ -638,7 +639,7 @@ var List, list, debug_list;
 					    LV.selected = LV.selected-1;
 				}
 
-				LV.intaxabsaamitan();
+				LV.select_silently();
 
 				LV._katabmowdoo3();
 				LV.uponhavaf && LV.uponhavaf( LV.length() );
@@ -665,6 +666,7 @@ var List, list, debug_list;
 				// if a list has no parent views defined, let onpress get triggered
 				if (item && (this.visible || force || !this.parent_views.length)) {
 					this.onpress && this.onpress( item, key, this.selected );
+					this.on_press && this.on_press( item, key, this.selected );
 
 					for (var opl in this.on_press_listeners) {
 						this.on_press_listeners[opl]( item, key, this.selected );
@@ -743,7 +745,13 @@ var List, list, debug_list;
 			
 		},
 		destroy: function () {
-			
+			if (this.element) {
+				if (this.element.parentElement) {
+					popdata(this.element.parentElement, 'focus');
+				}
+				this.element.remove();
+				delete this.element;
+			}
 		},
 		idprefix: function (id) {
 			this.idprefix_raw = id;
@@ -774,6 +782,44 @@ var List, list, debug_list;
 			return LV;
 		},
 	};
+
+
+	proto.is_uid_selected = function (uid) {
+		return parseint( this.id2num( uid ) ) == this.selected;
+	};
+	proto.select_next_visible = function (uid) {
+		// selects the closest prev element silently, useful for removals and hides
+		let prev_selected = parseint( this.id2num( uid ) );
+		let LV = this;
+		for (let i = prev_selected+1; i < this.length(); i++) {
+			let ns = this.get(i);
+			if (ns && !ns.hidden) {
+				LV.selected = i;
+				break;
+			}
+		}
+		LV.select_silently();
+	};
+
+	proto.hide_item = function (uid) {
+		let element = this.get_item_element_by_uid(uid);
+		if (element) {
+			let is_selected = this.is_uid_selected(uid);
+			ixtaf(element);
+			if (is_selected) {
+				this.select_next_visible(uid);
+			}
+		}
+	};
+	proto.show_item = function (uid) {
+		let element = this.get_item_element_by_uid(uid);
+		if (element) {
+			izhar(element);
+		}
+	};
+
+	proto.move_up = proto.moveup;
+	proto.move_down = proto.movedown;
 	
 	proto.set_reversed = function (yes) {
 		this.reverse = yes ? 1 : 0;
@@ -792,6 +838,9 @@ var List, list, debug_list;
 	};
 	proto.highlight = proto.baidaa;
 	proto.select_silently = proto.intaxabsaamitan;
+	proto.select_silently_by_uid = function (id) {
+		proto.select_silently(this.id2num(id));
+	};
 	proto.prevent_focus = function (yes) {
 		this._prevent_focus = yes;
 		return this;
@@ -855,7 +904,8 @@ var List, list, debug_list;
 		LV.on_press_listeners = {};
 		LV.parent_views = [];
 
-		element.dataset.focus = 'list';
+		setdata(element, 'focus', 'list'); // hint to Softkeys that this can be .focus()'d
+
 		element.listobject = LV;
 		LV.filmakaan = element.dataset.filmakaan;
 		LV.element = templates.get( 'list', element )();

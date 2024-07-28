@@ -32,7 +32,7 @@ body[data-transparency]
 	background-color		@primaryt
 	background-attachment	fixed !important
 html, body, svg text
-	font-family		sans-serif
+	font-family			sans-serif
 img
 	border				none
 ul

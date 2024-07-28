@@ -11,7 +11,10 @@ var Templates, templates, namaavij;
 			return templates.keys(element);
 		},
 		keys: function (element) {
-			if (!(element instanceof HTMLElement)) return;
+			if (!(element instanceof HTMLElement)) {
+				$.log.w( 'Templates.keys element not found', arguments );
+				return;
+			}
 			var keys = {};
 			var otherviews = element.querySelectorAll('[data-id]');
 			for (var i in otherviews) {
@@ -189,7 +192,7 @@ var Templates, templates, namaavij;
 		get: function (element, parent, before, id) {
 			if (isstr(element)) element = index[element];
 			if (!(element instanceof HTMLElement)) {
-				$.log.e( 'templates.get element not found', arguments );
+				$.log.w( 'Templates.get element not found', arguments );
 				return false;
 			}
 			

@@ -43,6 +43,9 @@ var do_package = function (args) {
 	var released = (args.keys.released || args.keys.r);
 	var filter_function;
 	filter_function = function (path, stat) {
+		if (path.match(/addons.*\/data/g)) {
+			return false;
+		}
 		if (no_deps) { // exclude the deps folder
 			if (path.startsWith('./deps')) {
 				return false;

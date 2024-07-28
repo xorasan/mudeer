@@ -29,8 +29,13 @@ var calcdistance = function (x1, y1, x2, y2) {
 		var c = {
 			f: '#fff',
 			s: -1,
-			o: element.getContext('2d', ctx_options)
+			e: element,
+			o: element.getContext('2d', ctx_options),
 		};
+		
+		c.context = c.o;
+		c.element = c.e;
+		
 		c.linedash = function (v) {
 			c.o.setLineDash(v || [])
 		};
@@ -61,6 +66,7 @@ var calcdistance = function (x1, y1, x2, y2) {
 				c.o.fillStyle = grd;
 			} else c.o.fillStyle = v;
 		};
+		c.fill_color = c.fillcolor;
 		c.strokecolor = function (v) {
 			c.s = v;
 			c.o.strokeStyle	= v;

@@ -241,7 +241,7 @@ createelement = function (name, classes, id) {
 	return e;
 },
 tahmeel = function (filename, text, mimetype, encode) { // download file with a name
-	var e = createelement('a'), prefix = '';
+	let e = createelement('a'), prefix = '';
 	if (mimetype !== false) prefix = (mimetype||'data:text/plain;charset=utf-8,');
 	if (encode   !== false) text = encodeURIComponent(text);
 
@@ -251,6 +251,17 @@ tahmeel = function (filename, text, mimetype, encode) { // download file with a 
 	document.body.appendChild(e);
 	e.click();
 	document.body.removeChild(e);
+},
+download_blob = function ({ blob, file_name = 'file.bin' } = {}) {
+	const url = window.URL.createObjectURL(blob);
+	let e = createelement('a');
+	attribute(e, 'href', url);
+	attribute(e, 'download', file_name);
+	setcss(e, 'display', 'none');
+	document.body.appendChild(e);
+	e.click();
+	document.body.removeChild(e);
+	window.URL.revokeObjectURL(url);
 },
 iswithinelement = function (arr, element) {
 	var a = arr[0],

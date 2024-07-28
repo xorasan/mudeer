@@ -17,17 +17,25 @@ var Recycler, debug_recycler = 0;
 	var all_recyclers = {}, recycler_uid = 0;
 
 	Recycler = function (list, name, need = 'default', size = 20) {
-		var recycler = { list, name, need, size, start: 0, end: size, enabled: 1, reverse: 0, uid: recycler_uid++ };
-		all_recyclers[recycler.uid] = recycler; // TODO delete on destroy
+		let recycler = { list, name, need, size, start: 0, end: size, enabled: 1, reverse: 0, uid: recycler_uid++ };
+		all_recyclers[recycler.uid] = recycler; // deleted on destroy
+		recycler.destroy = async function () {
+			// TODO cancel all pending operations 
+			// 		cancel fetches
+			// 		cancel animations
+			// 		delete all data
+			list.remove_all();
+			delete all_recyclers[recycler.uid];
+		};
 		
 		// TODO add a Network response on count per module if name need is there with a condition to filter the
 		// response using a custom callback
 		
-		var cache_enabled, phrases = {
+		let cache_enabled, phrases = {
 			next: 'Next',
 			prev: 'Previous',
 		};
-		var active = 1, removal_in_progress;
+		let active = 1, removal_in_progress;
 		list.listen_on_press(async function ( o, k ) {
 			if (o.uid == 'prev') {
 				await recycler.prev();
@@ -62,7 +70,7 @@ var Recycler, debug_recycler = 0;
 			return 0;
 		}
 
-		var prev_busy, next_busy, prev_timeout, next_timeout;
+		let prev_busy, next_busy, prev_timeout, next_timeout;
 		recycler.prev = async function () { if (recycler.enabled && !prev_busy && !removal_in_progress) {
 			if (debug_recycler) $.log.w( 'recycler.prev', name, need );
 			if (await all_items_loaded()) { return; }
@@ -187,7 +195,7 @@ var Recycler, debug_recycler = 0;
 			if (name == 'prev') update_prev_button();
 		};
 
-		var observer = new IntersectionObserver(on_intersection, { // define an observer instance
+		let observer = new IntersectionObserver(on_intersection, { // define an observer instance
 			root: null,   // default is the viewport
 			threshold: 1 // percentage of target's visible area. Triggers "onIntersection"
 		});
@@ -249,7 +257,7 @@ var Recycler, debug_recycler = 0;
 		};
 		recycler.cleanup = async function () { // remove out of scope items
 			// each added element is actively observed for visibility
-			// two edges is determined between visible and invisible items
+			// two edges are determined between visible and invisible items
 			// items past this edge + threshold are removed
 			
 			$.taxeer('recycler-cleanup', async function () { if (active) {
@@ -416,11 +424,24 @@ var Recycler, debug_recycler = 0;
 			return sorted_items;
 		};
 
+		let adapter;
+		recycler.get_adapter = function () {
+			return adapter;
+		};
+		recycler.connect_adapter = function (a) {
+			adapter = a;
+		};
+		recycler.disconnect_adapter = function () {
+			adapter = 0;
+		};
+
 		recycler.cached_ranges = [];
 		recycler.set_cache = function (yes) {
 			cache_enabled = yes ? 1 : 0;
 		};
 		recycler.set = async function ( items ) { // fig out where to put these items
+			if (!isarr(items)) items = [ items ];
+			
 			// use the compare function to determine which direction the item should go
 			// TODO try inserting these items one by one
 			items = recycler.sort(items);
@@ -483,7 +504,11 @@ var Recycler, debug_recycler = 0;
 			if (end-start > num_of_cached) {
 				allow = await recycler.aggregate_intercepts('range', payload);
 				if (allow !== 0) {
-					range = await Network.fetch(recycler.name, 'range', payload);
+					if (adapter) {
+						range = await adapter.get(payload);
+					} else {
+						range = await Network.fetch(recycler.name, 'range', payload);
+					}
 					range = range || [];
 				}
 			}
@@ -518,7 +543,11 @@ var Recycler, debug_recycler = 0;
 			var count = 0, payload = {};
 			var allow = await recycler.aggregate_intercepts('count', payload);
 			if (allow !== 0) {
-				count = await Network.fetch(recycler.name, 'count', payload);
+				if (adapter) {
+					range = await adapter.count(payload);
+				} else {
+					count = await Network.fetch(recycler.name, 'count', payload);
+				}
 				count = count || 0;
 			}
 
@@ -595,7 +624,7 @@ var Recycler, debug_recycler = 0;
 			return 1;
 		};
 
-		var intercepts = {}, intercept_uid = 0;
+		let intercepts = {}, intercept_uid = 0;
 		recycler.add_intercept = function (need, callback) {
 			if (isfun(need)) {
 				callback = need;
@@ -618,7 +647,7 @@ var Recycler, debug_recycler = 0;
 			return allow;
 		};
 
-		var postcepts = {}, postcept_uid = 0;
+		let postcepts = {}, postcept_uid = 0;
 		recycler.add_postcept = function (need, callback) {
 			if (isfun(need)) {
 				callback = need;
