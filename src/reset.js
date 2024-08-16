@@ -29,9 +29,7 @@ generate_alias = function (o, l) { // this replaces helpers.alias database.alias
 	
 	return o;
 },
-stringify = function (o) {
-	return JSON.stringify(o);
-},
+stringify = JSON.stringify,
 parsejson = function (o) {
 	return JSON.parse(o);
 },

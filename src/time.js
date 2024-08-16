@@ -234,16 +234,16 @@ var Time, time;
 				else days = Math.floor(days);
 				innerhtml(e, days + ' ' + translate('daysago'));
 			} else
-			if (by === 'hourly') {
+			if (by === 'hourly' || by === 'hour') {
 				innerhtml(e, time.formatdate( new Date(datetime), (is24 ? 'HH:mm' : 'hh:mma') ));
 			} else
-			if (by === 'yearly') {
+			if (by === 'yearly' || by === 'year') {
 				innerhtml(e, time.formatdate( new Date(datetime), 'YYYY' ));
 			} else
-			if (by === 'monthly') {
+			if (by === 'monthly' || by === 'month') {
 				innerhtml(e, time.formatdate( new Date(datetime), 'MMMM YYYY' ));
 			} else
-			if (by === 'daily') {
+			if (by === 'daily' || by === 'day') {
 				innerhtml(e, time.formatdate( new Date(datetime), 'Do MMMM YYYY' ));
 			} else
 			if (by === 'minute') {

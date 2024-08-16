@@ -67,16 +67,32 @@
 #softkeysui .row1 button:focus
 	box-shadow		0 0 25px 2px @accentd
 
+#softkeysui .row2 > :not(:last-of-type)
+	border-bottom	1px solid @secondaryd
+	border-radius	unset
+#softkeysui[data-shown] .row2 > :not(:last-of-type)
+	border-bottom	1px solid @secondaryl
+	border-radius	unset
 #softkeysui .row2 button
+	display			flex
+	flex-direction	column
 	padding			0 5px 0 0
 	margin-right	1px
 	font-size		100%
 	margin-bottom	0
 	border-right	1px solid @secondaryd
+	height			unset
+	align-items		center
 #softkeysui .row2 button:hover
 	box-shadow		-20px 0 15px 0px @secondary inset
 #softkeysui .row2 button:focus
 	box-shadow		-20px 0 15px 0px @accentd inset
+#softkeysui .row2 button .short
+	font-size		95%
+	margin-bottom	4px
+	max-width		48px
+#softkeysui .row2 button[data-hawm="1"] .short
+	opacity			0
 
 #softkeysui .left, #softkeysui .right
 	position		absolute
@@ -88,6 +104,8 @@
 	text-align		left
 	left			0
 	text-align		end
+#softkeysui #skenter
+	display			block
 #softkeysui .center
 	border-radius	8px 8px 0 0
 	border-right	1px solid @secondaryd
@@ -150,6 +168,8 @@ if min-width = 320px
 		flex-direction	column
 
 if min-width = 1200px
+	#softkeysui .row2 button .short
+		display			none
 	#softkeysui .row2 button .tooltip
 		display			inline-block
 		right			64px

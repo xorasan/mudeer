@@ -118,9 +118,11 @@ var _templates = {
 };
 var currentfolder = function () { return process.cwd().split('/').pop(); };
 var importsrc = function (conf, pathprefix) {
+	// will be DEPRECATED a better version of this should happen in build
 	// create new symlinks
 	pathprefix = pathprefix+'src/';
 
+	// TODO get rid of linked/ logic, mods should be imported directly using conf.include
 	if (conf.src instanceof Array) {
 		Files.set.folder(pathprefix);
 		Files.set.folder(pathprefix+'linked');

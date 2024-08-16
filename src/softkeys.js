@@ -50,42 +50,43 @@ var Softkeys, softkeys,
 		}
 	},
 	updatekey = function (uid) {
-		var parent, o = {}, classes = '', args = M[uid];
+		let parent, o = {}, classes = '', args = M[uid];
 		
 		if (!args) return;
-		
 		if (args.length === 1 || args.hidden || args.h) o.hidden = 1;
 		
-		var soft_hidden = args.hidden || args.h;
-		var callback = args[0] || args._callback;
-		var k = args.key || uid;
+		let soft_hidden = args.hidden || args.h;
+		let callback = args[0] || args._callback;
+		let k = args.key || uid;
 		
 		if (callback) o.onclick = function (e) {
 			if (index[k]) index[k].blur(); // prevent focus
 
-			var key = e ? e.key : undefined;
+			let key = e ? e.key : undefined;
 			callback(key, e);
 		};
 		if (o.contextmenu) o.oncontextmenu = function (e) {
 			if (index[k]) index[k].blur(); // prevent focus
 
-			var key = e ? e.key : undefined;
+			let key = e ? e.key : undefined;
 			o.contextmenu(key, e);
 		};
 		
-		o.name = args.name || args.n || '';
-		o.label = args[1] || args.label || args.l || '';
-		o.real_icon$icon = args[2] || args.icon || args.i;
-		o.status = args[3] || args.status || args.s;
+		o.name				= args.name	|| args.n		|| ''			;
+		o.label				= args[1]	|| args.label	|| args.l || ''	;
+		o.real_icon$icon	= args[2]	|| args.icon	|| args.i		;
+		o.real_icon$h		= args.icon$h		|| args.i$h				;
+		o.status			= args[3]	|| args.status	|| args.s		;
+		o.short_name		= o.short_name || args.short || args.sh		;
 		if (o.real_icon$icon === false) {
 			o.name = k;
 		}
 		
 		if (!isarr(args)) { // only .add API
-			o.key =   (args.ctrl ? 'ctrl ' : '')
-						+ (args.alt ? 'alt ' : '')
-						+ (args.shift ? 'shift ' : '')
-						+ (args.key || uid)
+			o.key =   (args.ctrl  ? 'ctrl '  : '')
+					+ (args.alt   ? 'alt '   : '')
+					+ (args.shift ? 'shift ' : '')
+					+ (args.key || uid)
 						;
 		}
 
@@ -103,14 +104,14 @@ var Softkeys, softkeys,
 		o.id = 'sk'+k;
 		o.classes = classes;
 
-		var before = 0;
+		let before = 0;
 		if (args.first) {
 			before = parent.firstElementChild;
 		}
 		if (args.last) {
 			before = parent.lastElementChild;
 		}
-		index[k] = templates.get('skbutton', parent, before, o.id)(o);
+		index[k] = Templates.get('skbutton', parent, before, o.id)(o);
 		
 		if (soft_hidden == 1) ixtaf(index[k]);
 		else if (soft_hidden == 0) izhar(index[k]);
@@ -270,6 +271,13 @@ var Softkeys, softkeys,
 			}
 			return this;
 		},
+		create_uid: function ( o ) {
+			let key = tolower(o.key || o.k);
+			return	(o.ctrl  ? 1 : 0) +'-'+
+					(o.alt   ? 1 : 0) +'-'+
+					(o.shift ? 1 : 0) +'-'+
+					key;
+		},
 		add: function (o) { // use this instead of .set
 			// adds a uid prop to provided object that you can use to remove this softkey later
 			// TODO maintain order after each addition / update
@@ -277,6 +285,7 @@ var Softkeys, softkeys,
 			   properties
 			   uid generated, you can later use it to remove keys
 			   n name
+			   sh short
 			   h hidden
 			   i icon
 			   l label
@@ -295,10 +304,7 @@ var Softkeys, softkeys,
 			if ( !isfun(o._callback) ) $.log.w('Softkeys add needs a callback');
 
 			if ( isfun(o._callback) && isstr(o.key) ) {
-				o.uid = (o.ctrl  ? 1 : 0) +'-'+
-						(o.alt   ? 1 : 0) +'-'+
-						(o.shift ? 1 : 0) +'-'+
-						o.key;
+				o.uid = Softkeys.create_uid( o );
 				M[ o.uid ] = o;
 				
 				updatekey(o.uid);
@@ -617,7 +623,7 @@ var Softkeys, softkeys,
 		};
 	});
 	Hooks.set('mousewheel', function (e) {
-		e && softkeys.press('', e, e.type);
+		e && Softkeys.press('', e, e.type);
 	});
 	
 	function fire_hook(name, e) {
@@ -714,7 +720,9 @@ var Softkeys, softkeys,
 //		}
 
 		Hooks.rununtilconsumed('softkey', [key, e || {}, e && e.type, 0]);
-		fire_hook('softkeys-up', e);
+
+//		fire_hook('softkeys-up', e);
+
 		preventdefault(e);
 	});
 	Hooks.set('keydown', function (e) {
@@ -728,7 +736,12 @@ var Softkeys, softkeys,
 			preventdefault(e);
 		}
 
-		fire_hook('softkeys-down', e);
+		// TODO BUG this causes bugs when messages are loaded, voice recording starts imm
+		// but without it, many uponenters dont get triggered
+		// both keyup and keydown call Softkeys.press
+		// the API needs to account for that or it messes up List().press
+		// ...
+//		fire_hook('softkeys-down', e);
 
 //
 //		if (time.now() - lastkeytime < 300) {
@@ -758,11 +771,11 @@ var Softkeys, softkeys,
 			t = args[3];
 		
 		if (t === 'skbutton') {
-			if (k.icon && !o.real_icon$icon)
-				k.icon.remove();
-			
-			if (!o.label && !o.real_icon$icon)
-				c.hidden = 1;
+//			if (k.icon && !o.real_icon$icon)
+//				k.icon.remove();
+//			
+//			if (!o.label && !o.real_icon$icon)
+//				c.hidden = 1;
 //			return 1; // to let sk.touch run
 		}
 	});

@@ -110,6 +110,15 @@ Hooks = hooks = {};
 			}
 			return handler_ids;
 		},
+		count_ids: function (hook) { // lighter weight version of get_ids, only return int
+			let count = 0;
+			for (let hook_id in Hooks._map) {
+				if (hook_id.startsWith( hook+'_' )) {
+					count++;
+				}
+			}
+			return count;
+		},
 		// run all handlers listening on this id and pass it this extras object
 		// add a try/catch clause to both run* fn's; make contigencies
 		run: function (hook, extras) {
@@ -166,6 +175,27 @@ Hooks = hooks = {};
 				}
 			}
 			return false;
+		},
+		until_many: async function (hook, { before } = {}) { // aggregates results from all promises
+			let aggregated_results = {};
+			let hook_ids = Hooks.get_ids(hook);
+			if (hook_ids.length) {
+				for (let hook_id of hook_ids) {
+					let [ name, need = 'default' ] = hook_id.split(',');
+					let handler = Hooks.get_handler(hook, hook_id);
+					let yes = 1;
+					if (isfun(before)) {
+						// return undefined to cancel handler
+						yes = await before({ name, need, hook, hook_id });
+					}
+					if (!isundef(yes)) {
+						let result = await handler( yes );
+						if (!isundef(result))
+							aggregated_results[hook_id] = { name, need, result };
+					}
+				}
+			}
+			return aggregated_results;
 		},
 		pop: function (hook, id) {
 			if (Hooks._registry_first[hook]) {

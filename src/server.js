@@ -16,7 +16,7 @@
  * 
  * */
 
-Server = {}, SocketIO = 0;
+Server = {};
 ;(function(){
 	'use strict';
 	
@@ -54,7 +54,6 @@ Server = {}, SocketIO = 0;
 			var express			= require('./deps/express');			// web framework external module
 			var fileupload		= require('./deps/express-fileupload');
 //			var serveStatic		= require('serve-static');				// serve static files
-			var socketIo		= require('./deps/socket.io');			// web socket external module
 
 			var app = express();
 
@@ -98,10 +97,7 @@ Server = {}, SocketIO = 0;
 
 			var http = require('http');
 			var server = http.createServer(app);
-			SocketIO = new socketIo.Server(server);
-			SocketIO.on('connection', function (socket) {
-				Hooks.run('socket', socket);
-			});
+			Server.primary = server;
 
 //			app.listen(options.port);
 			server.listen(options.port);

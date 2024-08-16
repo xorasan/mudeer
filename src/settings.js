@@ -85,11 +85,11 @@ var Settings, settings, currentad;
 				
 				if (body instanceof Array) obj.body$t = body[0];
 				else obj.body = body;
-					
+				
 				if (settingslist) {
 					settingslist.set(obj);
 					
-					if (backstack.states.view === module_name)
+					if (Backstack.states.view === module_name)
 						settingslist.select();
 				}
 			}
@@ -105,7 +105,7 @@ var Settings, settings, currentad;
 
 		keys = view.mfateeh(module_name);
 
-		settingslist = list( keys.list ).idprefix(module_name)
+		Settings.list = settingslist = list( keys.list ).idprefix(module_name)
 						.listitem('settingsitem')
 						.grid(3);
 		
@@ -125,7 +125,7 @@ var Settings, settings, currentad;
 	});
 	Hooks.set('viewready', function (args) {
 		if (Webapp.is_at_home()) {
-			softkeys.add({ n: 'Settings',
+			Softkeys.add({ n: 'Settings',
 				ctrl: 1,
 				alt: 1,
 				k: 'p',
@@ -145,12 +145,12 @@ var Settings, settings, currentad;
 				webapp.header([[module_name], 0, 'iconsettings']);
 //			}
 			
-			softkeys.list.basic(settingslist);
-			softkeys.set(K.en, function () {
+			Softkeys.list.basic(settingslist);
+			Softkeys.set(K.en, function () {
 				settingslist.press(K.en);
 			});
-			softkeys.set(K.bs, function () {
-				backstack.back();
+			Softkeys.set(K.bs, function () {
+				Backstack.back();
 			});
 
 			/* TEST

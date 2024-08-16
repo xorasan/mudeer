@@ -431,12 +431,11 @@ var List, list, debug_list;
 			}
 		},
 		set: function (o, id) { // deprecate the second argument
-			// TODO move previously inserted item when a new .before is detected
 			/* IMPORTANT
 			 * id would actually change the html#id
 			 * so avoid it unless you know what you're doing
 			 * */
-			if (id) $.log('List.set, stop using id, use o.uid instead');
+			if (id) $.log.w('List.set, stop using id, use o.uid instead');
 			o = o || {};
 
 			var clone, LV = this, listitem = o._listitem || LV._listitem,
@@ -546,10 +545,12 @@ var List, list, debug_list;
 
 			LV._katabmowdoo3();
 
-			LV.afterset && LV.afterset( o, clone, templates.keys(clone), listitem ); // TODO deprecate
-			LV.ba3dihi && LV.ba3dihi( o, clone, templates.keys(clone), listitem ); // TODO deprecate
-			LV.after_set && LV.after_set( o, clone, templates.keys(clone), listitem );
-			LV.uponadaaf && LV.uponadaaf( LV.length() );
+			let keys = Templates.keys(clone);
+			LV.afterset  && LV.afterset ( o, clone, keys, listitem ); // TODO deprecate
+			LV.ba3dihi   && LV.ba3dihi  ( o, clone, keys, listitem ); // TODO deprecate
+			LV.after_set && LV.after_set( o, clone, keys, listitem );
+			LV.uponadaaf && LV.uponadaaf( LV.length() ); // TODO deprecate
+			Hooks.run( LV.hook_prefix+'-on-changes', { type: 'set', object: o, clone, keys } );
 
 			return clone;
 		},
@@ -623,11 +624,13 @@ var List, list, debug_list;
 
 				element = elementbyid(id);
 			}
+
 			if (element) {
 				uid = element.dataset.uid;
 				
-				var prev_selected = parseint( LV.id2num( uid ) );
+				let prev_selected = parseint( LV.id2num( uid ) );
 				
+				let object = LV.adapter.get( uid );
 				LV.adapter.pop( uid );
 
 				element.remove();
@@ -643,13 +646,19 @@ var List, list, debug_list;
 
 				LV._katabmowdoo3();
 				LV.uponhavaf && LV.uponhavaf( LV.length() );
+				
+				let keys = Templates.keys( element );
+				Hooks.run( LV.hook_prefix+'-on-changes', { type: 'remove', object, clone: element, keys } );
 			}
 		},
 		remove_by_uid: function (uid) { // pop
 			return this.pop(uid);
 		},
 		popall: function () {
-			this.adapter = $.array();
+			let LV = this;
+			this.adapter.each(function ({ uid }) {
+				LV.pop( uid );
+			});
 			innertext(this.keys.items, '');
 			innertext(this._muntahaabox, '');
 			this._katabmowdoo3();
@@ -657,7 +666,7 @@ var List, list, debug_list;
 		remove_all: function () { // popall
 			return this.popall();
 		},
-		press: function (key, force) {
+		press: function (key, force, type) {
 			var element = this.get(this.selected);
 			if (element) {
 				var item = this.adapter.get( element.dataset.uid );
@@ -744,15 +753,6 @@ var List, list, debug_list;
 		set_scrolling_element: function () {
 			
 		},
-		destroy: function () {
-			if (this.element) {
-				if (this.element.parentElement) {
-					popdata(this.element.parentElement, 'focus');
-				}
-				this.element.remove();
-				delete this.element;
-			}
-		},
 		idprefix: function (id) {
 			this.idprefix_raw = id;
 			return this;
@@ -782,7 +782,6 @@ var List, list, debug_list;
 			return LV;
 		},
 	};
-
 
 	proto.is_uid_selected = function (uid) {
 		return parseint( this.id2num( uid ) ) == this.selected;
@@ -826,6 +825,7 @@ var List, list, debug_list;
 	};
 	proto.id_prefix = proto.idprefix;
 	proto.list_item = proto.listitem;
+	proto.template = proto.list_item;
 	proto.set_focus = proto.rakkaz;
 	proto.set_visibility = function (yes) {
 		var proto = this;
@@ -898,8 +898,58 @@ var List, list, debug_list;
 		});
 	});
 	
+	// TODO FIX memory leak, watch list elements being removed and auto call destroy for old modules
+	// like sheets, ...
+	let all_lists = {};
+	
 	List = list = function (element) { // TODO deprecate list
-		var LV = Object.create(proto);
+		if (isundef(element)) throw new Error('List needs an element');
+	
+		let LV = Object.create(proto);
+
+		all_lists[ element ] = LV;
+		
+		let all_hooks = [];
+		function set_hook(...args) {
+			let hook = Hooks.set.apply(Hooks, args);
+			all_hooks.push( hook );
+			return hook;
+		}
+		
+		LV.destroy = async function () {
+			// TODO cancel all pending operations 
+			// 		cancel fetches
+			// 		cancel animations
+			// 		delete all data
+
+			// unhook all
+			all_hooks.forEach(function (hook) {
+				hook.remove();
+			});
+
+			delete all_lists[ element ];
+
+			if (this.element) {
+				if (this.element.parentElement) {
+					popdata(this.element.parentElement, 'focus');
+				}
+				this.element.remove();
+				delete this.element;
+			}
+		};
+		LV.restore_selection = function () { // make [data-selected] element .selected
+			let selected_element = LV.keys.items.querySelector('[data-selected]');
+			if (selected_element) {
+				let order = [ ...LV.keys.items.children ].indexOf( selected_element );
+				if ( order > -1 ) {
+					LV.selected = order;
+				}
+			}
+		};
+		
+		let hook_prefix = LV.hook_prefix = [ 'list', Time.now() * Math.random(), Time.now() * Math.random() ].join('-');
+
+		LV.on_changes = function (callback) { return set_hook(hook_prefix+'-on-changes', callback); };
 
 		LV.on_press_listeners = {};
 		LV.parent_views = [];
@@ -935,7 +985,7 @@ var List, list, debug_list;
 			let yes = old_selection == uid && LV.element.dataset.focussed == 1;
 			LV.rakkaz(1, 1);
 			
-			if (yes) LV.press(K.en);
+			if (yes) LV.press(K.en, 0, 'click');
 		};
 //		LV.element.onwheel = function (e) {
 //			$.log( e );

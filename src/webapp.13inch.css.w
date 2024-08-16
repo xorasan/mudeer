@@ -38,7 +38,7 @@ if min-width = 800px
 	#softkeysui .row2 button svg
 		height			48px
 		width			48px
-	#softkeysui button span
+	#softkeysui button span.label
 		margin-left		8px
 
 if min-width = 1024px

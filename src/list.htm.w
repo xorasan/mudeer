@@ -5,9 +5,13 @@
 			.miqyaas [id=miqyaas] @hidden
 		.message @hidden
 			span [id=message]
-//		.prepad [id=prepad]
+		.start_pin .pin [id=start_pin] @hidden
+			.origin
+				.text 'start_pin'
 		.items [id=items]
-//		.postpad [id=postpad]
+		.end_pin .pin [id=end_pin] @hidden
+			.origin
+				.text 'end_pin'
 	[template=listitem] .item
 		.flex
 			img [id=image] @hidden

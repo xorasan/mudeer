@@ -1,7 +1,8 @@
 /* manage sessions
  * 
  */
-var Sessions, sessions,
+Sessions = {};
+var sessions,
 	tbl_adwr = 'sessions'
 	tbl_hsbt = 'accounts',
 	tbl_wqti = 'temporary',
@@ -82,6 +83,37 @@ Sessions = sessions = {
 				$.random(0, 99999) +""+ get_time_now()
 			)
 		);
+	},
+
+	get: async function ({ key }) {
+		if (!isstr(key)) {
+			throw Error('Sessions get_account needs a string key');
+		}
+
+		// does the session exist
+		let session = await MongoDB.get(Config.database.name, tbl_adwr, { hash: parsestring(key) });
+		if (!session) { // no, return false to force logout
+			return new Error('session not found');
+		}
+
+		// update .updated to keep session alive
+		await MongoDB.set(Config.database.name, tbl_adwr, {
+			uid: session.uid,
+			updated: get_time_now(),
+		});
+		
+		// does the linked account exist and is allowed login
+		let account = await MongoDB.get(Config.database.name, tbl_hsbt, {
+			uid:		session.account,
+//			status:		0, // TODO
+		});
+		
+		if (!account) { // no, return false to force logout
+			return new Error('account not found');;
+		}
+
+		// yes, return both
+		return { session, account };
 	},
 
 	get_session_account: function (key, callback) { // returns { session, account }

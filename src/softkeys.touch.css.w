@@ -67,7 +67,7 @@ if min-width = 321px
 if min-width = 321px
 	#skdots
 		display			none !important
-	#softkeysui .row2 [data-hawm="1"] span
+	#softkeysui .row2 [data-hawm="1"] .tooltip, #softkeysui .row2 [data-hawm="1"] .label
 		position		absolute
 		top				6px
 		right			95px

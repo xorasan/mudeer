@@ -1,4 +1,5 @@
 //icons hourglassempty
+Sheets = {}, Sheet = {};
 var Sheet, sheet,
 	sheet_ready	= 'sheet-ready',
 	sheet_done	= 'sheet-done',
@@ -10,7 +11,7 @@ var Sheet, sheet,
 		active_data, before_okay, debug_sheet,
 		ae, murakkaz;
 
-	Sheet = sheet = {
+	Sheets = Sheet = sheet = {
 		okay: 0,
 		cancel: 0,
 		onshow: 0,
@@ -253,6 +254,7 @@ var Sheet, sheet,
 			});
 		},
 	};
+
 	Hooks.set('ready', function () {
 		Sheet.index();
 		var mfateeh = templates.keys(sheetui);

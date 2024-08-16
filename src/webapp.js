@@ -765,7 +765,11 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 
 		if (debug_webapp) $.log.w('Webapp ready');
 		await Hooks.until('webapp-ready'); // 2024 use this
+
 		Hooks.run('ready', 1); // deprecated
+
+		if (debug_webapp) $.log.w('Webapp after-ready');
+		await Hooks.until('webapp-after-ready');
 
 		$.taxeer('loadingbox', function () {
 			loadingbox.hidden = 1;

@@ -6,7 +6,7 @@ var Sessions, sessions,
 ;(function(){
 	'use strict';
 	var Sidebar = get_global_object().Sidebar;
-	var cache = {}, lastsearch, mfateeh, usnmavlble = {}, debug_sessions = 1;
+	var cache = {}, lastsearch, mfateeh, usnmavlble = {}, debug_sessions = 0;
 	var go_forward, login_state = {}, join_state = {};
 	function setup_fields(mfateeh) {
 		mfateeh.username.uponenter = function () {
@@ -237,14 +237,17 @@ var Sessions, sessions,
 			setdata( View.dom_keys('signup').aqdaam, 'currentqadam', 0 );
 			setdata( View.dom_keys('signin').aqdaam, 'currentqadam', 0 );
 		},
-		signedin: function () { // return session key
-			return preferences.get(1);
+		signedin: function () { // deprecated use get_session_key instead
+			return Preferences.get(1);
 		},
 		uid: function () { // signedin account uid
 			return Preferences.get(2);
 		},
 		get_account_uid: function () {
 			return this.uid();
+		},
+		get_session_key: function () { // return session key
+			return Preferences.get(1);
 		},
 		get_session_uid: function () {
 			return Preferences.get('session_uid');
@@ -308,6 +311,7 @@ var Sessions, sessions,
 				
 				Webapp.status( xlate('loggedout') );
 				Hooks.run('sessionchange', 0);
+				Hooks.run('sessions-change', { signed_in: 0 });
 
 //				if (Backstack.darajah)
 //					Backstack.back();
@@ -352,7 +356,7 @@ var Sessions, sessions,
 		},
 	};
 	Hooks.set('sessionchange', function (signedin) {
-		$.log.w('Sessions', signedin ? 'signed in' : 'signed out');
+		if (debug_sessions) $.log.w('Sessions', signedin ? 'signed in' : 'signed out');
 		update_sidebar();
 	});
 	Hooks.set('ready', function (args) {
@@ -434,6 +438,7 @@ var Sessions, sessions,
 				preferences.set( 22 , response.type		);
 				if (!signedin) { // only do this if wasn't prev logged in
 					Hooks.run('sessionchange', response.key);
+					Hooks.run('sessions-change', { signed_in: 1 });
 					update_sidebar();
 					Webapp.status( xlate('loggedin') );
 					reset_all_forms();
@@ -466,6 +471,7 @@ var Sessions, sessions,
 		});
 
 		Hooks.run('sessionchange', !!Sessions.signedin());
+		Hooks.run('sessions-change', { signed_in: !!Sessions.signedin() });
 
 		var m = View.dom_keys('signup');
 		var usnmfld = m.username;

@@ -228,11 +228,17 @@ listener = function (obj, name, fn, o) {
 		name = obj,
 		obj = window;
 
-	if (name instanceof Array) {
+	if (name instanceof Array) { // TODO return array
 		name.forEach(function (item) {
 			obj.addEventListener(item, fn, o);
 		});
 	} else obj.addEventListener(name, fn, o);
+	
+	return {
+		remove: function () {
+			obj.removeEventListener(name, fn);
+		}
+	};
 },
 createelement = function (name, classes, id) {
 	var e = document.createElement(name||'div');

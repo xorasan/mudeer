@@ -1,6 +1,6 @@
-var Themes, themes;
+var Themes, themes, debug_themes = 0;
 ;(function(){
-	var K, P, settingsuid, settings_contrast_uid, current = 0, contrast = 0, debug_themes = 0;
+	var K, P, settingsuid, settings_contrast_uid, current = 0, contrast = 0;
 	
 	var store = {
 		0: {
@@ -39,15 +39,26 @@ var Themes, themes;
 			accentd:	'#0284c0',
 			accentdt:	'rgba(4, 126, 205, 0.7)',
 
-			greend:		'#0b0',
-			green:		'#0c0',
+			greenxxd:	'#030',
+			greenxd:	'#050',
+			greend:		'#080',
+			green:		'#0b0',
 			greenl:		'#0d0',
-			yellowd:	'#b90',
-			yellow:		'#ca0',
-			yellowl:	'#db0',
-			redl:		'#f99',
-			red:		'#c00',
-			redd:		'#900',
+			greenxl:	'#0f0',
+
+			yellowxxd:	'#310',
+			yellowxd:	'#530',
+			yellowd:	'#970',
+			yellow:		'#b90',
+			yellowl:	'#ec0',
+			yellowxl:	'#fd0',
+
+			redxxd:		'#300',
+			redxd:		'#500',
+			redd:		'#800',
+			red:		'#b00',
+			redl:		'#b88',
+			redxl:		'#f99',
  		},
 		1: {
 			status:		'rgba(0,0,0,0.6)',
@@ -88,9 +99,11 @@ var Themes, themes;
 			greend:		'#0b0',
 			green:		'#0c0',
 			greenl:		'#0d0',
+
 			yellowd:	'#b90',
 			yellow:		'#ca0',
 			yellowl:	'#db0',
+
 			redl:		'#900',
 			red:		'#c00',
 			redd:		'#faa',
@@ -181,7 +194,24 @@ var Themes, themes;
 		},
 	};
 
+	function calc_current_theme() {
+		let mode = Preferences.get(Themes.saveto, 1);
+		if (debug_themes) $.log.w( 'calc_current_theme', mode );
+
+		let theme = 0;
+		if ( !mode ) {
+			let dark_theme_query = window.matchMedia('(prefers-color-scheme: dark)');
+			theme = dark_theme_query.matches ? 0 : 1;
+		} else if ( mode == 1 ) { // white
+			theme = 1;
+		} else if ( mode == 2 ) { // black
+			theme = 0;
+		}
+		return theme;
+	}
 	function set_theme_with_contrast(theme) {
+		if (debug_themes) $.log.w( 'calc_current_theme', theme );
+
 //		if (contrast) { // high
 //			if ( theme ) { // white
 //				themes.set(3);
@@ -189,16 +219,21 @@ var Themes, themes;
 //				themes.set(2);
 //			}
 //		} else { // low
-			if ( theme ) { // white
+			if ( theme == 1 ) { // white
 				Themes.set(1);
-			} else { // black
+			} else if ( theme == 0 ) { // black
 				Themes.set(0);
 			}
 //		}
 		Hooks.run('themes-set', Themes.get_current_theme());
 	}
+	function on_theme_change() {
+		current = calc_current_theme();
+		set_theme_with_contrast(current);
+	}
 
 	Themes = themes = {
+		get_store: () => { return store },
 		/* in preferences (using localStorage), use this key to remember theme
 		 * */
 		saveto: 19,
@@ -215,6 +250,7 @@ var Themes, themes;
 		 * inside a store.theme, set a key to value
 		 * */
 		set: function (theme, key, value) {
+			if (debug_themes) $.log.w( 'Themes set', theme );
 			var arglen = arguments.length;
 			if (arglen === 0) {
 				Themes.set(current);
@@ -223,7 +259,8 @@ var Themes, themes;
 			if (arglen === 1) {
 				if (store[theme]) {
 					dynamicstyle.innerHTML = updatetheme(store[theme]);
-					themecolor && themecolor.setAttribute('content', themes.get('status'));
+					themecolor && themecolor.setAttribute('content', Themes.get('status'));
+					Hooks.run('themes-on-change', theme);
 				}
 			}
 
@@ -237,7 +274,7 @@ var Themes, themes;
 				store[theme][key] = value;
 			}
 
-			return themes;
+			return Themes;
 		},
 		/* if only one arg is provided, assume it's the key
 		 * */
@@ -259,7 +296,7 @@ var Themes, themes;
 		},
 		toggle: function () {
 			if (debug_themes) $.log.w( 'Themes toggle', current );
-			current = current ? 0 : 1;
+			current = calc_current_theme();
 			set_theme_with_contrast(current);
 			Preferences.set(Themes.saveto, current);
 			settings.jaddad(settingsuid);
@@ -332,19 +369,38 @@ var Themes, themes;
 
 	Hooks.set('ready', function () {
 		if (Preferences) {
-			current = Preferences.get(themes.saveto, 1) || 0;
-			contrast = Preferences.get(themes.saveto_contrast, 1) || 0;
+			current = calc_current_theme();
+			contrast = Preferences.get(Themes.saveto_contrast, 1) || 0;
 		}
 
 		set_theme_with_contrast(current);
+
+		let dark_theme_query = window.matchMedia('(prefers-color-scheme: dark)');
+		listener(dark_theme_query, 'change', on_theme_change);
 		
 		settingsuid = Settings.adaaf('theme', function () {
-			var iswhite = preferences.get(themes.saveto, 1);
-			current = iswhite ? 1 : 0;
+			let mode = Preferences.get(Themes.saveto, 1);
+			let title = 'system';
+				 if (mode == 1) title = 'bright';
+			else if (mode == 2) title = 'dark'	;
+
+			current = calc_current_theme();
 			set_theme_with_contrast(current);
-			return [ iswhite ? 'white' : 'black' ];
+
+			return [ title ];
 		}, function () {
-			Preferences.set(themes.saveto, preferences.get(themes.saveto, 1) ? 0 : 1);
+			let mode = Preferences.get(Themes.saveto, 1);
+			if (mode == 0) { // system
+				mode = 1;
+			} else if (mode == 1) { // bright
+				mode = 2;
+			} else if (mode == 2) { // dark
+				mode = 0;
+			} else { // system
+				mode = 0;
+			}
+
+			Preferences.set(Themes.saveto, mode);
 		}, 'icontheme');
 
 //		settings_contrast_uid = settings.adaaf('contrast', function () {
@@ -361,17 +417,17 @@ var Themes, themes;
 		K = Softkeys.K, // key names
 		P = Softkeys.P; // presets
 
-		if (Webapp.is_at_home()) {
-			Softkeys.add({ n: 'Theme',
-				k: 'i',
-				ctrl: 1,
-				alt: 1,
-				i: 'icontheme',
-				c: function (k, e) {
-					themes.toggle();
-					e && e.preventDefault();
-				}
-			});
-		}
+//		if (Webapp.is_at_home()) {
+//			Softkeys.add({ n: 'Theme',
+//				k: 'i',
+//				ctrl: 1,
+//				alt: 1,
+//				i: 'icontheme',
+//				c: function (k, e) {
+//					themes.toggle();
+//					e && e.preventDefault();
+//				}
+//			});
+//		}
 	});
 })();

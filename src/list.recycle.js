@@ -1,7 +1,6 @@
-var Recycler, debug_recycler = 0;
+Recycler = {}, debug_recycler = 1;
 ;(function(){
-	var Sidebar = get_global_object().Sidebar, module_name = 'recycler', module_title = 'Recycler',
-		listitem = 'recycler_item';
+	var module_name = 'recycler', module_title = 'Recycler', listitem = 'recycler_item';
 	
 	Offline.create(module_name, 0, {
 		mfateeh: ['order'],
@@ -16,17 +15,48 @@ var Recycler, debug_recycler = 0;
 	
 	var all_recyclers = {}, recycler_uid = 0;
 
-	Recycler = function (list, name, need = 'default', size = 20) {
+	Recycler = function ( list, name, need = 'default', size = 20 ) {
 		let recycler = { list, name, need, size, start: 0, end: size, enabled: 1, reverse: 0, uid: recycler_uid++ };
 		all_recyclers[recycler.uid] = recycler; // deleted on destroy
+		
+		let all_hooks = [];
+		function set_hook() {
+			let hook = Hooks.set.apply(Hooks, arguments);
+			all_hooks.push( hook );
+			return hook;
+		}
+		
 		recycler.destroy = async function () {
 			// TODO cancel all pending operations 
 			// 		cancel fetches
 			// 		cancel animations
 			// 		delete all data
+
+			// unhook all
+			all_hooks.forEach(function (hook) {
+				hook.remove();
+			});
+
 			list.remove_all();
 			delete all_recyclers[recycler.uid];
 		};
+
+		let hook_prefix = [module_name, name, need].join('-');
+		recycler.on_range = function (callback) { return set_hook(hook_prefix+'-on-range', callback); };
+		function run_on_range () { $.delay( hook_prefix+'-on-range', function () {
+			let start_hidden = 0, end_hidden = 0;
+			let elements = recycler.get_elements();
+			if (elements.length) {
+				recycler.start_hidden = start_hidden = parseint( getdata( elements[ 0 ] , 'o' ) );
+				recycler.end_hidden   = end_hidden   = parseint( getdata( elements[ elements.length-1 ] , 'o' ) );
+			}
+			Hooks.run( hook_prefix+'-on-range', {
+				start: recycler.start,
+				end: recycler.end,
+				start_hidden,
+				end_hidden,
+			} );
+		}, 200); }
 		
 		// TODO add a Network response on count per module if name need is there with a condition to filter the
 		// response using a custom callback
@@ -70,6 +100,20 @@ var Recycler, debug_recycler = 0;
 			return 0;
 		}
 
+		recycler.is_internal = function ({ uid } = {}) {
+			if (['prev', 'next'].includes(uid)) {
+				return 1;
+			}
+		};
+		recycler.get_selection = function () {
+			let selection = [];
+			let object = list.get_item_object();
+			if (!recycler.is_internal(object)) {
+				selection.push( object );
+			}
+			return selection;
+		};
+		
 		let prev_busy, next_busy, prev_timeout, next_timeout;
 		recycler.prev = async function () { if (recycler.enabled && !prev_busy && !removal_in_progress) {
 			if (debug_recycler) $.log.w( 'recycler.prev', name, need );
@@ -96,7 +140,7 @@ var Recycler, debug_recycler = 0;
 				
 				var items = await recycler.get( start, end );
 
-				var height = await recycler.insert( start, end, items, closest );
+				var height = await recycler.insert({ start, end, items, before: closest });
 				if (recycler.reverse) {
 					scroll_by(0, -height);
 					if (debug_recycler) $.log.w( 'prev scrolled by', -height );
@@ -110,6 +154,9 @@ var Recycler, debug_recycler = 0;
 				prev_timeout = setTimeout(function () {
 					list.set({ uid: 'prev', title: phrases.prev+( order == 0 ? ' (Start)' : '' ) });
 				}, 2000);
+
+				// BUG FIX temporary, to avoid infinite loop when client count doesn't match server count
+//				await recycler.count();
 			}
 			prev_busy = 0;
 		} };
@@ -144,7 +191,7 @@ var Recycler, debug_recycler = 0;
 					$.log.w( 'next error', e );
 				}
 
-				var height = await recycler.insert( start, end, items );
+				var height = await recycler.insert({ start, end, items });
 				next_visible = getdata(next_element, 'v') == '1';
 
 				list.set({ uid: 'next', title: phrases.next+' (Loaded Range '+start+' - '+end+')' });
@@ -161,6 +208,9 @@ var Recycler, debug_recycler = 0;
 						}
 					}
 				}, 10);
+
+				// BUG FIX temporary, to avoid infinite loop when client count doesn't match server count
+//				await recycler.count();
 			}
 			next_busy = 0;
 		} };
@@ -187,6 +237,10 @@ var Recycler, debug_recycler = 0;
 		}
 		function update_prev_button() {
 			list.set({ uid: 'prev', title: phrases.prev });
+		}
+		function set_element_order(element, order) {
+			setdata(element, 'o', order++);
+			
 		}
 
 		recycler.set_phrase = async function (name, translation) {
@@ -221,35 +275,97 @@ var Recycler, debug_recycler = 0;
 		observer.observe( list.get_item_element_by_uid('prev') );
 		observer.observe( list.get_item_element_by_uid('next') );
 
-		recycler.insert = async function (start, end, items, before) {
-			var height = 0;
+		function blip_item ( element ) {
+			setcss(element, 'background-color', Themes.get('secondary'));
+			setcss(element, 'transition', 'background-color .25s ease-in');
+			setTimeout(function () {
+				setcss(element, 'background-color', Themes.get('primary'));
+				setTimeout(function () {
+					// TODO clear_css(element, ...props)
+					setcss(element, 'background-color', '');
+					setcss(element, 'transition', '');
+				}, 300);
+			}, 300);
+		}
+
+		recycler.find_closest = (target) => {
+			let children = list.keys.items.children;
+			let rankings = [];
+			if ( children.length > 2 ) {
+				for ( let child of children ) {
+					let uid = getdata( child, 'uid' ), order;
+					if ( uid == 'prev' ) { // assign it the smallest order - 1
+						// this should also output next if it gets matched, since the target is using .before
+						order = getdata( children[ 0 ], 'o' );
+						if (!isundef( order )) {
+							order = parseint( order ) - 1;
+						}
+					} else if ( uid == 'next' ) { // order of element before next + 1
+						order = getdata( children[ children.length - 2 ], 'o' );
+						if (!isundef( order )) {
+							order = parseint( order ) + 1;
+						}
+					} else {
+						order = getdata( child, 'o' );
+					}
+
+					if (!isundef( order )) {
+						order = parseint( order );
+						rankings.push({ element: child, distance: Math.abs(order - target) });
+					}
+				}
+
+				rankings.sort(function (a, b) {
+					return a.distance - b.distance;
+				});
+			} else {
+				rankings.push({ element: children[ children.length - 1 ], distance: 0 });
+			}
+			return rankings[0];
+		};
+
+		recycler.insert = async function ({ start, end, items, before }) {
+			if (debug_recycler) $.log.w( 'recycler.insert', 'start', start, 'end', end, 'length', items.length, before );
+			let height = 0;
+			
+			if (synchro.recycler.total_items)
 			items.forEach(function (o, i) {
-				o.before = before || o.before || list.get_item_element_by_uid('next');
+				// TEMPORARY will remove after testing
+				if (!isundef(o.order)) { // then insert it next to the nearest matching order index number
+					let closest = recycler.find_closest(o.order);
+					if (closest) {
+						let { element } = closest;
+						let object = list.get_item_object_by_uid( getdata( element, 'uid' ) )
+						if (object.uid == 'next') name = 'next';
+						else name = object.name;
+						if (debug_recycler) $.log( 'will insert', o.order, o.name, 'before', object.order, name );
+						o.before = element;
+					}
+				}
+			});
+
+			items.forEach(function (o, i) {
+				o.before = /*before || */o.before || list.get_item_element_by_uid('next');
 				var was_present = list.get_item_element_by_uid(o.uid);
-				list.set( o );
+				list.set( o ); // this one re-orders it
 				var element = list.get_item_element_by_uid(o.uid);
 
 				setdata(element, 'o', start+i);
+
 				observer.observe( element );
 
 				if (!was_present) {
 					height += element.offsetHeight;
 					// FAILED tried animating height but it triggers next, prev
-					setcss(element, 'background-color', Themes.get('secondary'));
-					setcss(element, 'transition', 'background-color .5s ease-in');
-					setTimeout(function () {
-						setcss(element, 'background-color', Themes.get('primary'));
-						setTimeout(function () {
-							// TODO clear_css(element, ...props)
-							setcss(element, 'background-color', '');
-							setcss(element, 'transition', '');
-						}, 500);
-					}, 500);
 				}
+				// TODO expose an option
+				blip_item( element );
 			});
 			if (items.length) {
 				if (debug_recycler) $.log.w('recycler', name, 'inserted', items.length, 'with height', height );
 				list.calc_selection();
+
+				recycler.reorder();
 				
 				await Hooks.until('recycler-insert-done', { name, need });
 			}
@@ -280,6 +396,7 @@ var Recycler, debug_recycler = 0;
 					}
 				} }
 				if (prev_edge) {
+					// URGENT BUG after removing objects, start and end become really weird
 					recycler.start = parseint( getdata(prev_edge, 'o') );
 					recycler.prev_edge = getdata(prev_edge, 'uid');
 					var prev_sib_count = 0, prev_sib = prevsibling(prev_edge);
@@ -321,20 +438,36 @@ var Recycler, debug_recycler = 0;
 				var elements = recycler.get_elements();
 				list.title( recycler.total_items+' items ('+elements.length+' loaded)' );
 				list.calc_selection();
+				
+				run_on_range();
 				recycler.remember_range();
 			} },
 			100,
 			list.length() > (recycler.size*4) // force cleanup if too many items loaded
 			);
 		};
-		recycler.reorder = function () {
-			var order = recycler.start;
-			var elements = recycler.get_elements();
-			elements.forEach(function (element) {
-				setdata(element, 'o', order++);
-			});
+		recycler.reorder = function ({ start } = {}) {
+			if (debug_recycler) {
+				$.log.w( module_title, 'reorder start', recycler.start );
+			}
+			let elements = recycler.get_elements();
+			if (elements.length) {
+				let order = /*!isundef(start) ? start : */getdata(elements[0], 'o');
+				elements.forEach(function (element) {
+					setdata(element, 'o', order);
+
+					let uid = getdata(element, 'uid');
+					let object = list.get_item_object_by_uid( uid );
+					if (object) {
+						object.order = order;
+						list.set( object ); // this one can show the new order
+					}
+					order++;
+				});
+			}
 		};
 		recycler.render = async function () {
+			if (debug_recycler) $.log.w( 'recycler.render' );
 			if (await all_items_loaded()) { return; }
 			
 			var count = await recycler.count();
@@ -343,7 +476,7 @@ var Recycler, debug_recycler = 0;
 				end   = recycler.end,
 				items = await recycler.get( start, end );
 
-			var height = await recycler.insert( start, end, items );
+			var height = await recycler.insert({ start, end, items });
 			if (recycler.reverse && start == 0) {
 				if (debug_recycler) $.log.w( module_title, name, 'render scroll_by', height );
 				scroll_by(0, height);
@@ -368,6 +501,7 @@ var Recycler, debug_recycler = 0;
 			recycler.start = 0;
 			recycler.end = recycler.size;
 			recycler.render();
+			run_on_range();
 		};
 		recycler.jump_to_end = function () {
 			
@@ -440,6 +574,7 @@ var Recycler, debug_recycler = 0;
 			cache_enabled = yes ? 1 : 0;
 		};
 		recycler.set = async function ( items ) { // fig out where to put these items
+			if (debug_recycler) $.log.w( 'recycler.set' );
 			if (!isarr(items)) items = [ items ];
 			
 			// use the compare function to determine which direction the item should go
@@ -447,6 +582,31 @@ var Recycler, debug_recycler = 0;
 			items = recycler.sort(items);
 			// don't insert edge items if .start != 0 & .end != .total_count, this will keep scrolling flowing
 			items = items.filter(function (o) {
+				let old_element = list.get_item_element_by_uid( o.uid );
+				
+				if (old_element) { // if it's already there
+					o.before = old_element; // just update in place
+					let ignore;
+					
+					if (!isundef(o.order)) {
+						let order = parseint( getdata(old_element, 'o') );
+						if (order != o.order) {
+							ignore = 1; // handled in next clause
+						}
+					}
+					if (!ignore) return 1;
+				}
+				
+				if (!isundef(o.order)) { // then insert it next to the nearest matching order index number
+					let elements = recycler.get_elements();
+					for (let element of elements) {
+						let order = parseint( getdata(element, 'o') );
+						if (order <= o.order) o.before = element;
+						else break;
+					}
+					return 1;
+				}
+				
 				if (recycler.get_objects().length == 0) { // it no items exist, always allow insertion
 					return 1;
 				}
@@ -473,13 +633,14 @@ var Recycler, debug_recycler = 0;
 				return 1;
 			});
 			
-			var height = await recycler.insert(0, items.length, items);
+			var height = await recycler.insert({ start: 0, end: items.length, items });
 			if (height && recycler.enabled) {
 				scroll_by(0, height);
 			}
 			recycler.reorder();
 		};
 		recycler.get = async function ( start = 0, end = recycler.size ) {
+			if (debug_recycler) $.log.w( 'recycler.get', start, end );
 			var resolve;
 			var promise = new Promise(function (r) {
 				resolve = r;
@@ -504,7 +665,7 @@ var Recycler, debug_recycler = 0;
 			if (end-start > num_of_cached) {
 				allow = await recycler.aggregate_intercepts('range', payload);
 				if (allow !== 0) {
-					if (adapter) {
+					if (adapter && adapter.get) {
 						range = await adapter.get(payload);
 					} else {
 						range = await Network.fetch(recycler.name, 'range', payload);
@@ -543,8 +704,8 @@ var Recycler, debug_recycler = 0;
 			var count = 0, payload = {};
 			var allow = await recycler.aggregate_intercepts('count', payload);
 			if (allow !== 0) {
-				if (adapter) {
-					range = await adapter.count(payload);
+				if (adapter && adapter.count) {
+					count = await adapter.count(payload);
 				} else {
 					count = await Network.fetch(recycler.name, 'count', payload);
 				}
@@ -583,12 +744,30 @@ var Recycler, debug_recycler = 0;
 			return objects;
 		};
 		recycler.remove_by_uid = async function (uid, only_remove) {
-			var resolve;
+			let resolve, order;
+			let get_element_index = function (element) {
+				if (element) {
+					let children = Array.from(element.parentNode.children);
+					return children.indexOf(element);
+				}
+			};
 			var promise = new Promise(function (r) {
-				resolve = r;
+				resolve = function () {
+					if (!isundef(order)) {
+						recycler.reorder({ start: order });
+					} else {
+						recycler.reorder();
+					}
+					return r.apply(r, arguments);
+				};
 			});
 			var element = list.get_item_element_by_uid(uid);
 			if (element) {
+				// if the first element is being removed, we pass its order to the next element
+				if (get_element_index(element) == 1) { // 0 is the next/prev button
+					order = getdata(element, 'o');
+				}
+				
 				if (only_remove) {
 					list.remove_by_uid(uid);
 					resolve();
@@ -601,7 +780,6 @@ var Recycler, debug_recycler = 0;
 						setcss(element, 'height', '0px');
 						setTimeout(function () {
 							list.remove_by_uid(uid);
-							recycler.reorder();
 							resolve();
 						}, 500);
 					}, 50);
@@ -610,6 +788,15 @@ var Recycler, debug_recycler = 0;
 				resolve();
 			}
 			return promise;
+		};
+		recycler.remove = async function (uid_or_uids, only_remove) {
+			if (!isarr(uid_or_uids)) {
+				uid_or_uids = [ uid_or_uids ];
+			}
+			for await (let uid of uid_or_uids) {
+				if (!isundef(uid))
+					await recycler.remove_by_uid(uid, only_remove);
+			}
 		};
 		recycler.remove_all = async function () {
 			removal_in_progress = 1;
@@ -625,72 +812,82 @@ var Recycler, debug_recycler = 0;
 		};
 
 		let intercepts = {}, intercept_uid = 0;
-		recycler.add_intercept = function (need, callback) {
-			if (isfun(need)) {
-				callback = need;
-				need = intercept_uid++;
+		recycler.add_intercept = function (uid, callback) {
+			if (isfun(uid)) {
+				callback = uid;
+				uid = intercept_uid++;
 			}
-			intercepts[ need ] = callback;
+			intercepts[ uid ] = callback;
 		};
-		recycler.remove_intercept = function (need) {
-			delete intercepts[ need ];
+		recycler.remove_intercept = function (uid) {
+			delete intercepts[ uid ];
 		};
 		recycler.aggregate_intercepts = async function (need, payload) { // called before fetch request
 			payload = payload || {};
-			var allow = 1;
-			for (var i in intercepts) {
-				var intercept = intercepts[i];
+			let allow = 1;
+			for (let i in intercepts) {
+				let intercept = intercepts[i];
 				if (isfun(intercept)) {
-					allow = await intercept(need, payload);
+					allow = await intercept({ need, payload });
 				}
 			}
 			return allow;
 		};
 
 		let postcepts = {}, postcept_uid = 0;
-		recycler.add_postcept = function (need, callback) {
-			if (isfun(need)) {
-				callback = need;
-				need = postcept_uid++;
+		recycler.add_postcept = function (uid, callback) {
+			if (isfun(uid)) {
+				callback = uid;
+				uid = postcept_uid++;
 			}
-			postcepts[ need ] = callback;
+			postcepts[ uid ] = callback;
 		};
-		recycler.remove_postcept = function (need) {
-			delete postcepts[ need ];
+		recycler.remove_postcept = function (uid) {
+			delete postcepts[ uid ];
 		};
 		recycler.aggregate_postcepts = async function (need, payload, result) { // called after fetch response
-			var allow = 1;
-			for (var i in postcepts) {
+			let allow = 1;
+			for (let i in postcepts) {
 				var postcept = postcepts[i];
 				if (isfun(postcept)) {
-					allow = await postcept(need, payload, result);
+					allow = await postcept({ need, payload, result });
 				}
 			}
 			return allow;
 		};
 
+		recycler.on_enabled = function (callback) { return set_hook(hook_prefix+'-on-enabled', callback); };
+		function run_on_enabled () { $.delay( hook_prefix+'-on-enabled', function () {
+			Hooks.run( hook_prefix+'-on-enabled', {
+				enabled: recycler.enabled,
+			} );
+		}, 200); }
 		recycler.disable = function () { if (this.enabled) {
 			if (debug_recycler) $.log.w(module_title, 'disable', name);
 			this.enabled = 0;
+			run_on_enabled();
 		} };
 		recycler.enable = function () { if (!this.enabled) {
 			if (debug_recycler) $.log.w(module_title, 'enable', name);
 			this.enabled = 1;
+			run_on_enabled();
 		} };
 
 		recycler.reset_range = async function () {
 			recycler.start = 0;
 			recycler.end = recycler.size;
-//			await recycler.remember_range();
+			await recycler.remember_range();
+			
+			run_on_range();
 		};
 		recycler.remember_range = async function () {
 			// TODO add an luid key for like liud: room
 			// TODO make into promise
-			Offline.add(module_name, 'ranges', {
-				uid  : name+need     ,
-				start: recycler.start,
-				end  : recycler.end  ,
-			});
+//			Offline.add(module_name, 'ranges', {
+//				uid  : name+need     ,
+//				start: recycler.start,
+//				end  : recycler.end  ,
+//			});
 		};
 		recycler.restore_range = async function () {
 			var arr = await Offline.get_offline(module_name, 'ranges', { filter: { uid: name+need } } );
@@ -701,6 +898,8 @@ var Recycler, debug_recycler = 0;
 				if (recycler.reverse && recycler.start == 0) {
 					scroll_by(0, list.keys.items.offsetHeight);
 				}
+				
+				run_on_range();
 			}
 		};
 //		(async function () {

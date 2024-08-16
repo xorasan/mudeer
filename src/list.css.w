@@ -1,10 +1,43 @@
 .list
 	user-select		none
-.list .message
+
+.list > .pin
+	position		sticky
+	background		@secondary
+	border			1px solid @tertiary
+	margin			0 40px 0 auto
+	width			min-content
+	padding			38px
+	border-radius	100%
+	border-bottom-left-radius	0
+.list > .pin .origin
+	position		absolute
+
+.list > .start_pin
+	top				90px
+	transform		rotate(135deg)
+.list > .start_pin > .origin
+	transform		rotate(-135deg)
+	left			0
+	right			17px
+.list > .start_pin > .text
+	text-align		center
+
+.list > .end_pin
+	transform		rotate(-45deg)
+	bottom			90px
+.list > .end_pin > .origin
+	transform		rotate(45deg)
+	left			-17px
+	right			0
+.list > .end_pin .text
+	text-align		center
+
+.list > .message
 	display			flex
 	align-items		center
 	min-height		50vh
-.list .message span
+.list > .message span
 	font-size		150%
 	text-align		center
 	width			100%
