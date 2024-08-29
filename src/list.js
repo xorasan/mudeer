@@ -95,7 +95,6 @@ var List, list, debug_list;
 		// triggers on_focus
 		uponrakkaz: function (v, active) { // active = visible & view is active
 			if (v && active) Softkeys.list.basic(this);
-			if (isfun(this.on_focus)) this.on_focus(v, active);
 		},
 		rakkaz: function (v, active) { // deprecated, use set_focus
 			var o = this.get_item_object();
@@ -104,10 +103,12 @@ var List, list, debug_list;
 			if (this._prevent_focus || prevent_focus) return;
 
 			var yes;
-			this.murakkaz = !!v;
+			this.focussed = this.murakkaz = !!v;
 			if (v && !this.element.dataset.focussed) this.element.dataset.focussed = 1, yes = 1;
 			else if (!v && this.element.dataset.focussed) delete this.element.dataset.focussed, yes = 1;
 			(yes || active) && this.uponrakkaz && this.uponrakkaz(v, active);
+			
+			Hooks.run( this.hook_prefix+'-on-focus', { has_focus: this.focussed, list: this });
 		},
 		/* TODO
 		 * improve this navigation to account for mufarraqaat
@@ -219,11 +220,7 @@ var List, list, debug_list;
 			}
 			item = this.get(this.selected);
 			if (item && !this.element.dataset.freeflow) { // TODO only scroll if too close to edge
-				if (this.reverse) {
-					scroll_by(0, item.offsetHeight);
-				} else {
-					scroll_by(0, -item.offsetHeight);
-				}
+				this.scroll_up_if_needed();
 			}
 			return this;
 		},
@@ -282,12 +279,8 @@ var List, list, debug_list;
 //				);
 			}
 			item = this.get(this.selected);
-			if (item && !this.element.dataset.freeflow) { // TODO only scroll if too close to edge
-				if (this.reverse) {
-					scroll_by(0, -item.offsetHeight);
-				} else {
-					scroll_by(0, item.offsetHeight);
-				}
+			if (item && !this.element.dataset.freeflow) {
+				this.scroll_down_if_needed();
 			}
 			return this;
 		},
@@ -431,6 +424,7 @@ var List, list, debug_list;
 			}
 		},
 		set: function (o, id) { // deprecate the second argument
+			// supports .ruid -> .uid conversion
 			/* IMPORTANT
 			 * id would actually change the html#id
 			 * so avoid it unless you know what you're doing
@@ -783,6 +777,36 @@ var List, list, debug_list;
 		},
 	};
 
+	// only scroll if too close to edge
+	proto.scroll_up_if_needed = function ( item ) {
+		item = item || this.get( this.selected );
+		if (this.reverse) { // down
+			let [ x, y ] = get_bounds( item );
+			if ( y > innerheight()-200 ) {
+				scroll_by(0, item.offsetHeight);
+			}
+		} else { // up
+			let [ x, y ] = get_bounds( item );
+			if ( y < 200 ) {
+				scroll_by(0, -item.offsetHeight);
+			}
+		}
+	};
+	proto.scroll_down_if_needed = function ( item ) {
+		item = item || this.get( this.selected );
+		if (this.reverse) { // up
+			let [ x, y ] = get_bounds( item );
+			if ( y < 200 ) {
+				scroll_by(0, -item.offsetHeight);
+			}
+		} else { // down
+			let [ x, y ] = get_bounds( item );
+			if ( y > innerheight()-200 ) {
+				scroll_by(0, item.offsetHeight);
+			}
+		}
+	};
+
 	proto.is_uid_selected = function (uid) {
 		return parseint( this.id2num( uid ) ) == this.selected;
 	};
@@ -950,6 +974,7 @@ var List, list, debug_list;
 		let hook_prefix = LV.hook_prefix = [ 'list', Time.now() * Math.random(), Time.now() * Math.random() ].join('-');
 
 		LV.on_changes = function (callback) { return set_hook(hook_prefix+'-on-changes', callback); };
+		LV.on_focus = function (callback) { return set_hook(hook_prefix+'-on-focus', callback); };
 
 		LV.on_press_listeners = {};
 		LV.parent_views = [];

@@ -123,7 +123,7 @@
 input[data-over], textarea[data-over], input[data-under], textarea[data-under]
 	border-color	@red
 
-if min-width = 320px
+if min-width = 300px
 	#softkeysui .left
 		display			flex
 		flex-direction	row-reverse
@@ -176,7 +176,7 @@ if min-width = 1200px
 		top				3px
 	#softkeysui .row2 button:not(:hover) .tooltip
 		top				9px
-	#softkeysui button:not(:hover) .key
+	#softkeysui .row2 button:not(:hover) .key
 		display			none
 
 if min-width = 1400px

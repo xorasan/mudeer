@@ -52,7 +52,7 @@
 	
 
 
-if min-width = 860px
+if min-width = 861px
 	#sidebarui
 		display			inline-flex
 //		display			inline-block
@@ -61,12 +61,12 @@ if min-width = 860px
 		padding-right	90px
 	body
 		max-width		720px
-		margin-left		max(136px, 10%)
+		margin-left		max(134px, 10%)
 		margin-right	max( 90px, 10%)
 	#pagermowjoodah
 		max-width		650px
 		justify-content	left
-if min-width = 1024px
+if min-width = 1025px
 	body
 		max-width		720px
 		margin-left		max(260px, 25%)

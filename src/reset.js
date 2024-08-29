@@ -1,4 +1,15 @@
 // put global functions here available to both server and client
+measure_performance = function (name = 'task') {
+	let metric = {
+		start: performance.now(),
+	};
+	return {
+		end: function () {
+			metric.end = performance.now() - metric.start;
+			$.log.w( name, parsefloat(metric.end, 2)+'ms' );
+		}
+	}
+},
 get_global_object = function () { // to check module prop in window.* or global.*
 	return window || {}; // window is the global object on server side
 },
@@ -44,11 +55,47 @@ tabdeel = function (str, arr) {
 	}
 	return str;
 },
-deepcopy = function (v) {
+deep_upsert = function (target, source, visited = new Map()) {
+	// deeply merges properties from a source object into a target object, handles nested objects
+	// merges their properties, also removes properties in the target object if the corresponding value in
+	// the source object is undefined
+	// handles circular references, preventing infinite loops during recursion
+	
+    if (visited.has(source)) {
+        return visited.get(source);
+    }
+
+    for (const key in source) {
+        if (source.hasOwnProperty(key)) {
+            if (isundef(source[key])) {
+                delete target[key]; // remove key if the value is undefined
+            } else if (typeof source[key] === 'object' && source[key] !== null) {
+                if (!target[key] || typeof target[key] !== 'object') {
+                    target[key] = isarr(source[key]) ? [] : {};
+                }
+                
+                visited.set(source, target);
+                deep_upsert(target[key], source[key], visited);
+            } else {
+                target[key] = source[key];
+            }
+        }
+    }
+    return target;
+},
+deepcopy = function (o) {
 	// TODO deep copy obj recursively
+    if (typeof structuredClone === 'function') {
+        return structuredClone(o);
+    } else {
+        return JSON.parse(JSON.stringify(o));
+    }
 },
 isundef = function (v) {
 	return v === undefined;
+},
+isdef = function (v) {
+	return v !== undefined;
 },
 isstr = function (v) {
 	return typeof v == 'string';
@@ -68,7 +115,7 @@ isfun = function (v) {
 isarr = function (v) {
 	return Array.isArray(v);
 },
-areobjectsequal = function (a, b) { // only compares primitives bw 2 objs
+are_objects_equal = areobjectsequal = function (a, b) { // only compares primitives bw 2 objs
 	var same = 1;
 	if (a && b && Object.keys(a).length === Object.keys(b).length)
 	for (var i in a) {

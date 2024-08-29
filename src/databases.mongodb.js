@@ -41,6 +41,21 @@ MongoDB = {};
 	function use_db(name) {
 		return client.db(name);
 	}
+	
+	// TODO use this to replace _id with uid in all docs and back
+	function rename_property(obj, old_key, new_key) {
+		if (obj instanceof Object) {
+			Object.keys(obj).forEach(key => {
+				if (key === old_key) {
+					obj[new_key] = obj[old_key];
+					delete obj[old_key];
+				} else if (obj[key] instanceof Object) {
+					rename_property(obj[key], old_key, new_key);
+				}
+			});
+		}
+		return obj;
+	}
 
 	/* LOGIC
 	 * .uid is always translated to ._id since all mudeer modules use .uid
@@ -78,10 +93,18 @@ MongoDB = {};
 
 
 			// Specify the update or the document to insert if not found
-			const update = {
+			let update = {
 				$set: doc, // update props whether doc is found or not
 				$setOnInsert: { _id: uid, created: created },
+				$unset: {},
 			};
+
+			for ( let prop in doc ) {
+				if (doc[prop] === null) {
+					delete doc[prop];
+					update.$unset[prop] = 1;
+				}
+			}
 
 			const result = await collection.updateOne(
 				{ _id: uid }, // filter, find previous doc
@@ -133,10 +156,10 @@ MongoDB = {};
 	}
 
 	// converts uid to _id and reverse on out, always outs an { err, rows: [] }
-	async function find_many_as_array(db, collection_name, filter, cb) {
+	async function find_many_as_array (db, collection_name, filter, cb) {
 		if (debug_mongodb) $.log( ' find_many_as_array... ', collection_name, JSON.stringify(filter) );
 
-		var out_docs, out_error, aggregate, sort, limit, skip;
+		let out_docs, out_error, aggregate, sort, limit, skip;
 		filter = filter || {};
 		// convert uid to _id
 		if (filter.uid) { filter._id = filter.uid; delete filter.uid; }
@@ -177,20 +200,34 @@ MongoDB = {};
 		}
 	}
 	
-	async function find_as_count(db, collection_name, filter, cb) {
+	async function find_as_count (db, collection_name, filter, cb) {
 		if (debug_mongodb) $.log( ' find_as_count... ', collection_name, JSON.stringify(filter) );
 
-		var out_count, out_error;
+		let out_count, out_error, aggregate, sort, limit, skip;
 		filter = filter || {};
 		// convert uid to _id
-		if (filter.uid) {
-			filter._id = filter.uid;
-			delete filter.uid;
-		}
+		if (filter.uid) { filter._id = filter.uid; delete filter.uid; }
+
+		if (filter.$sort || filter.$limit || filter.$skip) { aggregate = 1; } // has to be first
+		
+		limit = filter.$limit; delete filter.$limit;
+		sort  = filter.$sort ; delete filter.$sort ;
+		skip  = filter.$skip ; delete filter.$skip ;
 
 		try {
 			const collection = use_db( db ).collection( collection_name );
-			out_count = await collection.countDocuments( filter );
+			if (aggregate) {
+				var filter_array = [ { $match: filter } ];
+				if (sort) filter_array.push( { $sort: sort } );
+				if (skip) filter_array.push( { $skip: skip } );
+				if (limit) filter_array.push( { $limit: limit } );
+				filter_array.push( { $count: 'total_count' } );
+
+				let result = await collection.aggregate( filter_array ).toArray();
+				out_count = result.length > 0 ? result[0].total_count : 0;
+			} else {
+				out_count = await collection.countDocuments( filter );
+			}
 		} catch (error) {
 			out_error = error;
 			$.log.e(' Error during find_as_count:', error);
@@ -352,7 +389,8 @@ MongoDB = {};
 	}
 
 	module.exports = Databases.mongodb = MongoDB = {
-		connect	: connect,
+		use_db,
+		connect,
 		db		: use_db,
 		set		: upsert_one_or_many,
 		query	: find_many_as_array,

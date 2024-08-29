@@ -33,7 +33,7 @@ var Softkeys, softkeys,
 		list: {},
 	};
 
-	var global_keys = ['f1', 'f2', 'f5', 'escape', K.sl, K.sr];
+	var global_keys = ['f1', 'insert', 'f2', 'f5', 'escape', K.sl, K.sr];
 
 	var hfizM = {}, M = {}, // mapped keys
 	current,
@@ -83,10 +83,14 @@ var Softkeys, softkeys,
 		}
 		
 		if (!isarr(args)) { // only .add API
+			let key_names = [ args.key || uid ];
+			if ( ['f1', 'insert', K.sl].includes( args.key ) ) {
+				key_names = ['f1', 'insert'];
+			}
 			o.key =   (args.ctrl  ? 'ctrl '  : '')
 					+ (args.alt   ? 'alt '   : '')
 					+ (args.shift ? 'shift ' : '')
-					+ (args.key || uid)
+					+ (key_names.join(' · '))
 						;
 		}
 
@@ -101,7 +105,12 @@ var Softkeys, softkeys,
 		} else {
 			parent = skhints;
 		}
-		o.id = 'sk'+k;
+		if (['#', 'backspace', 'softright', 'softleft', 'enter', '0-0-0-enter',
+			 '0-0-0-softleft', '0-0-0-softright'].includes(uid)) { // for old API keys in row1
+			o.id = 'sk'+k;
+		} else {
+			o.id = 'sk'+uid;
+		}
 		o.classes = classes;
 
 		let before = 0;
@@ -368,7 +377,7 @@ var Softkeys, softkeys,
 				if (e.y <= -1) k = K.up;
 				if (e.y >=  1) k = K.dn;
 			}
-			if (k == 'f1') k = K.sl, pd();
+			if (['f1', 'insert'].includes(k)) k = K.sl, pd();
 			if (k == 'f2') k = K.sr, pd();
 			if (k == 'f5' ||
 					(e && e.ctrlKey && ['r', 'ر'].includes(k))
@@ -589,9 +598,13 @@ var Softkeys, softkeys,
 	Softkeys.autoheight = autoheight;
 	// TODO make repeat logic here
 	var resize = function () {
-		var w = innerwidth(), sl = index[K.sl], sr = index[K.sr];
-		if (w > 720) {
-			var ww = ((innerwidth()-590)/2);
+		let w = innerwidth(), sl = index[K.sl], sr = index[K.sr];
+		if (w > 920) {
+			let iw = innerwidth();
+			if (iw > 1024) {
+				iw = 1024;
+			}
+			let ww = ((iw-590)/2);
 			if (sl) setcss(sl, 'width', ww+'px');
 			if (sr) setcss(sr, 'width', ww+'px');
 		} else {
@@ -631,9 +644,9 @@ var Softkeys, softkeys,
 
 		// TODO BUG this causes bugs when messages are loaded, voice recording starts imm
 		// but without it, many uponenters dont get triggered
-		if (key == K.en) {
-			Softkeys.press(e.key, e, e.type, 0);
-		}
+//		if (key == K.en) {
+//			Softkeys.press(e.key, e, e.type, 0);
+//		}
 
 		let code = (e || {}).keyCode, modifiers = [];
 		let is_alphanum, is_alpha, is_lower, is_upper, is_number;
@@ -721,7 +734,7 @@ var Softkeys, softkeys,
 
 		Hooks.rununtilconsumed('softkey', [key, e || {}, e && e.type, 0]);
 
-//		fire_hook('softkeys-up', e);
+		fire_hook('softkeys-up', e);
 
 		preventdefault(e);
 	});
@@ -741,7 +754,7 @@ var Softkeys, softkeys,
 		// both keyup and keydown call Softkeys.press
 		// the API needs to account for that or it messes up List().press
 		// ...
-//		fire_hook('softkeys-down', e);
+		fire_hook('softkeys-down', e);
 
 //
 //		if (time.now() - lastkeytime < 300) {

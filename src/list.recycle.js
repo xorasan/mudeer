@@ -1,4 +1,4 @@
-Recycler = {}, debug_recycler = 1;
+Recycler = {}, debug_recycler = 0;
 ;(function(){
 	var module_name = 'recycler', module_title = 'Recycler', listitem = 'recycler_item';
 	
@@ -17,6 +17,10 @@ Recycler = {}, debug_recycler = 1;
 
 	Recycler = function ( list, name, need = 'default', size = 20 ) {
 		let recycler = { list, name, need, size, start: 0, end: size, enabled: 1, reverse: 0, uid: recycler_uid++ };
+		
+		recycler.start_hidden = recycler.start;
+		recycler.end_hidden   = recycler.end  ;
+		
 		all_recyclers[recycler.uid] = recycler; // deleted on destroy
 		
 		let all_hooks = [];
@@ -41,39 +45,57 @@ Recycler = {}, debug_recycler = 1;
 			delete all_recyclers[recycler.uid];
 		};
 
-		let hook_prefix = [module_name, name, need].join('-');
+		let hook_prefix = [module_name, name, need].join('-'),
+			// old range that was last reported out
+			old_range = {};
+		recycler.on_press = function (callback) { return set_hook(hook_prefix+'-on-press', callback); };
 		recycler.on_range = function (callback) { return set_hook(hook_prefix+'-on-range', callback); };
-		function run_on_range () { $.delay( hook_prefix+'-on-range', function () {
-			let start_hidden = 0, end_hidden = 0;
+		function run_on_range () {
+			let start_hidden = 0, end_hidden = 0, new_range = {};
 			let elements = recycler.get_elements();
 			if (elements.length) {
 				recycler.start_hidden = start_hidden = parseint( getdata( elements[ 0 ] , 'o' ) );
 				recycler.end_hidden   = end_hidden   = parseint( getdata( elements[ elements.length-1 ] , 'o' ) );
+				
+				new_range = {
+					start: recycler.start,
+					end: recycler.end,
+					start_hidden,
+					end_hidden,
+				};
 			}
-			Hooks.run( hook_prefix+'-on-range', {
-				start: recycler.start,
-				end: recycler.end,
-				start_hidden,
-				end_hidden,
-			} );
-		}, 200); }
-		
-		// TODO add a Network response on count per module if name need is there with a condition to filter the
-		// response using a custom callback
+
+			$.delay( hook_prefix+'-on-range', function () {
+				// if the range has changed
+				if ( !are_objects_equal( old_range, new_range ) ) {
+					old_range = {
+						start: recycler.start,
+						end: recycler.end,
+						start_hidden,
+						end_hidden,
+					};
+					Hooks.run( hook_prefix+'-on-range', old_range );
+				}
+			}, 2000);
+		}
 		
 		let cache_enabled, phrases = {
 			next: 'Next',
 			prev: 'Previous',
 		};
 		let active = 1, removal_in_progress;
-		list.listen_on_press(async function ( o, k ) {
-			if (o.uid == 'prev') {
-				await recycler.prev();
-				list.select_by_uid( 'prev' );
-			}
-			if (o.uid == 'next') {
-				await recycler.next();
-				list.select_by_uid( 'next' );
+		list.listen_on_press(async function ( o, k, i ) {
+			if (k == 'enter') {
+				if (o.uid == 'prev') {
+					await recycler.prev();
+					list.select_by_uid( 'prev' );
+				} else
+				if (o.uid == 'next') {
+					await recycler.next();
+					list.select_by_uid( 'next' );
+				} else {
+					Hooks.run( hook_prefix+'-on-press', o, k, i );
+				}
 			}
 		});
 		recycler.set_reversed = function (yes) {
@@ -114,6 +136,7 @@ Recycler = {}, debug_recycler = 1;
 			return selection;
 		};
 		
+		// TODO prev & next after success should check again if they're still visible & loaded_items < count
 		let prev_busy, next_busy, prev_timeout, next_timeout;
 		recycler.prev = async function () { if (recycler.enabled && !prev_busy && !removal_in_progress) {
 			if (debug_recycler) $.log.w( 'recycler.prev', name, need );
@@ -121,13 +144,18 @@ Recycler = {}, debug_recycler = 1;
 
 			prev_busy = 1;
 
-			var closest = list.keys.items.childNodes[1];
-			var order = getdata(closest, 'o'), start, end;
+			let closest = list.keys.items.childNodes[1];
+			let order = getdata(closest, 'o'), start, end;
 			if (order) {
 				order = parseint( order );
-				start = order-size;
+				start = order - recycler.size;
 				end   = order;
 				if (start < 0) start = 0;
+
+				// extend the hidden range
+				// items will get filtered out after this limit
+				recycler.start_hidden = start - recycler.size;
+				if (recycler.start_hidden < 0) recycler.start_hidden = 0;
 			}
 
 			if (order == 0) {
@@ -138,9 +166,9 @@ Recycler = {}, debug_recycler = 1;
 			if (start !== end && order !== 0) {
 				list.set({ uid: 'prev', title: phrases.prev+' (Loading '+start+' - '+end+'...)' });
 				
-				var items = await recycler.get( start, end );
+				let items = await recycler.get( start, end );
 
-				var height = await recycler.insert({ start, end, items, before: closest });
+				let height = await recycler.insert({ start, end, items, before: closest });
 				if (recycler.reverse) {
 					scroll_by(0, -height);
 					if (debug_recycler) $.log.w( 'prev scrolled by', -height );
@@ -170,10 +198,15 @@ Recycler = {}, debug_recycler = 1;
 			if (order) {
 				order = parseint( order );
 				start = order;
-				end   = order+size;
+				end   = order + recycler.size;
 				if (end > recycler.total_items) {
 					end = recycler.total_items;
 				}
+
+				// extend the hidden range
+				// items will get filtered out after this limit
+				recycler.end_hidden = end + recycler.size;
+				if (recycler.end_hidden > recycler.total_items) recycler.end_hidden = recycler.total_items;
 			}
 
 			if (order == recycler.total_items-1) {
@@ -238,10 +271,6 @@ Recycler = {}, debug_recycler = 1;
 		function update_prev_button() {
 			list.set({ uid: 'prev', title: phrases.prev });
 		}
-		function set_element_order(element, order) {
-			setdata(element, 'o', order++);
-			
-		}
 
 		recycler.set_phrase = async function (name, translation) {
 			phrases[name] = translation;
@@ -288,9 +317,30 @@ Recycler = {}, debug_recycler = 1;
 			}, 300);
 		}
 
+		// these are useful if *_hidden have not been fig'd out yet, will become useless if they can be guaranteed
+		recycler.get_either_start = () => {
+			if (isnum(recycler.start_hidden))
+				return recycler.start_hidden;
+			else
+				return recycler.start;
+		};
+		recycler.get_either_end = () => {
+			if (isnum(recycler.end_hidden))
+				return recycler.end_hidden;
+			else
+				return recycler.end;
+		};
+
+		recycler.get_first_element = () => {
+			let first_element = recycler.list.keys.items.children[1];
+			let uid = getdata( first_element, 'uid' );
+			if ( !recycler.is_internal( uid ) ) {
+				return first_element;
+			}
+		};
 		recycler.find_closest = (target) => {
 			let children = list.keys.items.children;
-			let rankings = [];
+			let rankings = [], result = {};
 			if ( children.length > 2 ) {
 				for ( let child of children ) {
 					let uid = getdata( child, 'uid' ), order;
@@ -311,31 +361,93 @@ Recycler = {}, debug_recycler = 1;
 
 					if (!isundef( order )) {
 						order = parseint( order );
-						rankings.push({ element: child, distance: Math.abs(order - target) });
+						rankings.push({
+							element: child,
+							distance: Math.abs(order - target.order),
+							order,
+							uid,
+						});
 					}
 				}
 
 				rankings.sort(function (a, b) {
 					return a.distance - b.distance;
 				});
+				
+				result = rankings[0];
+				
+				let old_element = list.get_item_element_by_uid( target.uid );
+				if (old_element) {
+					let old_order = getdata( old_element, 'o' );
+					// exclude self, if new order is >= old element's order, then we need to insert after
+					if (result.order >= old_order && result.uid !== target.uid) {
+						result.after = 1;
+					}
+					
+					let either_start = recycler.get_either_start();
+					
+					// preserve starting edge
+					if (old_order == either_start && target.order > either_start) {
+						// the element that takes its place should have the order set to start_hidden
+						result.enforce_start_hidden = 1;
+					}
+				}
+				if (result.after) {
+					let next_sib = nextsibling( result.element );
+					if (next_sib) {
+						result.element = next_sib;
+					}
+				}
 			} else {
-				rankings.push({ element: children[ children.length - 1 ], distance: 0 });
+				result = { element: children[ children.length - 1 ], distance: 0 };
 			}
-			return rankings[0];
+			return result;
 		};
 
 		recycler.insert = async function ({ start, end, items, before }) {
 			if (debug_recycler) $.log.w( 'recycler.insert', 'start', start, 'end', end, 'length', items.length, before );
 			let height = 0;
 			
-			if (synchro.recycler.total_items)
+			// if the first element element is being swapped, the incoming element's order should be set to zero
+			// TODO fig out where to add this clause most effectively
+			let enforce_start_hidden;
+
+			// don't insert edge items if .start != 0 & .end != .total_count, this will keep scrolling flowing
+			items = items.filter(function (o) {
+				if (isnum(o.order)) {
+					let filter_out;
+					if (o.order < recycler.get_either_start()) {
+						if (debug_recycler) $.log.w( o.uid, 'filtered out before start')
+						filter_out = 1;
+					}
+					if (o.order > recycler.get_either_end()) {
+						if (debug_recycler) $.log.w( o.uid, 'filtered out after end')
+						filter_out = 1;
+					}
+					
+					if (filter_out) {
+						let old_element = list.get_item_element_by_uid( o.uid );
+						if (old_element) {
+							list.remove_by_uid( o.uid );
+						}
+						return 0;
+					}
+				}
+				
+				return 1;
+			});
+			
+			if (recycler.total_items)
 			items.forEach(function (o, i) {
-				// TEMPORARY will remove after testing
 				if (!isundef(o.order)) { // then insert it next to the nearest matching order index number
-					let closest = recycler.find_closest(o.order);
+					let closest = recycler.find_closest(o);
 					if (closest) {
+						if (closest.enforce_start_hidden)
+							enforce_start_hidden = closest.enforce_start_hidden;
+
 						let { element } = closest;
-						let object = list.get_item_object_by_uid( getdata( element, 'uid' ) )
+						
+						let object = list.get_item_object_by_uid( getdata( element, 'uid' ) );
 						if (object.uid == 'next') name = 'next';
 						else name = object.name;
 						if (debug_recycler) $.log( 'will insert', o.order, o.name, 'before', object.order, name );
@@ -346,7 +458,14 @@ Recycler = {}, debug_recycler = 1;
 
 			items.forEach(function (o, i) {
 				o.before = /*before || */o.before || list.get_item_element_by_uid('next');
-				var was_present = list.get_item_element_by_uid(o.uid);
+				let was_present = list.get_item_element_by_uid(o.uid);
+				
+				let old_object = list.get_item_object_by_uid(o.uid);
+				let is_object_updated;
+				if (old_object) {
+					is_object_updated = o.updated > old_object.updated;
+				}
+				
 				list.set( o ); // this one re-orders it
 				var element = list.get_item_element_by_uid(o.uid);
 
@@ -358,14 +477,26 @@ Recycler = {}, debug_recycler = 1;
 					height += element.offsetHeight;
 					// FAILED tried animating height but it triggers next, prev
 				}
-				// TODO expose an option
-				blip_item( element );
+				if (is_object_updated || !was_present) {
+					// TODO expose an option
+					blip_item( element );
+				}
 			});
 			if (items.length) {
 				if (debug_recycler) $.log.w('recycler', name, 'inserted', items.length, 'with height', height );
 				list.calc_selection();
 
+				if (enforce_start_hidden) {
+					let first_element = recycler.get_first_element();
+					if (first_element) {
+						setdata( first_element, 'o', recycler.get_either_start() );
+					}
+				}
+				
 				recycler.reorder();
+				
+				// also accounts for small num of items, on addition, keeps loaded in check
+				recycler.apply_count();
 				
 				await Hooks.until('recycler-insert-done', { name, need });
 			}
@@ -376,7 +507,7 @@ Recycler = {}, debug_recycler = 1;
 			// two edges are determined between visible and invisible items
 			// items past this edge + threshold are removed
 			
-			$.taxeer('recycler-cleanup', async function () { if (active) {
+			$.delay('recycler-cleanup', async function () { if (active) {
 				setcss(list.keys.raees, 'top', (Webapp.get_header_height()-1)+'px');
 
 				var was_length = list.length();
@@ -396,17 +527,16 @@ Recycler = {}, debug_recycler = 1;
 					}
 				} }
 				if (prev_edge) {
-					// URGENT BUG after removing objects, start and end become really weird
 					recycler.start = parseint( getdata(prev_edge, 'o') );
 					recycler.prev_edge = getdata(prev_edge, 'uid');
-					var prev_sib_count = 0, prev_sib = prevsibling(prev_edge);
+					let prev_sib_count = 0, prev_sib = prevsibling(prev_edge);
 					while (prev_sib) {
-						var prev_sib_uid = getdata(prev_sib, 'uid');
+						let prev_sib_uid = getdata(prev_sib, 'uid');
 						
 						if (['next', 'prev'].includes(prev_sib_uid)) {
 							break;
 						}
-						var sib = prevsibling(prev_sib);
+						let sib = prevsibling(prev_sib);
 						if (prev_sib_count >= recycler.size) {
 							list.remove_by_uid( prev_sib_uid );
 						}
@@ -419,12 +549,12 @@ Recycler = {}, debug_recycler = 1;
 					recycler.next_edge = getdata(next_edge, 'uid');
 					var next_sib_count = 0, next_sib = nextsibling(next_edge);
 					while (next_sib) {
-						var next_sib_uid = getdata(next_sib, 'uid');
+						let next_sib_uid = getdata(next_sib, 'uid');
 						
 						if (['next', 'prev'].includes(next_sib_uid)) {
 							break;
 						}
-						var sib = nextsibling(next_sib);
+						let sib = nextsibling(next_sib);
 						if (next_sib_count >= recycler.size) {
 							list.remove_by_uid( next_sib_uid );
 						}
@@ -452,7 +582,7 @@ Recycler = {}, debug_recycler = 1;
 			}
 			let elements = recycler.get_elements();
 			if (elements.length) {
-				let order = /*!isundef(start) ? start : */getdata(elements[0], 'o');
+				let order = !isundef(start) ? start : getdata(elements[0], 'o');
 				elements.forEach(function (element) {
 					setdata(element, 'o', order);
 
@@ -577,67 +707,10 @@ Recycler = {}, debug_recycler = 1;
 			if (debug_recycler) $.log.w( 'recycler.set' );
 			if (!isarr(items)) items = [ items ];
 			
-			// use the compare function to determine which direction the item should go
-			// TODO try inserting these items one by one
-			items = recycler.sort(items);
-			// don't insert edge items if .start != 0 & .end != .total_count, this will keep scrolling flowing
-			items = items.filter(function (o) {
-				let old_element = list.get_item_element_by_uid( o.uid );
-				
-				if (old_element) { // if it's already there
-					o.before = old_element; // just update in place
-					let ignore;
-					
-					if (!isundef(o.order)) {
-						let order = parseint( getdata(old_element, 'o') );
-						if (order != o.order) {
-							ignore = 1; // handled in next clause
-						}
-					}
-					if (!ignore) return 1;
-				}
-				
-				if (!isundef(o.order)) { // then insert it next to the nearest matching order index number
-					let elements = recycler.get_elements();
-					for (let element of elements) {
-						let order = parseint( getdata(element, 'o') );
-						if (order <= o.order) o.before = element;
-						else break;
-					}
-					return 1;
-				}
-				
-				if (recycler.get_objects().length == 0) { // it no items exist, always allow insertion
-					return 1;
-				}
-				if (o.before) {
-					var closest = list.keys.items.childNodes[1];
-					if (closest) {
-						if (closest.isEqualNode(o.before)) { // will get inserted at the start
-							var order = parseint( getdata(o.before, 'o') );
-							if (order != 0) {
-								$.log.w( module_title, o.uid, 'was filtered out near the start' );
-								return 0;
-							}
-						}
-					}
-				}
-				if (!o.before) { // will get inserted at the end
-					var closest = list.keys.items.children[ list.keys.items.childNodes.length-2 ];
-					var order = parseint( getdata(closest, 'o') );
-					if (order != recycler.total_items-1) {
-						$.log.w( module_title, o.uid, 'was filtered out near the end' );
-						return 0;
-					}
-				}
-				return 1;
-			});
-			
-			var height = await recycler.insert({ start: 0, end: items.length, items });
+			var height = await recycler.insert({ start: recycler.get_either_start(), end: items.length, items });
 			if (height && recycler.enabled) {
 				scroll_by(0, height);
 			}
-			recycler.reorder();
 		};
 		recycler.get = async function ( start = 0, end = recycler.size ) {
 			if (debug_recycler) $.log.w( 'recycler.get', start, end );
@@ -691,10 +764,16 @@ Recycler = {}, debug_recycler = 1;
 		};
 
 		recycler.total_items = 0;
+		recycler.apply_count = function ({ loaded } = {}) {
+			if (!isnum(loaded)) {
+				var elements = recycler.get_elements();
+				loaded = elements.length;
+			}
+			list.title( recycler.total_items+' items ('+loaded+' loaded)' );
+		};
 		recycler.set_count = async function (count) {
 			recycler.total_items = count;
-			var elements = recycler.get_elements();
-			list.title( recycler.total_items+' items ('+elements.length+' loaded)' );
+			recycler.apply_count();
 		};
 		recycler.count = async function () {
 			var resolve;
@@ -751,20 +830,27 @@ Recycler = {}, debug_recycler = 1;
 					return children.indexOf(element);
 				}
 			};
-			var promise = new Promise(function (r) {
+			let is_first_element;
+			let promise = new Promise(function (r) {
 				resolve = function () {
 					if (!isundef(order)) {
-						recycler.reorder({ start: order });
+						recycler.reorder({ start: parseint( order ) });
 					} else {
 						recycler.reorder();
+					}
+					if (is_first_element) {
+						// list has logic to move selection to the prev element
+						// we override it in case it's our 'prev' btn
+						list.down();
 					}
 					return r.apply(r, arguments);
 				};
 			});
-			var element = list.get_item_element_by_uid(uid);
+			let element = list.get_item_element_by_uid(uid);
 			if (element) {
 				// if the first element is being removed, we pass its order to the next element
 				if (get_element_index(element) == 1) { // 0 is the next/prev button
+					is_first_element = 1;
 					order = getdata(element, 'o');
 				}
 				
@@ -780,6 +866,7 @@ Recycler = {}, debug_recycler = 1;
 						setcss(element, 'height', '0px');
 						setTimeout(function () {
 							list.remove_by_uid(uid);
+							recycler.apply_count();
 							resolve();
 						}, 500);
 					}, 50);
@@ -798,16 +885,26 @@ Recycler = {}, debug_recycler = 1;
 					await recycler.remove_by_uid(uid, only_remove);
 			}
 		};
-		recycler.remove_all = async function () {
+		recycler.remove_all = async function ({ keep_range } = {}) {
 			removal_in_progress = 1;
 			recycler.cached_ranges = [];
 			var elements = recycler.get_elements();
 			for (var element of elements) {
 				var uid = getdata(element, 'uid');
-				await recycler.remove_by_uid( uid, 1 );
+				if (keep_range) {
+					list.remove_by_uid(uid);
+				} else {
+					await recycler.remove_by_uid( uid, 1 );
+				}
 			}
 			removal_in_progress = 0;
-			await recycler.reset_range();
+
+			if (!keep_range) {
+				await recycler.reset_range();
+			}
+			
+			recycler.apply_count({ loaded: 0 });
+			
 			return 1;
 		};
 

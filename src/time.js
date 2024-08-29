@@ -271,12 +271,17 @@ var Time, time;
 			} else if (hours <= 6) {
 				text = time.formatdate( new Date(datetime), (is24 ? 'HH:mm' : 'hh:mma') );
 			} else if (days <= 1) {
-				if (dataset && dataset.muxtasar == '3')
+				let short_time;
+				if (dataset) {
+					short_time = dataset.muxtasar || dataset.short;
+				}
+				
+				if (short_time == '3')
 					text += time.fuzzytime( datetime, 1 );
-				else if (dataset && dataset.muxtasar == '2')
+				else if (short_time == '2')
 					text += time.fuzzytime( datetime );
 				else {
-					if (dataset && !dataset.muxtasar)
+					if (isundef(short_time))
 						text += time.fuzzytime( datetime ) + ' '+at+' ';
 					text += time.formatdate( new Date(datetime), (is24 ? 'HH:mm' : 'hh:mma') );
 				}

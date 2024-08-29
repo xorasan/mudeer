@@ -278,7 +278,7 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 			blur();
 			return ae;
 		},
-		header: function (text, align, original_keys) {
+		header: function (text, align = 1, original_keys) {
 			// if text is [text] assumes i18n; unless it has at least two elements
 			
 			var header_icon, header_title = text, header_subtitle = '';
@@ -422,13 +422,20 @@ var Webapp, webapp, appname = 'APPNAME' || '',
 				if ( confirm(xlate('sure')) ) close();
 			} else close();
 		},
-		icons: function (parent) {
+		icons: function (parent, { addon } = {}) {
 			var elements = (parent||doc.body).querySelectorAll('[data-icon]');
 			for (var i in elements) {
 				if ( elements.hasOwnProperty(i) && elements[i].dataset.icon ) {
-					var e = icons.querySelector('#'+elements[i].dataset.icon);
-					if (e)
-						elements[i].innerHTML	= '<svg viewBox="0 0 48 48">'+e.cloneNode(1).innerHTML+'</svg>';
+					let icon_svg;
+					if (addon && addon.manifest && addon.manifest.uid) {
+						icon_svg = Addons.get_icon(addon.manifest.uid, elements[i].dataset.icon);
+						if (icon_svg)
+							innerhtml(elements[i], icon_svg);
+					} else {
+						icon_svg = icons.querySelector('#'+elements[i].dataset.icon);
+						if (icon_svg)
+							innerhtml(elements[i], '<svg viewBox="0 0 48 48">'+icon_svg.cloneNode(1).innerHTML+'</svg>');
+					}
 //					elements[i].innerHTML	= '<svg><use xlink:href=\'#'
 //											+ elements[i].dataset.icon
 //											+ '\'></use></svg>';

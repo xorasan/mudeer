@@ -73,10 +73,8 @@ var Markdown;
 			
 			return replacedText;
 		},
-		render: function (text, options) {
+		render: function (text, { use_span, no_links, no_images } = {}) {
 			var rendered = '';
-			options = options || {};
-			var use_span = options.use_span;
 			text = ( text || '' );
 			
 			text = text.split('\n');
@@ -110,14 +108,14 @@ var Markdown;
 					part = part.replace('\n"', '');
 					rendered += '<blockquote>' + Markdown.format(part, true) + '</blockquote>';
 				}
-				else if (part.startsWith('[') && part.endsWith(')')) {
+				else if (part.startsWith('[') && part.endsWith(')') && !no_links) {
 					part.replace(/\[(.*)\]\((.+)\)/gm, function (fulltext, title, path) {
 						title = Markdown.htmlentities(title);
 						path = Markdown.htmlentities(path);
 						rendered += '<a class=l href="'+path+'">' + title + '</a>';
 					});
 				}
-				else if (part.startsWith('![') && part.endsWith(')')) {
+				else if (part.startsWith('![') && part.endsWith(')') && !no_images) {
 					part.replace(/\!\[(.*)\]\((.+)\)/gm, function (fulltext, title, path) {
 						title = Markdown.htmlentities(title);
 						path = Markdown.htmlentities(path);

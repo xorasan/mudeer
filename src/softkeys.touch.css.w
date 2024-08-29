@@ -1,7 +1,4 @@
-if max-width = 420px
-	#sksoftleft .tooltip
-		display		none
-if min-width = 321px
+if min-width = 301px
 	#softkeysui button
 		line-height		1
 		letter-spacing	-1px
@@ -64,7 +61,7 @@ if min-width = 321px
 	left			0
 //[data-keyboardopen] #softkeysui button
 //	opacity			0.7
-if min-width = 321px
+if min-width = 301px
 	#skdots
 		display			none !important
 	#softkeysui .row2 [data-hawm="1"] .tooltip, #softkeysui .row2 [data-hawm="1"] .label

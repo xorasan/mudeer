@@ -91,7 +91,7 @@ Server = {};
 			});
 
 			app.use(express.static(public_path));
-			app.get('*', function (req, res) {
+			app.get('*', async function (req, res) {
 				res.sendFile( public_path+'index.html' );
 			});
 

@@ -142,6 +142,7 @@ var Templates, templates, namaavij;
 						if (is_icon || is_image) {
 							icon_src = o[i+'$icon'] || o[i+'$image'];
 						}
+						
 						if (isstr(icon_src) && icon_src.length) {
 							keys[i].hidden = 0;
 							if (icon_src.startsWith('file:/') || icon_src.startsWith('/') || is_image) {
@@ -218,6 +219,8 @@ var Templates, templates, namaavij;
 					parent.appendChild(clone);
 				
 				Hooks.rununtilconsumed('widgets', parent);
+
+				Webapp.icons(clone); // only replace icons in clone
 
 				return function (o) {
 					return templates.set(clone, o, template);

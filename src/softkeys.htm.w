@@ -14,6 +14,6 @@
 		.icon [id=real_icon]
 		span .inline .tooltip
 			label [id=name] @hidden
-			.key .pad .tag .dim .smallcaps [id=key] @hidden
+			.key .pad .tag .dim .upper .bold .small [id=key] @hidden
 		span [id=label] .label @hidden
 		span [id=short_name] .short @hidden

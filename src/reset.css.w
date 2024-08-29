@@ -102,6 +102,7 @@ label
 	font-size		90%
 	font-weight		bold
 	padding			0 2px
+	display			inline-block
 input, textarea, select, .input
 	border				0
 	border-bottom		2px solid @secondary

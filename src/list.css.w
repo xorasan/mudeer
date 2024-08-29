@@ -209,12 +209,21 @@
 	pointer-events		none
 	transition			opacity .2s ease-in
 
-
 .soft_item
 	border-radius	12px
+	padding			12px
+
+if max-width = 720px
+	.soft_item
+		padding-right	46px
+	[data-grid] .soft_item
+		padding-right	unset
+
 .soft_item:hover
 	background		@secondaryxd
 .soft_item[data-selected]
+	background		@secondaryd
+.list[data-focussed] .soft_item[data-selected]
 	background		@secondaryl
 	box-shadow		0 0 0 2px @secondaryd inset
 	border-color	@accent

@@ -7,8 +7,8 @@
 	display			inline-block
 #eqonahui
 	display			none
-	width			76px
-	height			76px
+	width			64px
+	height			64px
 	border			0
 	margin			8px
 #loadingbox
@@ -50,9 +50,9 @@ body[data-minimal]
 	position		sticky
 	top				0
 	backdrop-filter	blur(8px)
-.headerui .header[data-align="1"]
+#headerui [data-align="1"]
 	text-align		center
-.headerui .header[data-align="2"]
+#headerui [data-align="2"]
 	text-align		end
 #icons
 	height			0

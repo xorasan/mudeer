@@ -66,44 +66,11 @@ Network.sync(module_name, function (response) {
 	}
 	else response.finish();
 });
-Web.during_init(function (done, queue) {
+/*Web.during_init(function (done, queue) {
 	Server.get('/manifest.json', function (req, res) {
-		var path = Web.get_public_path();
-
-		MongoDB.query( Config.database.name, module_name, 0, function (result) {
-			var manifest = {};
-			result.rows.forEach(function (o) {
-				manifest[o.uid] = o.value;
-			});
-
-			var name = "APPNAME";
-
-			Files.get.file(path+'manifest.json', function (data, err) {
-				if (err) {
-					$.log.s( err );
-					res.sendStatus(404);
-				} else if (data) {
-					data = data.toString();
-					res.setHeader('Last-Modified', new Date().toUTCString() );
-					try {
-						data = JSON.parse(data);
-						data.name		= manifest.name || name;
-						data.short_name	= manifest.short_name || name;
-
-						if (manifest.description)
-							data.description= manifest.description;
-						
-						res.json(data);
-					} catch (ignore) {
-						$.log.e( ignore );
-						res.sendStatus(500);
-					}
-				}
-			});
-		});
 	});
 	
 	done(queue);
-});
+});*/
 
 })();

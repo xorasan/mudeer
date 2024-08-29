@@ -15,7 +15,7 @@ Web = {};
 	}
 	function is_response_sent( result, extra ) {
 		let response_sent;
-		if (!isundef(result)) {
+		if (isdef(result)) {
 			if (result instanceof File) {
 				response_sent = 1;
 				let res = extra.res, path = result.name;
@@ -230,9 +230,16 @@ Web = {};
 							let extra = {
 								req:			req,
 								res:			res,
+								request:		req,
+								response:		res,
 								url:			req.originalUrl || '',
 							};
 							let result = await Hooks.until('server-get', extra);
+							
+							if (result === 1) { // assume response was sent
+								return;
+							}
+							
 							if ( is_response_sent( result, extra ) ) {
 								return;
 							}

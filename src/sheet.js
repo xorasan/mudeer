@@ -18,8 +18,16 @@ var Sheet, sheet,
 		zaahir: function (name) { // currently active sheet TODO deprecate
 			return active_sheet_name === name;
 		},
-		is_active: function (name) {
-			return active_sheet_name === name;
+		is_active: function (name, uid) {
+			let yes = active_sheet_name === name;
+			if (!isundef(uid)) {
+				yes = this.get_active_uid() == uid;
+			}
+			return yes;
+		},
+		is_active_fully: function (name, uid) {
+			let yes = this.is_active(name, uid) && Backstack.darajah == 2;
+			return yes;
 		},
 		get_active: function () {
 			return active_sheet_name;
@@ -44,7 +52,7 @@ var Sheet, sheet,
 		},
 		bardaa: function (v) {
 			if (!container.firstElementChild) return;
-			var children = Object.values(container.firstElementChild.children);
+			let children = Object.values(container.firstElementChild.children);
 			if (v) {
 				children.forEach(function (item) {
 					if (getdata(item, 'focus') === 'list') {
@@ -56,15 +64,23 @@ var Sheet, sheet,
 					}
 				});
 				setdata(container, 'bardaa', 1);
-				softkeys.set(K.sl, function (e) {
-					webapp.itlaa3('pleasewait');
-				}, 0, 'iconhourglassempty');
+				Softkeys.add({ n: 'Processing...',
+					k: K.sl,
+					i: 'iconhourglassempty',
+					c: function () {
+						Webapp.status('Please wait...');
+					},
+				});
 				ae = webapp.blur();
 			}
 			else {
-				softkeys.set(K.sl, function (e) {
-					sheet.okay();
-				}, 0, 'icondone');
+				Softkeys.add({ n: 'Done',
+					k: K.sl,
+					i: 'icondone',
+					c: function () {
+						Sheet.okay && Sheet.okay();
+					},
+				});
 				popdata(container, 'bardaa');
 				if (ae) ae.focus();
 				if (murakkaz) murakkaz.rakkaz(1);
@@ -167,7 +183,7 @@ var Sheet, sheet,
 					}
 					
 					// TODO transition modules to use this method to (re)construct sheets
-					Hooks.run(sheet_ready, args, keys, new_list);
+//					Hooks.run(sheet_ready, args, keys, new_list);
 
 					Hooks.rununtilconsumed('widgets', sheetui);
 				}
@@ -217,10 +233,15 @@ var Sheet, sheet,
 				Webapp.blur();
 				Hooks.run('back');
 			};
+
+			Hooks.run(sheet_ready, args, keys, new_list);
 		},
 		get: function (name) {
 			if (!name) return container.firstElementChild;
 			else return index[name];
+		},
+		get_element: function ( ...args ) {
+			return this.get( ...args );
 		},
 		index: function (parent) {
 			let elements = (parent||document.body).querySelectorAll('[data-sheet]');

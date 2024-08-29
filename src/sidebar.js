@@ -15,11 +15,13 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 	};
 
 	Sidebar = {
+		softkey_enabled: 0,
 		set_softkey: function () {
-			Softkeys.add( sidebar_softkey );
+			if (this.softkey_enabled)
+				Softkeys.add( sidebar_softkey );
 		},
 		remove_softkey: function () {
-			if (sidebar_softkey.uid)
+			if (this.softkey_enabled && sidebar_softkey.uid)
 				Softkeys.remove( sidebar_softkey.uid );
 		},
 		// { uid, title, icon, count, keep_open, callback }
@@ -79,7 +81,7 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 					l.uponclick = function (o) {
 						if (!o.keep_open) // if you want to keep the side bar open
 							backstack.back();
-						$.taxeer('after_sidebar_sheet', function () {
+						$.delay('after_sidebar_sheet', function () {
 							sidebar_list.uponclick(o);
 						}, 20);
 					};
@@ -110,9 +112,9 @@ var Sidebar, sidebar_list, sidebar_sheet_list;
 		});
 	});
 	Hooks.set('webapp-before-init', async function () {
-		sidebar_list = List( templates.keys(sidebarui).list ).idprefix('sdbr')
+		sidebar_list = List( Templates.keys(sidebarui).list ).idprefix('sdbr')
 						.listitem('sidebar_item').title('Sidebar');
-
+		Sidebar.list = sidebar_list;
 		sidebar_list.after_set = function (o, c, k) {
 			if (Templates.has_property(o, 'count'))
 				izhar(k.count_tag);

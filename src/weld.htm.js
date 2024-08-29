@@ -24,7 +24,7 @@ const voidtags = [
 	'wbr'
 ],
 quotesmask = /[ '"]/,
-pathmask = '\\w\\=\\:\\;\\.\\#\\(\\)\\%\\,\\-\\!\\&\\/\\# ا-ي',
+pathmask = '\\w\\=\\:\\;\\.\\#\\(\\)\\%\\,\\-\\!\\&\\/\\#\\* ا-ي',
 /*
  * this should also return a map of all uglifiable keywords
  * this map should add to slang.keywords using $.unique

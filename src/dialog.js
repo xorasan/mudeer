@@ -24,6 +24,14 @@ var Dialog, dialog,
 		get_uid: function () {
 			return current_uid;
 		},
+		get_answer: function () {
+			let keys		= Templates.keys(dialogui);
+			
+			if (keys.input.hidden)
+				return keys.textarea.value;
+			else
+				return keys.input.value;
+		},
 		set_message: function (m) {
 			var k = templates.keys(dialogui);
 
@@ -43,7 +51,7 @@ var Dialog, dialog,
 			markooz() && markooz().blur();
 			
 			dialogui.hidden = 0;
-			var k			= templates.keys(dialogui)	,
+			let k			= Templates.keys(dialogui)	,
 				name		= args.name		||	args.n	,
 				uid			= args.uid		||	args.u	,
 				max			= args.max		||	args.x	,
@@ -72,9 +80,6 @@ var Dialog, dialog,
 			}
 			
 			Dialog.onshow && Dialog.onshow(name);
-
-			// TODO transition modules to use this method to (re)construct dialogs
-			Hooks.run(dialog_ready, args, k);
 			
 			Dialog.okay = function () {
 				var answer = input_element.value;
@@ -108,6 +113,9 @@ var Dialog, dialog,
 			}
 
 			this.set_message( message );
+
+			// TODO transition modules to use this method to (re)construct dialogs
+			Hooks.run(dialog_ready, args, k);
 		},
 	};
 	Hooks.set('backstackdialog', function (args) {

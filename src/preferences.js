@@ -58,16 +58,19 @@ var Preferences, preferences;
 		set: function (name, value) {
 			return localStorage.setItem(name, value);
 		},
-		get: function (name, json) {
+		get: function (name, json, fallback) {
+			let value = localStorage.getItem(name);
+			if (!isundef(fallback) && value === null) value = fallback;
+			
 			if (json) {
 				try {
-					return JSON.parse( localStorage.getItem(name) );
+					return JSON.parse( value );
 				} catch (ignore) {
 //					$.log.s( 'error parse json' );
 				}
 				return {};
 			} else
-				return localStorage.getItem(name);
+				return value;
 		},
 		pop: function (name) {
 			return localStorage.removeItem(name);
@@ -99,13 +102,13 @@ var Preferences, preferences;
 
 	var buildnum = preferences.get('#', 1);
 	if ( buildnum != BUILDNUMBER ) {
-		preferences.pop(3); // ruid
-		preferences.pop('@'); // last sync time
+		Preferences.pop(3); // ruid
+		Preferences.pop('@'); // last sync time
 		// lists cache, since these store XPO kinda values
-		preferences.pop(4); // list view cache
-		preferences.pop(6); // initial sync done
+		Preferences.pop(4); // list view cache
+		Preferences.pop(6); // initial sync done
 	}
-	preferences.set('#', BUILDNUMBER);
+	Preferences.set('#', BUILDNUMBER);
 	
 	Hooks.set('XPO.ready', function () {
 		if ( buildnum != BUILDNUMBER ) {

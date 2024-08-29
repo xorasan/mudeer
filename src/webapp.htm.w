@@ -6,13 +6,13 @@
 #loadingbox .fixed .flex
 	.center
 		.flex .vertical
-			[i18n=loading] .big .bold
+			[i18n=loading] .big .bold .centertext
 			[id=progress]
 [template=progress_item] .soft_item .flex
 	.flex .vertical .grow
 		[id=title] .bold
-		[id=info] .dim
-	[id=progress]
+		[id=info] .dim .small
+	[id=progress] .pad
 #dimmer .fixed @hidden
 	#dimmertext
 // TODO support for ROOT for /
@@ -24,7 +24,7 @@ img #eqonahui .fixed .top .right .z200 @src(JAZAR/e.png)
 		[id=subtitle] .dim
 #headerui .relative .headerui
 	[id=header] [dir=1] @hidden
-		.flex .padv
+		.inlineflex .padv
 			.vcenter .pad
 				[id=icon] .icon
 			.vcenter .pad

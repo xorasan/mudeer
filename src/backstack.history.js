@@ -8,10 +8,10 @@
  * any app that needs to run on platforms with a back button that needs the
  * history api (like android) should include this sub-module
  * */
-
+debug_backstack_history = 0;
 ;(function(){
 	'use strict';
-	var uuid = 0, debug_backstack_history = 0;
+	var uuid = 0;
 	
 	/* NOTE
 	 * clear the history stack requires boilerplate code
@@ -32,7 +32,7 @@
 	// override the original .back function
 	var original_back_function = Backstack.back;
 	Backstack.back = function () {
-		if (chronicle.length || history.state) {
+		if (chronicle.length || history.length > 1) {
 			if (debug_backstack_history) $.log.w( 'history.back()' );
 			history.back();
 		}
@@ -48,13 +48,20 @@
 	}
 	function get_current_entry() {
 		 return chronicle[ chronicle.length-1 ];
-//		 return { state: history.state, link: location.pathname };
+//		 return { state: history.state, link: get_uri() };
 	}
+	
+	function get_uri () { // use this instead of location.pathname
+		// since dialogs use ?something syntax, location assigns them as location.search
+		// so we use href minus origin to get the full uri
+		return location.href.slice( location.origin.length );
+	}
+	Backstack.get_uri = get_uri;
 
 	function parse_link(link) {
-		if (!isundef(link)) link = location.pathname;
+		if (isundef(link)) link = get_uri();
 		
-		var is_main = link == '/', is_view, view_uid, is_sheet, sheet_uid, is_dialog, dialog_uid;
+		var is_main = link == '/', is_view, view_uid, view_tab, is_sheet, sheet_uid, is_dialog, dialog_uid;
 		var crumbs = link.split('/'), last_crumb = '';
 		crumbs.forEach(function (crumb, i) {
 			if (crumb.startsWith('-')) is_sheet = crumb.slice(1);
@@ -69,7 +76,11 @@
 						dialog_uid = crumb;
 					}
 				} else if (i == 1) {
-					is_view = crumb;
+					if (crumb) {
+						let view_parts = crumb.split('.');
+						is_view = view_parts[0];
+						view_tab = view_parts[1] || 'default';
+					}
 				} else if (i == 2 && isundef(view_uid)) {
 					view_uid = crumb;
 				}
@@ -77,7 +88,7 @@
 			
 			last_crumb = crumb;
 		});
-		return { is_main, is_view, view_uid, is_sheet, sheet_uid, is_dialog, dialog_uid };
+		return { is_main, is_view, view_uid, view_tab, is_sheet, sheet_uid, is_dialog, dialog_uid };
 	}
 	Backstack.parse = parse_link;
 	function restore_crumbs(crumbs) {
@@ -176,9 +187,9 @@
 	listener('popstate', function (event) {
 		// retrieve all states from the link
 
-		var crumbs = parse_link( location.pathname );
+		var crumbs = parse_link( get_uri() );
 		
-		if (debug_backstack_history) $.log.w( 'Backstack popstate', location.pathname, crumbs );
+		if (debug_backstack_history) $.log.w( 'Backstack popstate', get_uri(), crumbs );
 		if (chronicle.length) {
 			var item = chronicle.pop();
 			if (item) {
@@ -267,7 +278,7 @@
 
 		// check if the current entry is the same as the one being pushed, if so, restore it silently
 		var current_entry = get_current_entry();
-		if (current_entry && current_entry.link && current_entry.link == link || location.pathname == link) {
+		if (current_entry && current_entry.link && current_entry.link == link || get_uri() == link) {
 			if (debug_backstack_history) $.log.w( 'Backstack staying at current entry silently' );
 			return;
 		}
@@ -280,7 +291,7 @@
 			let element = Views.get_element('not_found');
 			if (element) {
 				let keys = Templates.keys(element);
-				innertext(keys.path, location.pathname);
+				innertext(keys.path, get_uri());
 			}
 		}
 
@@ -310,7 +321,7 @@
 	Hooks.set('ready', function () {
 		if (debug_backstack_history) $.log.w( 'Backstack History Ready' );
 		$.taxeer('backstack-history-ready', function () {
-			var crumbs = parse_link( location.pathname );
+			var crumbs = parse_link( get_uri() );
 			restore_crumbs(crumbs);
 			Backstack.states.main = 1; // Testing
 		}, 100);

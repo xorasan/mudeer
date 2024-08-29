@@ -16,10 +16,13 @@
 			preferences.set(saveto, preferences.get(saveto, 1) ? 0 : 1);
 		});
 	});
+
+	// -1 is left edge, 0 is middle, 1 is right edge
 	Hooks.set('navigationstart', function (args) {
+		let edge_threshold = 60;
 		locked = 0; // free direction lock
-		if (args[0] > innerwidth(-60)) edgestart = 1;
-		else if (args[0] < 60) edgestart = -1;
+		if (args[0] > innerwidth(-edge_threshold)) edgestart = 1;
+		else if (args[0] < edge_threshold) edgestart = -1;
 		else edgestart = 0;
 	});
 	Hooks.set('navigation', function (args) {
@@ -133,12 +136,13 @@
 	
 	listener(skhints, ['touchstart'/*, 'mousedown'*/], function (e) {
 		preventdefault(e);
-		// when scrolled, raycast is off by scroll height
-		lamsahbar = [e.touches[0].pageX, e.touches[0].pageY-scrollingelement().scrollTop];
+		// when scrolled, raycast is off by scroll height (-scrollingelement().scrollTop) <- this was causing a bug
+		// since skhints is fixed, no need to worry about scroll height
+		lamsahbar = [e.touches[0].clientX, e.touches[0].clientY];
 	});
 	listener(skhints, ['touchmove'/*, 'mousemove'*/], function (e) {
 		if (lamsahbar) {
-			lamsahbar = [e.touches[0].pageX, e.touches[0].pageY-scrollingelement().scrollTop];
+			lamsahbar = [e.touches[0].clientX, e.touches[0].clientY];
 			var ch = skhints.children, el,
 				path;
 			if (e.type == 'touchmove') {

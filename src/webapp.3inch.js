@@ -73,14 +73,14 @@ var datepicker = datepicker || 0;
 	Hooks.set('closeall', function (level) {
 		if (level === 3) {
 			datepicker && datepicker.hide();
-			dialog.hide();
+			Dialog.hide();
 			Webapp.blur();
 		}
-		if (level === 2) Sheet.hide(), Webapp.blur();
-		if (level === 1) View.get('main'), Webapp.blur();
+		if (level === 2) Sheets.hide(), Webapp.blur();
+		if (level === 1) Views.get('main'), Webapp.blur();
 		if (level === 0) {
 //			Webapp.status( translate('exiting') );
-//			$.taxeer('exit', function () {
+//			$.delay('exit', function () {
 //				Webapp.exit();
 //			});
 		}

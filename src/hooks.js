@@ -163,7 +163,7 @@ Hooks = hooks = {};
 			
 			var handlers_first = Hooks._registry_first[hook];
 			var handlers = Hooks._registry[hook];
-			if (handlers_first instanceof Array || handlers instanceof Array) {
+			if ( Array.isArray(handlers_first) || Array.isArray(handlers) ) {
 				handlers = ( handlers_first || [] ).concat( handlers || [] );
 				for (var i in handlers) {
 					if (typeof handlers[i] === 'function') {

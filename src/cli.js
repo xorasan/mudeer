@@ -64,6 +64,8 @@ Cli = {};
 		 * ~~		= reset
 		 */
 		ansi: function (str) {
+			if (typeof str != 'string') return str;
+			
 			var rs = /\`\`/,
 				r2 = /\~\~/,
 				cm = /\^([\w]+)\^/,
@@ -110,6 +112,15 @@ Cli = {};
 			}
 			
 			console.log.apply(console, args);
+		},
+		warn: function () {
+			var args = [];
+			
+			for (var i in arguments) {
+				args.push( _.ansi( arguments[i] ) );
+			}
+			
+			console.warn.apply(console, args);
 		},
 		write: function () {
 			var str = '';

@@ -66,14 +66,14 @@ var Settings, settings, currentad;
 		},
 		adaaf: function (name, getvalue, onpress, icon) { // add
 			settingsitems.push([name, getvalue, onpress, icon]);
-			settings.jaddad(settingsitems.length-1);
+			Settings.jaddad(settingsitems.length-1);
 			return settingsitems.length-1;
 		},
 		axad: function (uid) { // get
 			return settingsitems[uid];
 		},
 		jaddad: function (uid) { // update
-			var item = settings.axad(uid);
+			var item = Settings.axad(uid);
 			if (item) {
 				var body = typeof item[1] === 'function' ? item[1]() : undefined;
 				var obj = {
@@ -113,12 +113,12 @@ var Settings, settings, currentad;
 			return item;
 		};
 		settingsitems.forEach(function (item, i) {
-			settings.jaddad(i);
+			Settings.jaddad(i);
 		});
 		settingslist.onpress = function (item, key, uid) {
 			if (item) {
-				settings.axad(item.index)[2]();
-				settings.jaddad(item.index);
+				Settings.axad(item.index)[2]();
+				Settings.jaddad(item.index);
 			}
 		};
 

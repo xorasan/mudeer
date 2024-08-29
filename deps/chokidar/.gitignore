@@ -1,0 +1,6 @@
+*.bak
+*.log
+/coverage/
+/node_modules/
+/test-fixtures/
+/package-lock.json
